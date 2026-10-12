@@ -1,0 +1,226 @@
+<template>
+  <div v-if="loading" class="bg-[#111] border border-white/10 rounded-2xl p-6 flex flex-col items-center justify-center space-y-3">
+    <div class="w-8 h-8 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
+    <p class="text-xs text-white/50 font-mono uppercase tracking-wider">Computing Shapley Additive Explanations...</p>
+  </div>
+
+  <div v-else class="bg-[#111] border border-white/10 rounded-2xl p-6 w-full max-w-2xl shadow-2xl relative overflow-hidden animate-fade-in group">
+    <div class="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl group-hover:bg-emerald-500/10 transition-colors" />
+
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6 relative z-10 border-b border-white/5 pb-4">
+      <div>
+        <h3 class="text-lg font-display font-medium text-white tracking-tight flex items-center gap-2">
+          <BarChart3 class="w-5 h-5 text-emerald-400" />
+          SHAP Credit Underwriting Explainability
+        </h3>
+        <p class="text-xs text-white/40 mt-1">Algorithmic pricing feature-level contributions (SHAP values)</p>
+      </div>
+      <span
+        :class="[
+          'text-[10px] px-2.5 py-1 rounded-full flex items-center gap-1 font-medium font-mono border',
+          shapData?.decision_status === 'limit_exceeded'
+            ? 'text-amber-400 bg-amber-500/10 border-amber-500/30'
+            : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+        ]"
+      >
+        <Sparkles class="w-3 h-3" />
+        {{ shapData?.decision_status === 'limit_exceeded' ? 'LIMIT EXCEEDED' : 'APPROVED' }}
+      </span>
+    </div>
+
+    <div class="space-y-6 relative z-10">
+      <!-- Requested vs Approved Capacity -->
+      <div class="grid grid-cols-2 gap-4">
+        <div class="bg-[#0A0A0A] p-4 rounded-xl border border-white/5">
+          <p class="text-[10px] text-white/40 uppercase tracking-widest font-bold font-mono">Requested Amount</p>
+          <p class="text-xl font-bold text-white mt-1">
+            ₹{{ shapData?.requested_amount ? Math.round(shapData.requested_amount).toLocaleString('en-IN') : '—' }}
+          </p>
+        </div>
+        <div
+          :class="[
+            'p-4 rounded-xl border',
+            shapData?.decision_status === 'limit_exceeded'
+              ? 'bg-amber-500/5 border-amber-500/30'
+              : 'bg-emerald-500/5 border-emerald-500/10'
+          ]"
+        >
+          <p class="text-[10px] text-white/40 uppercase tracking-widest font-bold font-mono">Max Approved Capacity</p>
+          <p
+            :class="[
+              'text-xl font-bold mt-1',
+              shapData?.decision_status === 'limit_exceeded' ? 'text-amber-400' : 'text-emerald-400'
+            ]"
+          >
+            ₹{{ shapData?.final_approved_limit ? Math.round(shapData.final_approved_limit).toLocaleString('en-IN') : '—' }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Summary Card -->
+      <div class="bg-[#050505] p-4 rounded-xl border border-white/5 text-xs text-white/80 leading-relaxed font-sans">
+        <strong>Decision Summary:</strong> {{ shapData?.shap_summary }}
+      </div>
+
+      <!-- Feature Impact Waterfall Rows -->
+      <div class="space-y-3">
+        <div class="grid grid-cols-12 text-[10px] font-bold uppercase tracking-wider text-white/40 font-mono pb-2 border-b border-white/5">
+          <span class="col-span-4">Feature Risk Variable</span>
+          <span class="col-span-3 text-right">Interest Rate Impact</span>
+          <span class="col-span-5 pl-4">Impact Rationale</span>
+        </div>
+
+        <div
+          v-for="(row, idx) in shapData?.waterfall"
+          :key="idx"
+          class="grid grid-cols-12 items-center text-xs py-2.5 border-b border-white/5 hover:bg-white/[0.01] transition-all rounded-lg px-1"
+        >
+          <span class="col-span-4 font-semibold text-white/90">{{ row.feature }}</span>
+          <span
+            :class="[
+              'col-span-3 text-right font-mono font-bold',
+              row.feature === 'Base Benchmark'
+                ? 'text-white'
+                : row.rate_impact < 0
+                ? 'text-emerald-400'
+                : 'text-rose-400'
+            ]"
+          >
+            {{
+              row.feature === 'Base Benchmark'
+                ? `${row.rate_impact.toFixed(2)}%`
+                : `${row.rate_impact < 0 ? '' : '+'}${row.rate_impact.toFixed(2)}% p.a.`
+            }}
+          </span>
+          <span class="col-span-5 pl-4 text-white/50 text-[11px] leading-snug">
+            {{ row.description }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Capacity Contribution by Feature -->
+      <div class="pt-2">
+        <div class="grid grid-cols-12 text-[10px] font-bold uppercase tracking-wider text-white/40 font-mono pb-2 border-b border-white/5">
+          <span class="col-span-5">Risk Variable</span>
+          <span class="col-span-3 text-right">Capacity Added</span>
+          <span class="col-span-4 pl-4">Impact Rationale</span>
+        </div>
+        <div
+          v-for="(row, idx) in shapData?.waterfall"
+          :key="`cap-${idx}`"
+          class="grid grid-cols-12 items-center text-xs py-2.5 border-b border-white/5 hover:bg-white/[0.01] transition-all rounded-lg px-1"
+        >
+          <span class="col-span-5 font-semibold text-white/90">{{ row.feature }}</span>
+          <span
+            :class="[
+              'col-span-3 text-right font-mono font-bold',
+              row.feature === 'Base Benchmark'
+                ? 'text-white'
+                : row.limit_impact < 0
+                ? 'text-rose-400'
+                : 'text-emerald-400'
+            ]"
+          >
+            {{
+              row.feature === 'Base Benchmark'
+                ? '₹0'
+                : `${row.limit_impact < 0 ? '−' : '+'}₹${Math.abs(row.limit_impact).toLocaleString('en-IN')}`
+            }}
+          </span>
+          <span class="col-span-4 pl-4 text-white/50 text-[11px] leading-snug">
+            {{ row.description }}
+          </span>
+        </div>
+        <div class="grid grid-cols-12 items-center text-xs pt-2.5 px-1">
+          <span class="col-span-5 font-bold text-white">Maximum Approved Capacity</span>
+          <span class="col-span-3 text-right font-mono font-bold text-white">
+            ₹{{ shapData?.final_approved_limit ? Math.round(shapData.final_approved_limit).toLocaleString('en-IN') : '—' }}
+          </span>
+          <span class="col-span-4 pl-4 text-white/40 text-[11px]">Sum of all feature contributions</span>
+        </div>
+      </div>
+
+      <!-- Dynamic Metric Comparison -->
+      <div class="grid grid-cols-2 gap-4 pt-4 border-t border-white/5 text-center">
+        <div class="bg-[#0A0A0A] p-4 rounded-xl border border-white/5">
+          <p class="text-[10px] text-white/40 uppercase tracking-widest font-bold font-mono">Market Reference Rate</p>
+          <p class="text-xl font-bold text-white mt-1">{{ shapData?.base_rate?.toFixed(2) }}% p.a.</p>
+        </div>
+        <div class="bg-emerald-500/5 p-4 rounded-xl border border-emerald-500/10">
+          <p class="text-[10px] text-emerald-400 uppercase tracking-widest font-bold font-mono">Your Approved Rate</p>
+          <p class="text-xl font-bold text-emerald-400 mt-1">{{ shapData?.final_approved_rate?.toFixed(2) }}% p.a.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
+import { useLoanStore } from '@/stores/loanStore';
+import { Sparkles, BarChart3 } from '@lucide/vue';
+import { api } from '@/lib/api';
+
+const store = useLoanStore();
+const loading = ref(true);
+const shapData = ref<any>(null);
+
+onMounted(async () => {
+  if (store.sessionId) {
+    const res = await api.fetchShapExplainability(store.sessionId);
+    if (res.success && res.data?.shap_data) {
+      shapData.value = res.data.shap_data;
+    }
+    loading.value = false;
+  } else {
+    shapData.value = {
+      base_rate: 12.5,
+      final_approved_rate: 10.5,
+      final_approved_limit: 1200000,
+      requested_amount: 2000000,
+      decision_status: 'limit_exceeded',
+      shap_summary:
+        'Your requested amount of ₹2,000,000 exceeds your computed approved capacity of ₹1,200,000 by ₹800,000. Each feature contributes to this capacity — CIBIL score (800) adds ₹500,000, income adds ₹250,000, FOIR adds ₹50,000 and location adds ₹100,000. Reducing the amount to within ₹1,200,000 or improving income / lowering existing debt would change this decision.',
+      waterfall: [
+        {
+          feature: 'Base Benchmark',
+          rate_impact: 12.5,
+          limit_impact: 300000,
+          direction: 'neutral',
+          description: 'National Benchmark Pricing for Personal Loans.',
+        },
+        {
+          feature: 'CIBIL Bureau Score',
+          rate_impact: -2.0,
+          limit_impact: 500000,
+          direction: 'positive',
+          description: 'Tier-1 Prime Score (800+) reduced risk premium significantly.',
+        },
+        {
+          feature: 'Monthly Net Income',
+          rate_impact: -0.5,
+          limit_impact: 250000,
+          direction: 'positive',
+          description: 'Upper Salaried Tier (₹75k-₹1.5L/mo).',
+        },
+        {
+          feature: 'FOIR / Existing Debt',
+          rate_impact: -0.25,
+          limit_impact: 50000,
+          direction: 'positive',
+          description: 'Moderate Existing Debt Obligations (FOIR 25%-45%).',
+        },
+        {
+          feature: 'Location Tier',
+          rate_impact: -0.25,
+          limit_impact: 100000,
+          direction: 'positive',
+          description: 'Mumbai BKC address registered as low default metropolitan tier.',
+        },
+      ],
+    };
+    loading.value = false;
+  }
+});
+</script>
