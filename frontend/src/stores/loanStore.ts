@@ -145,6 +145,6 @@ export const useLoanStore = defineStore('nbfc-session', {
 
   // Persist only the fields needed to restore session across page reloads
   persist: {
-    paths: ['currentState', 'user', 'sessionId', 'currentView'],
+    pick: ['currentState', 'user', 'sessionId', 'currentView'],
   },
 });
