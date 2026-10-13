@@ -58,8 +58,8 @@ async def verification_agent_node(state: dict) -> dict:
 
     if principal > pre_approved:
         if "salary slip" not in doc_type:
-            issues.append(f"High-value loan requested (₹{principal:,} > Limit ₹{pre_approved:,}). A Salary Slip is mandatory, but received '{docs.get('document_type')}'.")
-            log.append(f"⚠️ Mandatory Salary Slip missing for ₹{principal:,} loan.")
+            issues.append(f"High-value loan requested (GHS {principal:,} > Limit GHS {pre_approved:,}). A Salary Slip is mandatory, but received '{docs.get('document_type')}'.")
+            log.append(f"⚠️ Mandatory Salary Slip missing for GHS {principal:,} loan.")
     else:
         if "pan" not in doc_type and "aadhaar" not in doc_type:
             issues.append(f"Identity verification required for regular loans. Please upload PAN Card or Aadhaar Card. Received '{docs.get('document_type')}'.")

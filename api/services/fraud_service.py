@@ -62,7 +62,7 @@ async def fraud_check(session_id: str) -> dict:
         "signal_name": "Income Inflation",
         "weight": SIGNAL_WEIGHTS["income_inflation"],
         "triggered": income_inflated,
-        "detail": f"Claimed: ₹{claimed:,} vs Extracted: ₹{extracted:,}" if income_inflated else ""
+        "detail": f"Claimed: GHS {claimed:,} vs Extracted: GHS {extracted:,}" if income_inflated else ""
     })
 
     # Signal 3: Tampered document
@@ -113,7 +113,7 @@ async def fraud_check(session_id: str) -> dict:
         "signal_name": "Abnormal Loan-to-Income",
         "weight": SIGNAL_WEIGHTS["abnormal_loan_ratio"],
         "triggered": abnormal,
-        "detail": f"₹{principal:,} = {principal/claimed:.1f}× salary" if abnormal else ""
+        "detail": f"GHS {principal:,} = {principal/claimed:.1f}× salary" if abnormal else ""
     })
 
     # Bonus: Multiple signals

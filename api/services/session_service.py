@@ -81,7 +81,7 @@ async def end_active_session(session_id: str) -> dict:
         # Determine CRM strings
         if decision == "approve":
             principal = pre_state.get("loan_terms", {}).get("principal", 0)
-            new_record = f"Sanctioned ₹{principal:,} loan."
+            new_record = f"Sanctioned GHS {principal:,} loan."
             drop_off = ""
         else:
             new_record = f"Inquired about {intent} but didn't conclude."

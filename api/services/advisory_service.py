@@ -50,13 +50,13 @@ async def generate_advisory(session_id: str) -> dict:
         dti_percent = (dti * 100) if dti else 0
 
         advisory_message = (
-            f"Congratulations, {name}! Your loan of ₹{principal:,.0f} has been approved. "
+            f"Congratulations, {name}! Your loan of GHS {principal:,.0f} has been approved. "
             f"Here's your personalized repayment summary:\n\n"
-            f"• **EMI**: ₹{emi:,.0f}/month\n"
+            f"• **EMI**: GHS {emi:,.0f}/month\n"
             f"• **Tenure**: {tenure} months\n"
             f"• **Interest Rate**: {terms.get('rate', 0):.1f}% p.a.\n"
-            f"• **Total Interest Payable**: ₹{total_interest:,.0f}\n"
-            f"• **Total Repayment**: ₹{total_repayment:,.0f}\n"
+            f"• **Total Interest Payable**: GHS {total_interest:,.0f}\n"
+            f"• **Total Repayment**: GHS {total_repayment:,.0f}\n"
             f"• **DTI Ratio**: {dti_percent:.0f}% of income"
         )
         if profile_str:
@@ -73,10 +73,10 @@ async def generate_advisory(session_id: str) -> dict:
         if salary > 60000:
             recommended_sip = min(5000, int(salary * 0.08))
             cross_sell = (
-                f"With your monthly income of ₹{salary:,}, consider starting a SIP of "
-                f"₹{recommended_sip:,}/month (just {recommended_sip/salary*100:.0f}% of salary) "
+                f"With your monthly income of GHS {salary:,}, consider starting a SIP of "
+                f"GHS {recommended_sip:,}/month (just {recommended_sip/salary*100:.0f}% of salary) "
                 f"alongside your loan for wealth building. Even a 12% annual return could grow "
-                f"this to ₹{int(recommended_sip * ((1+0.01)**120 - 1)/0.01):,} in 10 years."
+                f"this to GHS {int(recommended_sip * ((1+0.01)**120 - 1)/0.01):,} in 10 years."
             )
         elif dti < 0.30:
             cross_sell = (
@@ -119,11 +119,11 @@ async def generate_advisory(session_id: str) -> dict:
             if salary > 0 and existing_emi > 0:
                 free_cash_flow = salary - existing_emi
                 next_steps.append(
-                    f"With your monthly surplus of ₹{free_cash_flow:,}, "
+                    f"With your monthly surplus of GHS {free_cash_flow:,}, "
                     f"pay down existing debt faster to improve DTI"
                 )
             cross_sell = (
-                f"A ₹25,000 FD-backed credit card from FinServe reports to all bureaus monthly, "
+                f"A GHS 25,000 FD-backed credit card from FinServe reports to all bureaus monthly, "
                 f"helping rebuild your score 2-3x faster than unsecured cards."
             )
         else:
@@ -132,7 +132,7 @@ async def generate_advisory(session_id: str) -> dict:
             excess_dti = max(0, dti_actual - 50)
 
             advisory_message = (
-                f"{name}, your total monthly debt obligation of ₹{total_emi:,} "
+                f"{name}, your total monthly debt obligation of GHS {total_emi:,} "
                 f"is {dti_actual:.0f}% of your income, exceeding our 50% ceiling by {excess_dti:.0f}%. "
             )
             if principal > 0:
@@ -147,8 +147,8 @@ async def generate_advisory(session_id: str) -> dict:
                     else:
                         suggested_principal = max_emi_for_dti * tenure
                     advisory_message += (
-                        f"\n\n💡 **Recommendation**: A loan of ₹{suggested_principal:,.0f} "
-                        f"would keep your DTI at 50%, with EMI of ₹{max_emi_for_dti:,.0f}/month."
+                        f"\n\n💡 **Recommendation**: A loan of GHS {suggested_principal:,.0f} "
+                        f"would keep your DTI at 50%, with EMI of GHS {max_emi_for_dti:,.0f}/month."
                     )
 
             advisory_message += "\n\n**Options to improve eligibility:**"
@@ -285,9 +285,9 @@ async def generate_contextual_response(phone: str, query: str) -> str:
         profile = (
             f"Customer: {name}\n"
             f"CIBIL: {score}\n"
-            f"Salary: ₹{salary:,}/month\n"
+            f"Salary: GHS {salary:,}/month\n"
             f"City: {city}\n"
-            f"Existing EMIs: ₹{existing_emi:,}/month\n"
+            f"Existing EMIs: GHS {existing_emi:,}/month\n"
             f"Active loans: {len(loans)}"
         )
 
@@ -345,7 +345,7 @@ def _message_next_emi(loans: List[Dict[str, Any]]) -> str:
     remaining = loan.get("remaining_emis", 0)
 
     return f"""Your next EMI payment:
-• **Amount:** ₹{emi:,.0f}
+• **Amount:** GHS {emi:,.0f}
 • **Due Date:** {next_due}
 • **Remaining EMIs:** {remaining}
 
@@ -367,7 +367,7 @@ def _message_loan_status(loans: List[Dict[str, Any]]) -> str:
 
         emoji = "Approved" if status == "Approved" else "Pending" if status == "Pending" else "Rejected"
         status_lines.append(
-            f"**{lid}:** {emoji}\n   Amount: ₹{amount:,} | Next EMI: {next_due} | {remaining} EMIs left"
+            f"**{lid}:** {emoji}\n   Amount: GHS {amount:,} | Next EMI: {next_due} | {remaining} EMIs left"
         )
 
     return "Your Loans Overview\n" + "\n".join(status_lines)
@@ -383,10 +383,10 @@ def _message_approval(loans: List[Dict[str, Any]], context: Dict[str, Any]) -> s
 
     return f"""Congratulations {customer_name}!
 
-Your loan of **₹{principal:,.0f}** has been approved!
+Your loan of **GHS {principal:,.0f}** has been approved!
 
 **Loan Details:**
-• Monthly EMI: ₹{emi:,.0f}
+• Monthly EMI: GHS {emi:,.0f}
 • Tenure: {tenure} months
 • First EMI Due: {next_due}
 
@@ -408,7 +408,7 @@ def _message_general(loans: List[Dict[str, Any]]) -> str:
     count = len(loans)
 
     return (
-        f"Hey! You've got {count} active loan(s) — ₹{total_emi:,.0f}/month total. "
+        f"Hey! You've got {count} active loan(s) — GHS {total_emi:,.0f}/month total. "
         f"What can I help with? You can check your next EMI due date, "
         f"view detailed loan status, make an EMI payment, or ask for advice."
     )
@@ -649,14 +649,14 @@ async def explain_selected_loan(session_id: str, lender_name: str, interest_rate
 
 **Loan Summary:**
 • **Lender:** {lender_name}
-• **Amount:** ₹{principal:,.0f}
+• **Amount:** GHS {principal:,.0f}
 • **Interest Rate:** {interest_rate:.2f}% per annum
 • **Tenure:** {tenure} months
 
 **Your Monthly Commitment:**
-• **EMI:** ₹{emi:,.0f}/month ({emi_percentage:.1f}% of your income)
-• **Total Interest:** ₹{total_interest:,.0f}
-• **Total Repayment:** ₹{total_cost:,.0f}
+• **EMI:** GHS {emi:,.0f}/month ({emi_percentage:.1f}% of your income)
+• **Total Interest:** GHS {total_interest:,.0f}
+• **Total Repayment:** GHS {total_cost:,.0f}
 
 **Why This Loan?**"""
 

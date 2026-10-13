@@ -14,10 +14,10 @@ from datetime import datetime
 class GetLoansRequest(BaseModel):
     """Request to compare loans from multiple lenders."""
     
-    loan_amount: float = Field(..., description="Loan amount in INR", gt=0)
+    loan_amount: float = Field(..., description="Loan amount in GHS", gt=0)
     tenure_months: int = Field(..., description="Tenure in months", gt=0, le=360)
     credit_score: int = Field(default=700, description="CIBIL credit score", ge=600, le=900)
-    monthly_salary: float = Field(..., description="Monthly salary in INR", gt=0)
+    monthly_salary: float = Field(..., description="Monthly salary in GHS", gt=0)
     age: int = Field(default=35, description="Age in years", ge=18, le=80)
     existing_obligations: float = Field(default=0, description="Monthly EMI of other loans", ge=0)
     
@@ -69,10 +69,10 @@ class WhatIfRequest(BaseModel):
 class EligibilityCheckRequest(BaseModel):
     """Request for quick eligibility check."""
     
-    loan_amount: float = Field(..., description="Loan amount in INR", gt=0)
+    loan_amount: float = Field(..., description="Loan amount in GHS", gt=0)
     tenure_months: int = Field(..., description="Tenure in months", gt=0)
     credit_score: int = Field(default=700, description="Credit score", ge=600, le=900)
-    monthly_salary: float = Field(..., description="Monthly salary in INR", gt=0)
+    monthly_salary: float = Field(..., description="Monthly salary in GHS", gt=0)
     age: int = Field(default=35, description="Age in years", ge=18, le=80)
     existing_obligations: float = Field(default=0, description="Monthly EMI of other loans", ge=0)
 

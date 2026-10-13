@@ -57,7 +57,7 @@ async def document_query_agent_node(state: dict) -> dict:
 
         prompt = (
             "You are a document classifier. Look at this document and respond ONLY with:\n"
-            "DOCUMENT_TYPE: <exact type, e.g. Aadhaar Card, PAN Card, Salary Slip, Bank Statement, Passport>\n"
+            "DOCUMENT_TYPE: <exact type, e.g. National ID, SSNIT Card, Passport, Driver's License, Salary Slip, Bank Statement>\n"
             "NAME_ON_DOC: <full name as printed on document>\n"
             "VALID: <YES or NO based on whether it appears to be a genuine government/official document>"
         )
@@ -106,7 +106,7 @@ async def document_query_agent_node(state: dict) -> dict:
             msg = (
                 f"❌ **Document not sufficient for your loan tier ({tier_label})**\n\n"
                 f"📄 Type detected: **{doc_type_raw}**\n\n"
-                f"For a loan of ₹{principal:,.0f} against your limit of ₹{limit:,.0f}, "
+                f"For a loan of GHS {principal:,.0f} against your limit of GHS {limit:,.0f}, "
                 f"you need one of:\n👉 **{accepted_str}**"
             )
 

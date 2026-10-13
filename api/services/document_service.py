@@ -398,7 +398,7 @@ async def verify_income(session_id: str) -> dict:
         "income_match": income_match,
         "variance_pct": round(variance, 1),
         "message": (
-            f"Income verified. Extracted: ₹{extracted:,.0f}, Claimed: ₹{claimed:,.0f}. "
+            f"Income verified. Extracted: GHS {extracted:,.0f}, Claimed: GHS {claimed:,.0f}. "
             f"Variance: {variance:.1f}%."
             + ("" if income_match else " ⚠️ Significant variance detected.")
         )

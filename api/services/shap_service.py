@@ -39,11 +39,11 @@ def compute_shap_explainability(
     if monthly_inc >= 150000:
         income_limit_impact = 450000
         income_rate_impact = -0.50
-        income_desc = "High Salary Level (≥₹1.5L/mo) unlocked maximum capacity."
+        income_desc = "High Salary Level (≥GHS 1.5L/mo) unlocked maximum capacity."
     elif monthly_inc >= 75000:
         income_limit_impact = 250000
         income_rate_impact = -0.25
-        income_desc = "Upper Salaried Tier (₹75k-₹1.5L/mo)."
+        income_desc = "Upper Salaried Tier (GHS 75k-GHS 1.5L/mo)."
     else:
         income_limit_impact = 100000
         income_rate_impact = 0.00
@@ -92,12 +92,12 @@ def compute_shap_explainability(
     if requested > final_limit:
         decision_status = "limit_exceeded"
         shap_summary = (
-            f"Your requested amount of ₹{requested:,.0f} exceeds your computed approved "
-            f"capacity of ₹{final_limit:,.0f} by ₹{excess:,.0f}. "
+            f"Your requested amount of GHS {requested:,.0f} exceeds your computed approved "
+            f"capacity of GHS {final_limit:,.0f} by GHS {excess:,.0f}. "
             f"Each feature contributes to this capacity — CIBIL score ({credit_score}) adds "
-            f"₹{cibil_limit_impact:,.0f}, income adds ₹{income_limit_impact:,.0f}, FOIR adds "
-            f"₹{foir_limit_impact:,.0f} and location adds ₹{city_limit_impact:,.0f}. "
-            f"Reducing the amount to within ₹{final_limit:,.0f} or improving income / lowering "
+            f"GHS {cibil_limit_impact:,.0f}, income adds GHS {income_limit_impact:,.0f}, FOIR adds "
+            f"GHS {foir_limit_impact:,.0f} and location adds GHS {city_limit_impact:,.0f}. "
+            f"Reducing the amount to within GHS {final_limit:,.0f} or improving income / lowering "
             f"existing debt would change this decision."
         )
     else:
@@ -106,8 +106,8 @@ def compute_shap_explainability(
             f"Your approved rate of {final_rate}% p.a. was derived from a base rate of "
             f"{base_rate}%, with a {abs(cibil_rate_impact)}% discount from your CIBIL score of "
             f"{credit_score} and a {abs(income_rate_impact + city_rate_impact):.2f}% discount from "
-            f"income & location telemetry. Your request of ₹{requested:,.0f} is within your "
-            f"computed approved capacity of ₹{final_limit:,.0f}."
+            f"income & location telemetry. Your request of GHS {requested:,.0f} is within your "
+            f"computed approved capacity of GHS {final_limit:,.0f}."
         )
 
     return {

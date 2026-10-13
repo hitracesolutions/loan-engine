@@ -52,7 +52,7 @@ class LoanRanker:
             Normalized score (0-100)
         
         Example:
-            EMI: ₹5,000 (best) → 100, ₹8,000 (worst) → 62.5
+            EMI: GHS 5,000 (best) → 100, GHS 8,000 (worst) → 62.5
             Approval: 85% → 85, 95% → 95
         """
         if min_val == max_val:
@@ -246,9 +246,9 @@ class LoanRanker:
             cost_diff = second.get("total_cost", 0) - cost
             
             if emi_diff > 0:
-                reasons.append(f"Save ₹{emi_diff:,.0f}/month vs 2nd choice")
+                reasons.append(f"Save GHS {emi_diff:,.0f}/month vs 2nd choice")
             if cost_diff > 0:
-                reasons.append(f"Save ₹{cost_diff:,.0f} total vs 2nd choice")
+                reasons.append(f"Save GHS {cost_diff:,.0f} total vs 2nd choice")
         
         # Create final recommendation text
         if not reasons:

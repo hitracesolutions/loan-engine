@@ -76,7 +76,7 @@ async def fraud_agent_node(state: dict) -> dict:
         signals_triggered += 1
         signals.append(
             f"⚠️ **Income Inflation** (+{SIGNAL_WEIGHTS['income_inflation']:.0%} risk)\n"
-            f"   Claimed: ₹{claimed:,}/month vs Document: ₹{extracted:,}/month "
+            f"   Claimed: GHS {claimed:,}/month vs Document: GHS {extracted:,}/month "
             f"({inflation_pct:.0f}% overstatement)\n"
             f"   Action: Request last 3 months bank statement"
         )
@@ -122,7 +122,7 @@ async def fraud_agent_node(state: dict) -> dict:
         signals_triggered += 1
         signals.append(
             f"⚠️ **Abnormal Loan-to-Income Ratio** (+{SIGNAL_WEIGHTS['abnormal_loan_ratio']:.0%} risk)\n"
-            f"   Requested ₹{principal:,} = {ratio:.1f}× monthly salary (threshold: 60×)\n"
+            f"   Requested GHS {principal:,} = {ratio:.1f}× monthly salary (threshold: 60×)\n"
             f"   Action: Enhanced income verification required"
         )
 

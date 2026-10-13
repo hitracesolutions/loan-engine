@@ -66,8 +66,8 @@ class EligibilityChecker:
             (Eligible: bool, Reason: str)
         """
         if monthly_salary >= min_income:
-            return True, f"Income ₹{monthly_salary:,.0f} >= ₹{min_income:,.0f} ✓"
-        return False, f"Income ₹{monthly_salary:,.0f} < ₹{min_income:,.0f}"
+            return True, f"Income GHS {monthly_salary:,.0f} >= GHS {min_income:,.0f} ✓"
+        return False, f"Income GHS {monthly_salary:,.0f} < GHS {min_income:,.0f}"
     
     @staticmethod
     def check_loan_amount(
@@ -87,13 +87,13 @@ class EligibilityChecker:
             (Eligible: bool, Reason: str)
         """
         if min_loan <= loan_amount <= max_loan:
-            return True, f"Loan ₹{loan_amount:,.0f} within ₹{min_loan:,.0f}-₹{max_loan:,.0f} ✓"
+            return True, f"Loan GHS {loan_amount:,.0f} within GHS {min_loan:,.0f}-GHS {max_loan:,.0f} ✓"
         
-        error_msg = f"Loan ₹{loan_amount:,.0f} outside range"
+        error_msg = f"Loan GHS {loan_amount:,.0f} outside range"
         if loan_amount < min_loan:
-            error_msg += f" (Min: ₹{min_loan:,.0f})"
+            error_msg += f" (Min: GHS {min_loan:,.0f})"
         else:
-            error_msg += f" (Max: ₹{max_loan:,.0f})"
+            error_msg += f" (Max: GHS {max_loan:,.0f})"
         return False, error_msg
     
     @staticmethod
@@ -156,14 +156,14 @@ class EligibilityChecker:
             return (
                 True,
                 f"FOIR {foir_percentage:.1f}% <= {limit_percentage:.1f}% ✓ "
-                f"(EMI ₹{monthly_emi:,.0f} + Existing ₹{existing_obligations:,.0f} = ₹{total_obligations:,.0f})",
+                f"(EMI GHS {monthly_emi:,.0f} + Existing GHS {existing_obligations:,.0f} = GHS {total_obligations:,.0f})",
                 foir
             )
         
         return (
             False,
             f"FOIR {foir_percentage:.1f}% > {limit_percentage:.1f}% "
-            f"(EMI ₹{monthly_emi:,.0f} too high for salary ₹{monthly_salary:,.0f})",
+            f"(EMI GHS {monthly_emi:,.0f} too high for salary GHS {monthly_salary:,.0f})",
             foir
         )
     
@@ -289,15 +289,15 @@ class EligibilityChecker:
             needed = 15000
             diff = needed - current
             suggestions.append(
-                f"💼 Increase monthly income by ₹{diff:,.0f} "
-                f"(Current: ₹{current:,.0f})"
+                f"💼 Increase monthly income by GHS {diff:,.0f} "
+                f"(Current: GHS {current:,.0f})"
             )
         
         if any("loan amount" in check.lower() for check in failed_checks):
             suggestions.append(
                 f"💰 Reduce requested loan amount or try a different lender\n"
-                f"   • Consider a smaller loan (₹{user_profile.loan_amount * 0.75:,.0f})\n"
-                f"   • Try NBFC X (allows loans up to ₹30 lakhs)"
+                f"   • Consider a smaller loan (GHS {user_profile.loan_amount * 0.75:,.0f})\n"
+                f"   • Try NBFC X (allows loans up to GHS 30 lakhs)"
             )
         
         if any("FOIR" in check for check in failed_checks):

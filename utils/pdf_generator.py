@@ -42,7 +42,7 @@ def generate_rejection_letter(customer: dict, terms: dict, reasons: list, cust_i
         c.setFont("Helvetica", 11)
         y -= 20; c.drawString(70, y, f"Name: {cust_name}")
         y -= 18; c.drawString(70, y, f"Phone: {cust_phone}")
-        y -= 18; c.drawString(70, y, f"Requested Amount: INR {principal:,.2f}")
+        y -= 18; c.drawString(70, y, f"Requested Amount: GHS {principal:,.2f}")
 
         # Decision
         y -= 35
@@ -57,7 +57,7 @@ def generate_rejection_letter(customer: dict, terms: dict, reasons: list, cust_i
         c.drawString(50, y, "Loan Request Summary")
         c.setFont("Helvetica", 10)
         y -= 18
-        c.drawString(70, y, f"Loan Amount Requested: INR {principal:,.2f}")
+        c.drawString(70, y, f"Loan Amount Requested: GHS {principal:,.2f}")
         y -= 15
         loan_rate = terms.get("rate", 0)
         loan_tenure = terms.get("tenure", 0)
@@ -67,7 +67,7 @@ def generate_rejection_letter(customer: dict, terms: dict, reasons: list, cust_i
             y -= 15
             c.drawString(70, y, f"Proposed Interest Rate: {loan_rate:.2f}% p.a.")
             y -= 15
-            c.drawString(70, y, f"Estimated Monthly EMI: INR {monthly_emi:,.2f}")
+            c.drawString(70, y, f"Estimated Monthly EMI: GHS {monthly_emi:,.2f}")
             y -= 18
         c.setFont("Helvetica", 11)
         c.drawString(50, y, "Dear applicant, after careful review of your application, we are unable to approve")

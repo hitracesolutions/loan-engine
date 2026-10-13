@@ -129,11 +129,11 @@ async def generate_sanction(session_id: str) -> dict:
         fee_amount = (principal * processing_fee) / 100
 
         loan_data = [
-            ["Amount", f"INR {principal:,.2f}"],
+            ["Amount", f"GHS {principal:,.2f}"],
             ["Interest Rate", f"{rate}% p.a."],
             ["Tenure", f"{tenure} months"],
-            ["EMI", f"INR {emi:,.2f}"],
-            ["Processing Fee", f"{processing_fee}% (INR {fee_amount:,.2f})"],
+            ["EMI", f"GHS {emi:,.2f}"],
+            ["Processing Fee", f"{processing_fee}% (GHS {fee_amount:,.2f})"],
             ["DTI Ratio", f"{dti*100:.1f}%"],
         ]
         loan_table = Table(loan_data, colWidths=[200, 250])
@@ -285,7 +285,7 @@ async def process_esign_acceptance(session_id: str) -> dict:
         "success": True,
         "message": (
             f"🎉 **Congratulations {cust_name}!**\n\n"
-            f"Your loan of ₹{principal:,.0f} has been successfully approved and e-signed!\n\n"
+            f"Your loan of GHS {principal:,.0f} has been successfully approved and e-signed!\n\n"
             f"📄 **Next Steps:**\n"
             f"• Your sanction letter has been generated\n"
             f"• The funds will be disbursed to your bank account\n"

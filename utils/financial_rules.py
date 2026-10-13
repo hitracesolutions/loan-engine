@@ -15,9 +15,9 @@ FRAUD_SCORE_HARD_REJECT_THRESHOLD = 0.70  # Fraud score >= 0.70 → hard reject
 
 # ─── DTI TIERS (based on monthly salary) ─────────────────────────────────────
 DTI_TIERS = [
-    (30000, 0.40),     # < ₹30k monthly: 40% max DTI
-    (100000, 0.50),    # ₹30k-₹100k: 50% max DTI
-    (float('inf'), 0.60)  # > ₹100k: 60% max DTI
+    (30000, 0.40),     # < GHS 30k monthly: 40% max DTI
+    (100000, 0.50),    # GHS 30k-GHS 100k: 50% max DTI
+    (float('inf'), 0.60)  # > GHS 100k: 60% max DTI
 ]
 
 def calculate_emi(principal: float, rate_pa: float, tenure_months: int) -> float:
@@ -250,7 +250,7 @@ def evaluate_underwriting(
                 "recommended_emi": round(max_allowed_emi, 2)
             }
             decision = "approve"
-            reasons.append(f"Offered optimized loan amount of ₹{round(optimal_loan_amount, 2)} to meet FOIR requirements.")
+            reasons.append(f"Offered optimized loan amount of GHS {round(optimal_loan_amount, 2)} to meet FOIR requirements.")
             
     # Construct final result
     result = {

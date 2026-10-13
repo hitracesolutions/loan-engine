@@ -244,7 +244,7 @@ async def capture_loan_requirement(session_id: str, loan_type: str, loan_amount:
         "emi": emi,
         "total_interest": total_interest,
         "total_repayment": total_payment,
-        "message": f"Loan captured: ₹{loan_amount:,.0f} at {rate}% for {tenure_months} months. EMI: ₹{emi:,.2f}/month."
+        "message": f"Loan captured: GHS {loan_amount:,.0f} at {rate}% for {tenure_months} months. EMI: GHS {emi:,.2f}/month."
     })
 async def chat_with_agent(session_id: str, user_message: str, history: list[dict] = None) -> dict:
     """Conversational interface using the Master LangGraph."""
@@ -392,10 +392,10 @@ async def chat_with_agent(session_id: str, user_message: str, history: list[dict
             if lt and lt.get("principal") and lt.get("tenure") and lt.get("emi"):
                 reply = (
                     "✅ Loan terms updated (policy-approved values):\n"
-                    f"- Loan amount: ₹{lt['principal']:,.2f}\n"
+                    f"- Loan amount: GHS {lt['principal']:,.2f}\n"
                     f"- Tenure: {lt['tenure']} months\n"
                     f"- Final interest rate: {(lt.get('rate') or 12):.2f}% p.a.\n"
-                    f"- Monthly EMI: ₹{lt['emi']:,.2f}\n\n"
+                    f"- Monthly EMI: GHS {lt['emi']:,.2f}\n\n"
                     "(These values are taken from the underwriting engine and match the sidebar; if your request was out-of-policy, we adjusted accordingly.)"
                 )
             else:

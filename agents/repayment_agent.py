@@ -80,7 +80,7 @@ async def repayment_agent_node(state: dict) -> dict:
     summary = (
         f"\n📋 **Your Loan Summary**\n\n"
         f"You have **{num_active}** active loan(s):"
-        f" • Total Monthly Payment: **₹{total_monthly:,.2f}**"
+        f" • Total Monthly Payment: **GHS {total_monthly:,.2f}**"
         f" • Total EMIs Remaining: **{total_remaining_emis}**\n\n"
         f"What would you like to do? "
         f"• Check next EMI due date "
@@ -101,7 +101,7 @@ async def repayment_agent_node(state: dict) -> dict:
     # Generate humanized response via LLM
     prompt_context = (
         f"CUSTOMER: {customer.get('name', 'User')}\n"
-        f"LOAN: ₹{principal:,.0f} | EMI: ₹{emi:,.2f}\n"
+        f"LOAN: GHS {principal:,.0f} | EMI: GHS {emi:,.2f}\n"
         f"PROGRESS: {payments_made} out of {tenure} paid\n"
         f"NEXT DUE: {next_due}"
     )
