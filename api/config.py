@@ -10,7 +10,7 @@ load_dotenv(override=True)
 
 class Settings(BaseSettings):
     """Application settings loaded from environment."""
-    APP_NAME: str = "NBFC Loan Processing API"
+    APP_NAME: str = "Gidfine Loan Processing API"
     APP_VERSION: str = "1.0.0"
     APP_ENV: str = os.getenv("APP_ENV", "development")
     DEBUG: bool = True
@@ -20,22 +20,22 @@ class Settings(BaseSettings):
     SANCTION_DIR: str = "data/sanctions"
 
     # MongoDB Configuration
-    MONGO_URI: str = os.getenv("MONGO_URI", "mongodb://localhost:27017/nbfc")
-    
+    MONGO_URI: str = os.getenv("MONGO_URI", "mongodb://localhost:27017/gidfine")
+
     # Redis Configuration
     REDIS_HOST: str = os.getenv("REDIS_HOST", "localhost")
     REDIS_PORT: int = int(os.getenv("REDIS_PORT", "6379"))
     REDIS_DB: int = int(os.getenv("REDIS_DB", "0"))
     REDIS_PASSWORD: str = os.getenv("REDIS_PASSWORD", "")
     REDIS_CACHE_TTL: int = int(os.getenv("REDIS_CACHE_TTL", "3600"))  # 1 hour
-    
+
     # Email Configuration
     SMTP_HOST: str = os.getenv("SMTP_HOST", "smtp.gmail.com")
     SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
     SMTP_USER: str = os.getenv("SMTP_USER", "")
     SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "")
-    EMAIL_FROM: str = os.getenv("EMAIL_FROM", "noreply@finserve-nbfc.com")
-    EMAIL_FROM_NAME: str = os.getenv("EMAIL_FROM_NAME", "FinServe NBFC")
+    EMAIL_FROM: str = os.getenv("EMAIL_FROM", "noreply@gidfine.com")
+    EMAIL_FROM_NAME: str = os.getenv("EMAIL_FROM_NAME", "Gidfine")
     
     # AI API Keys
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")

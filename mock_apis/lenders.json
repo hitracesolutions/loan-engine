@@ -1,135 +1,134 @@
 {
   "lenders": [
     {
-      "lender_id": "hdfc_bank",
-      "lender_name": "HDFC Bank",
+      "lender_id": "access_bank_gh",
+      "lender_name": "Access Bank Ghana",
       "lender_type": "bank",
       "reg_details": {
-        "cin": "L65920MH1994PLC080618",
-        "office": "HDFC Bank House, Senapati Bapat Marg, Lower Parel, Mumbai - 400013",
-        "email": "loansupport@hdfcbank.com",
-        "web": "https://www.hdfcbank.com"
+        "cin": "BRN-GH-2007-001234",
+        "office": "Access Bank Building, Airport Residential Area, Accra",
+        "email": "loansupport@accessbankgh.com",
+        "web": "https://www.accessbankgh.com"
       },
       "interest_rate_range": {
-        "min": 9.5,
-        "max": 11.5
+        "min": 16.5,
+        "max": 19.5
       },
-      "base_rate": 9.5,
+      "base_rate": 16.5,
       "processing_fee_percent": 0.5,
-      "max_loan_amount": 5000000,
-      "min_loan_amount": 100000,
+      "max_loan_amount": 100000,
+      "min_loan_amount": 2000,
       "tenure_options": [12, 24, 36, 48, 60],
-      "min_credit_score": 750,
+      "min_credit_score": 650,
       "foir_limit": 0.40,
       "approval_probability": 0.85,
       "risk_profile": "low",
-      "characteristics": "Lowest interest rate in the market, perfect for professionals with high credit scores. Offers premium customer service and a wide branch network.",
-      "settlement_days": 7
-    },
-    {
-      "lender_id": "icici_bank",
-      "lender_name": "ICICI Bank",
-      "lender_type": "bank",
-      "reg_details": {
-        "cin": "L65190GJ1994PLC021012",
-        "office": "ICICI Bank Tower, Near Chakli Circle, Old Padra Road, Vadodara - 390007",
-        "email": "care@icicibank.com",
-        "web": "https://www.icicibank.com"
-      },
-      "interest_rate_range": {
-        "min": 10.5,
-        "max": 12.5
-      },
-      "base_rate": 10.5,
-      "processing_fee_percent": 0.75,
-      "max_loan_amount": 4000000,
-      "min_loan_amount": 100000,
-      "tenure_options": [12, 24, 36, 48, 60, 72],
-      "min_credit_score": 700,
-      "foir_limit": 0.45,
-      "approval_probability": 0.80,
-      "risk_profile": "low",
-      "characteristics": "Highly reliable with a completely digital approval process. Great for existing salary account holders with personalized pre-approved offers.",
+      "characteristics": "Competitive interest rate and fast processing. Excellent customer service with a wide branch network across Ghana.",
       "settlement_days": 5
     },
     {
-      "lender_id": "bajaj_finserv",
-      "lender_name": "Bajaj Finserv",
-      "lender_type": "nbfc",
+      "lender_id": "fidelity_bank_gh",
+      "lender_name": "Fidelity Bank Ghana",
+      "lender_type": "bank",
       "reg_details": {
-        "cin": "L65910PN2007PLC130076",
-        "office": "Bajaj Auto Limited Complex, Mumbai-Pune Road, Akurdi, Pune - 411035",
-        "email": "wecare@bajajfinserv.in",
-        "web": "https://www.bajajfinserv.in"
+        "cin": "BRN-GH-2006-005678",
+        "office": "Fidelity House, Accra, Ghana",
+        "email": "care@fidelitybank.com.gh",
+        "web": "https://www.fidelitybank.com.gh"
       },
       "interest_rate_range": {
-        "min": 13.5,
-        "max": 16.0
+        "min": 17.5,
+        "max": 20.5
       },
-      "base_rate": 13.5,
-      "processing_fee_percent": 1.5,
-      "max_loan_amount": 3000000,
-      "min_loan_amount": 50000,
-      "tenure_options": [12, 24, 36, 48, 60],
-      "min_credit_score": 650,
-      "foir_limit": 0.50,
-      "approval_probability": 0.95,
-      "risk_profile": "medium",
-      "characteristics": "Market leader in NBFC approvals. Most flexible eligibility criteria and fastest disbursal (often within 2 hours of document verification).",
-      "settlement_days": 2
-    },
-    {
-      "lender_id": "muthoot_finance",
-      "lender_name": "Muthoot Finance",
-      "lender_type": "nbfc",
-      "reg_details": {
-        "cin": "L65910KL1997PLC011300",
-        "office": "Muthoot Chambers, Opposite Saritha Theatre Complex, Banerji Road, Kochi - 682018",
-        "email": "mails@muthootgroup.com",
-        "web": "https://www.muthootfinance.com"
-      },
-      "interest_rate_range": {
-        "min": 12.0,
-        "max": 15.5
-      },
-      "base_rate": 12.0,
-      "processing_fee_percent": 1.0,
-      "max_loan_amount": 2000000,
-      "min_loan_amount": 50000,
-      "tenure_options": [6, 12, 24, 36, 48],
+      "base_rate": 17.5,
+      "processing_fee_percent": 0.75,
+      "max_loan_amount": 80000,
+      "min_loan_amount": 2000,
+      "tenure_options": [12, 24, 36, 48, 60, 72],
       "min_credit_score": 600,
-      "foir_limit": 0.55,
-      "approval_probability": 0.90,
-      "risk_profile": "medium",
-      "characteristics": "Legacy institution with high trust. Excellent for quick personal loans with minimal friction, especially for returning customers.",
-      "settlement_days": 1
+      "foir_limit": 0.45,
+      "approval_probability": 0.80,
+      "risk_profile": "low",
+      "characteristics": "Highly reliable with a completely digital approval process. Great for existing account holders with personalized pre-approved offers.",
+      "settlement_days": 3
     },
     {
-      "lender_id": "saraswat_bank",
-      "lender_name": "Saraswat Bank",
-      "lender_type": "cooperative",
+      "lender_id": "zenith_bank_gh",
+      "lender_name": "Zenith Bank Ghana",
+      "lender_type": "bank",
       "reg_details": {
-        "cin": "U99999MH1918PLC000481",
-        "office": "Eknath Thakur Bhavan, Plot No. 953, Appasaheb Marathe Marg, Prabhadevi, Mumbai - 400025",
-        "email": "corporate.office@saraswatbank.com",
-        "web": "https://www.saraswatbank.com"
+        "cin": "BRN-GH-2008-009876",
+        "office": "Zenith Bank Building, Osu, Accra",
+        "email": "support@zenithbankgh.com",
+        "web": "https://www.zenithbankgh.com"
       },
       "interest_rate_range": {
-        "min": 10.5,
-        "max": 12.0
+        "min": 15.5,
+        "max": 18.5
       },
-      "base_rate": 10.5,
-      "processing_fee_percent": 0.25,
-      "max_loan_amount": 2500000,
-      "min_loan_amount": 50000,
-      "tenure_options": [12, 24, 36, 48, 60, 84],
+      "base_rate": 15.5,
+      "processing_fee_percent": 0.6,
+      "max_loan_amount": 120000,
+      "min_loan_amount": 2500,
+      "tenure_options": [12, 24, 36, 48, 60],
       "min_credit_score": 680,
       "foir_limit": 0.45,
+      "approval_probability": 0.82,
+      "risk_profile": "low",
+      "characteristics": "Market leader with excellent reputation. Offers premium customer service and competitive rates for professionals.",
+      "settlement_days": 4
+    },
+    {
+      "lender_id": "standard_chartered_gh",
+      "lender_name": "Standard Chartered Bank Ghana",
+      "lender_type": "bank",
+      "reg_details": {
+        "cin": "BRN-GH-2005-002345",
+        "office": "Standard Chartered Building, Tema, Ghana",
+        "email": "loans@sc.com.gh",
+        "web": "https://www.standardchartered.com/gh"
+      },
+      "interest_rate_range": {
+        "min": 17.0,
+        "max": 20.0
+      },
+      "base_rate": 17.0,
+      "processing_fee_percent": 1.0,
+      "max_loan_amount": 150000,
+      "min_loan_amount": 5000,
+      "tenure_options": [12, 24, 36, 48, 60, 72],
+      "min_credit_score": 700,
+      "foir_limit": 0.50,
       "approval_probability": 0.78,
       "risk_profile": "low",
-      "characteristics": "Cooperative approach with very low processing fees. Ideal for long-term tenures and community-focused lending with a personal touch.",
-      "settlement_days": 10
+      "characteristics": "International bank with strong global connections. Ideal for customers with business ties or international transactions.",
+      "settlement_days": 6
+    },
+    {
+      "lender_id": "republic_bank_gh",
+      "lender_name": "Republic Bank Ghana",
+      "lender_type": "bank",
+      "reg_details": {
+        "cin": "BRN-GH-2009-011223",
+        "office": "Republic Bank Plaza, Accra",
+        "email": "loanservices@republicbankgh.com",
+        "web": "https://www.republicbankgh.com"
+      },
+      "interest_rate_range": {
+        "min": 18.0,
+        "max": 21.5
+      },
+      "base_rate": 18.0,
+      "processing_fee_percent": 1.5,
+      "max_loan_amount": 75000,
+      "min_loan_amount": 1500,
+      "tenure_options": [12, 24, 36, 48, 60],
+      "min_credit_score": 580,
+      "foir_limit": 0.55,
+      "approval_probability": 0.88,
+      "risk_profile": "medium",
+      "characteristics": "Most flexible eligibility criteria and fastest disbursal (often within 1-2 business days of document verification).",
+      "settlement_days": 2
     }
-
   ]
 }

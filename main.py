@@ -1,4 +1,4 @@
-"""FinServe NBFC — Unified Main Entry Point."""
+"""Gidfine — Unified Main Entry Point."""
 
 import traceback
 from bson import ObjectId
@@ -45,7 +45,7 @@ if os.name == "nt":
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
-    description="End-to-end NBFC loan origination API with MongoDB persistence.",
+    description="End-to-end AI-powered loan origination API with MongoDB persistence.",
     docs_url="/docs",
     redoc_url="/redoc",
 )

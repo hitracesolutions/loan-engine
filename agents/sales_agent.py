@@ -39,17 +39,14 @@ def detect_apply_intent(text: str) -> bool:
     return False
 
 
-def _parse_amount_inr(text: str) -> Optional[float]:
+def _parse_amount_ghs(text: str) -> Optional[float]:
     t = (text or "").lower().replace(",", "").strip()
-    lakh_match = re.search(r"(\d+(?:\.\d+)?)\s*(lakh|lac)", t)
-    if lakh_match:
-        return float(lakh_match.group(1)) * 100000
     k_match = re.search(r"(\d+(?:\.\d+)?)\s*(k|thousand)", t)
     if k_match:
         return float(k_match.group(1)) * 1000
-    rs_match = re.search(r"(?:rs\.?|inr|rupees?)?\s*(\d{4,9}(?:\.\d+)?)", t)
-    if rs_match:
-        return float(rs_match.group(1))
+    ghs_match = re.search(r"(?:ghs|ghc|cedis?)?\s*(\d{2,8}(?:\.\d+)?)", t)
+    if ghs_match:
+        return float(ghs_match.group(1))
     return None
 
 
@@ -74,7 +71,7 @@ def _safe_float(val, default=0.0):
         if isinstance(val, (int, float)): return float(val)
         if not val: return default
         # Remove symbols and handle fractions if any
-        clean = str(val).lower().replace("₹", "").replace(",", "").replace("%", "").strip()
+        clean = str(val).lower().replace("₹", "").replace("₵", "").replace("ghs", "").replace(",", "").replace("%", "").strip()
         if "tbd" in clean or "discuss" in clean: return default
         nums = re.findall(r"[\d.]+", clean)
         return float(nums[0]) if nums else default
@@ -88,7 +85,7 @@ def _calc_emi(principal: float, rate_pa: float, tenure: int) -> float:
     return calculate_emi(principal, rate_pa, tenure)
 
 
-ADVISOR_PROMPT_TEMPLATE = """You are a Senior Financial Wellness Advisor at FinServe.
+ADVISOR_PROMPT_TEMPLATE = """You are a Senior Financial Wellness Advisor at Gidfine.
 You are the user's trusted ally for financial planning and orientation.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -108,7 +105,7 @@ You are the user's trusted ally for financial planning and orientation.
 4. **EMPATHY**: Celebrate successes and be supportive during challenges.
 """
 
-SALES_CLOSER_PROMPT = """You are a Senior Loan Specialist at FinServe.
+SALES_CLOSER_PROMPT = """You are a Senior Loan Specialist at Gidfine.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## YOUR PERSONALITY & TONE:
@@ -123,7 +120,7 @@ SALES_CLOSER_PROMPT = """You are a Senior Loan Specialist at FinServe.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 1. **ACKNOWLEDGE & CELEBRATE**: For returning users, ALWAYS acknowledge their past relationship.
 2. **THE 'WHY' OVER THE 'WHAT'**: Instead of "How much do you want?", try "What's the goal you're planning for?"
-3. **PEER HANDOFF**: If Priya (the Advisor) just introduced you, acknowledge it!
+3. **PEER HANDOFF**: If the Advisor just introduced you, acknowledge it!
 4. **NATURAL DATA GATHERING - CRITICAL EXTRACTION RULES**:
    - You MUST collect these 3 core variables before proceeding to confirmation: (1) Amount, (2) Tenure, (3) Loan Purpose.
    - 🚫 NEVER GUESS OR ASSUME MISSING VALUES. If the user only gives the amount, you MUST ask for the tenure and purpose.
@@ -134,8 +131,8 @@ SALES_CLOSER_PROMPT = """You are a Senior Loan Specialist at FinServe.
    - Do NOT set `confirmed: true` or ask for final confirmation until ALL variables (Amount, Tenure, Purpose) are explicitly provided by the user.
 5. **DOCUMENT REQUIREMENTS**:
    - Determine the required documents based on your evaluation of the loan request and customer risk.
-   - For all loans, include "Identity (PAN or Aadhaar)".
-   - For higher amounts or riskier profiles, include "Income Proof (Salary Slip)" and/or "Bank Statement (Last 3 Months)".
+   - For all loans, include "Identity (National ID, Passport, or Driver's License)".
+   - For higher amounts or riskier profiles, include "Income Proof (Payslip or Bank Statement)" and/or "Bank Statement (Last 3 Months)".
    - List these in the `required_documents` array in the JSON.
 6. **ONE QUESTION**: Always end with exactly ONE natural, open-ended question to gather the next missing piece of information.
 
@@ -228,7 +225,7 @@ def _build_products_info() -> str:
     for key, p in LOAN_PRODUCTS.items():
         lines.append(
             f"**{p['name']}** ({key})\n"
-            f"  Amount Range: ₹{p['min_amount']:,} – ₹{p['max_amount']:,} | "
+            f"  Amount Range: GHS {p['min_amount']:,} – GHS {p['max_amount']:,} | "
             f"Base Rate: {p['base_rate']}% p.a."
         )
     return "\n".join(lines)
@@ -253,7 +250,7 @@ def _build_customer_context(customer: dict) -> str:
     if past_loans:
         loan_history_str = "\n## PAST LOAN HISTORY:\n"
         for i, loan in enumerate(past_loans, 1):
-            loan_history_str += f"{i}. {loan.get('type', 'Personal')} Loan: ₹{(loan.get('amount') or 0):,} | Status: {loan.get('decision', 'N/A')} | Date: {loan.get('date', 'N/A')}\n"
+            loan_history_str += f"{i}. {loan.get('type', 'Personal')} Loan: GHS {(loan.get('amount') or 0):,} | Status: {loan.get('decision', 'N/A')} | Date: {loan.get('date', 'N/A')}\n"
     
     past_records = customer.get("past_records") or "No previous recorded interactions."
     drop_offs = customer.get("drop_off_history") or "None recorded."
@@ -267,10 +264,10 @@ def _build_customer_context(customer: dict) -> str:
 
     return (
         f"Customer Name: {name} | City: {city}\n"
-        f"Monthly Salary: ₹{salary:,}/month\n"
-        f"CIBIL / Credit Score: {score}\n"
-        f"Pre-Approved Loan Limit: ₹{limit:,}\n"
-        f"Existing Monthly EMI Burden: ₹{emi_total:,}/month\n"
+        f"Monthly Salary: GHS {salary:,}/month\n"
+        f"Credit Score: {score}\n"
+        f"Pre-Approved Loan Limit: GHS {limit:,}\n"
+        f"Existing Monthly EMI Burden: GHS {emi_total:,}/month\n"
         f"Active Loans: {', '.join(loans) if loans else 'None'}\n"
         f"Internal Records: {past_records}\n"
         f"Previous Drop-off Points: {drop_offs}\n"
