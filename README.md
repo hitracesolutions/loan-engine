@@ -8,7 +8,7 @@
   <img src="https://img.shields.io/badge/LangGraph-%E2%9C%93-purple" alt="LangGraph">
 </p>
 
-<h1 align="center">FinServe NBFC</h1>
+<h1 align="center">gidfin NBFC</h1>
 <p align="center"><strong>AI-powered loan origination platform with a multi-agent pipeline, real-time decisioning, and a multi-lender marketplace.</strong></p>
 
 <br>
@@ -541,6 +541,8 @@ ruff check .
 ## License
 
 MIT. See `LICENSE` for details.
-#   l o a n - e n g i n e  
- #   l o a n - e n g i n e  
+#   l o a n - e n g i n e 
+ 
+ #   l o a n - e n g i n e 
+ 
  
