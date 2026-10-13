@@ -122,9 +122,9 @@ class EmailService:
         
         # Prepare email content based on decision
         if decision == 'approve':
-            subject = f"🎉 Loan Approved - FinServe NBFC - ₹{(loan_terms.get('principal') or 0):,}"
+            subject = f"🎉 Loan Approved - Gidfine - GHS {(loan_terms.get('principal') or 0):,}"
             body = self._get_approval_email_body(customer_name, loan_terms, session_id)
-            
+
             # Attach sanction letter if available
             attachments = []
             if attachment_path and os.path.exists(attachment_path):
@@ -135,9 +135,9 @@ class EmailService:
                 pdf_files = glob.glob(sanction_pdf)
                 if pdf_files:
                     attachments.extend(pdf_files)
-        
+
         elif decision in ['reject', 'soft_reject']:
-            subject = f"📝 Loan Application Update - FinServe NBFC"
+            subject = f"📝 Loan Application Update - Gidfine"
             body = self._get_rejection_email_body(customer_name, loan_terms, decision)
             attachments = []
             if attachment_path and os.path.exists(attachment_path):
@@ -149,9 +149,9 @@ class EmailService:
                 pdf_files = glob.glob(rejection_pdf)
                 if pdf_files:
                     attachments.extend(pdf_files)
-        
+
         else:
-            subject = f"📋 Loan Application Received - FinServe NBFC"
+            subject = f"📋 Loan Application Received - Gidfine"
             body = self._get_received_email_body(customer_name, loan_terms)
             attachments = []
         

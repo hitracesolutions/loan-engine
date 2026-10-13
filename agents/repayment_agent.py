@@ -5,7 +5,7 @@ from api.core.websockets import manager
 from config import get_master_llm, llm_invoke_with_retry
 from datetime import datetime
 
-REPAYMENT_PROMPT = """You are Arjun, a concise loan repayment guide at FinServe.
+REPAYMENT_PROMPT = """You are a concise loan repayment guide at Gidfine.
 
 GUIDELINES:
 1. **NEVER RE-ASK**: If the customer already stated their intent (pay, check due date, etc.), respond directly. Do NOT ask "what would you like to do?" again.

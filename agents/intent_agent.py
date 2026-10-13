@@ -13,15 +13,15 @@ import re
 from config import get_extraction_llm, llm_invoke_with_retry
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
-INTENT_SYSTEM_PROMPT = """You are Arjun, the Senior Strategy Dispatcher at FinServe NBFC. Your job is to classify the user's latest message into one of five strict categories to ensure they talk to the right specialist.
+INTENT_SYSTEM_PROMPT = """You are the Senior Strategy Dispatcher at Gidfine. Your job is to classify the user's latest message into one of five strict categories to ensure they talk to the right specialist.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## INTENT CATEGORIES:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-1. **'loan'**: The user wants to borrow money, start a new application, check their pre-approved limit, or mentions "borrow", "apply", "fees", "tuition", "IIT", "loan please", "Apply for Loan", or any specific amount (e.g., "1 lakh", "75k", "50000"). **PRIORITIZE THIS** if the user mentions financial needs.
+1. **'loan'**: The user wants to borrow money, start a new application, check their pre-approved limit, or mentions "borrow", "apply", "fees", "tuition", "loan please", "Apply for Loan", or any specific amount (e.g., "50000", "100k", "500000"). **PRIORITIZE THIS** if the user mentions financial needs.
 2. **'document_request'**: The user wants an official letter like "rejection letter", "sanction letter", "loan agreement", "PDF", or "sanction agreement". They say things like "give rejection letter", "show my sanction", "rejection letter please".
-3. **'advice'**: The user is asking "Should I take a loan?", "Is this a good investment?", "How can I improve my CIBIL?", "What is my DTI?", or looking for advisor guidance.
-4. **'kyc'**: The user is uploading or asking about PAN, Aadhaar, Salary Slips, or "how to upload documents".
+3. **'advice'**: The user is asking "Should I take a loan?", "Is this a good investment?", "How can I improve my credit?", "What is my debt-to-income?", or looking for advisor guidance.
+4. **'kyc'**: The user is uploading or asking about ID documents, National ID, Passport, Salary Slips, or "how to upload documents".
 5. **'sign'**: The user says "I am ready to sign", "e-sign", "accept the offer", or "confirm the loan".
 6. **'payment'**: The user wants to check their **present loans**, **active loans**, **current loans**, make an EMI payment, check their **loan status**, see **remaining balance**, or track **repayment progress**. (e.g., "my present loans", "what loans do I have", "my active loans", "how much is left?", "pay my emi", "status of my loan"). **A simple greeting like 'hi', 'hello', 'hey' should be 'none', NOT 'payment'**.
 7. **'none'**: General greetings ("Hi", "Hello", "hey", "good morning") or completely unrelated chat.

@@ -95,13 +95,13 @@ async def sanction_agent_node(state: dict):
         elements = []
 
         reg_details = state.get("selected_lender_reg_details", {}) or {}
-        lender_cin = reg_details.get("cin", "L65910PN2007PLC130076")
-        lender_office = reg_details.get("office", "FinServe complex, Mumbai-Pune Road, Pune - 411035")
-        lender_web = reg_details.get("web", "www.finserve-nbfc.com")
+        lender_cin = reg_details.get("cin", "BRN-GH-2007-001234")
+        lender_office = reg_details.get("office", "Gidfine Financial Complex, Accra - Ghana")
+        lender_web = reg_details.get("web", "www.gidfine.com")
 
         # Header
-        elements.append(Paragraph(f"<b>{selected_lender_name or 'FinServe NBFC Ltd.'}</b>", styles["Title"]))
-        elements.append(Paragraph(f"<font size=8>CIN: {lender_cin} | Registered Office: {lender_office}</font>", styles["Normal"]))
+        elements.append(Paragraph(f"<b>{selected_lender_name or 'Gidfine Ltd.'}</b>", styles["Title"]))
+        elements.append(Paragraph(f"<font size=8>BRN: {lender_cin} | Registered Office: {lender_office}</font>", styles["Normal"]))
         elements.append(Paragraph(f"<font size=8>Website: {lender_web}</font>", styles["Normal"]))
         elements.append(Spacer(1, 10))
         elements.append(Paragraph(f"<b>{letter_label.upper()} LETTER</b>", styles["Heading2"]))
@@ -110,7 +110,7 @@ async def sanction_agent_node(state: dict):
 
         # Applicant Table
         app_data = [
-            ["Lender", selected_lender_name or "FinServe NBFC Ltd."],
+            ["Lender", selected_lender_name or "Gidfine Ltd."],
             ["Applicant Name", cust_name],
             ["Communication Addr", Paragraph(cust_addr, styles["Normal"])],
             ["Registered Phone", cust_phone],
@@ -124,10 +124,10 @@ async def sanction_agent_node(state: dict):
         # Loan Table
         if is_approved:
             loan_data = [
-                ["Amount", f"INR {principal:,.0f}"],
+                ["Amount", f"GHS {principal:,.0f}"],
                 ["Rate", f"{rate*100 if rate < 1 else rate}% p.a."],
                 ["Tenure", f"{tenure} mos"],
-                ["EMI", f"INR {emi:,.2f}"],
+                ["EMI", f"GHS {emi:,.2f}"],
             ]
             loan_table = Table(loan_data, colWidths=[120, 330])
             loan_table.setStyle(TableStyle([("GRID", (0, 0), (-1, -1), 0.5, colors.grey), ("BACKGROUND", (0,0), (0,-1), colors.whitesmoke)]))
@@ -143,10 +143,10 @@ async def sanction_agent_node(state: dict):
     if is_approved:
         msg = (f"📜 **Your Sanction Letter is Ready!**\n\n"
                f"I've generated your official agreement (ID: {filename}).\n\n"
-               f"**Lender**: {selected_lender_name or 'FinServe NBFC'}\n"
+               f"**Lender**: {selected_lender_name or 'Gidfine'}\n"
                f"**Rate**: {rate:.1f}% p.a.\n"
-               f"**Amount**: ₹{principal:,}\n\n"
-               f"**NEXT STEP**: Please click the button below to **E-sign** and authorize the disbursement of ₹{principal:,} to your linked account.")
+               f"**Amount**: GHS {principal:,}\n\n"
+               f"**NEXT STEP**: Please click the button below to **E-sign** and authorize the disbursement of GHS {principal:,} to your linked account.")
         options = ["✍️ E-sign & Disburse", "📄 View Letter", "Talk to Arjun"]
         phase = "sanction_esign"
     else:
