@@ -29,7 +29,7 @@ class IdentifyCustomerResponse(BaseModel):
 # ── Step 3: POST /session/{id}/capture-loan ───────────────────────────────────
 class CaptureLoanRequest(BaseModel):
     loan_type: str = Field(..., description="personal / student / business / home")
-    loan_amount: float = Field(..., gt=0, description="Requested loan amount in INR")
+    loan_amount: float = Field(..., gt=0, description="Requested loan amount in GHS")
     tenure_months: int = Field(..., gt=0, le=360, description="Loan tenure in months")
 
 class CaptureLoanResponse(BaseModel):

@@ -159,19 +159,19 @@ class EmailService:
     
     async def send_otp_email(self, customer_email: str, customer_name: str, otp: str) -> bool:
         """Send OTP verification email"""
-        subject = "🔐 OTP Verification - FinServe NBFC"
+        subject = "🔐 OTP Verification - Gidfine"
         body = self._get_otp_email_body(customer_name, otp)
         return await self.send_email(customer_email, subject, body, is_html=True)
-    
+
     async def send_profile_completion_reminder(self, customer_data: dict, missing_fields: List[str]) -> bool:
         """Send profile completion reminder"""
         customer_name = customer_data.get('name', 'Customer')
         customer_email = customer_data.get('email', '')
-        
+
         if not customer_email:
             return False
-        
-        subject = "⚠️ Complete Your Profile - FinServe NBFC"
+
+        subject = "⚠️ Complete Your Profile - Gidfine"
         body = self._get_profile_completion_body(customer_name, missing_fields)
         return await self.send_email(customer_email, subject, body, is_html=True)
     
@@ -198,33 +198,33 @@ class EmailService:
         <body>
             <div class="header">
                 <h1>🎉 Congratulations, {customer_name}!</h1>
-                <p>Your loan has been approved by FinServe NBFC</p>
+                <p>Your loan has been approved by Gidfine</p>
             </div>
-            
+
             <div class="content">
                 <h2>Loan Details</h2>
                 <div class="loan-details">
-                    <p><strong>Loan Amount:</strong> ₹{principal:,.2f}</p>
+                    <p><strong>Loan Amount:</strong> GHS {principal:,.2f}</p>
                     <p><strong>Interest Rate:</strong> {rate}% p.a.</p>
                     <p><strong>Tenure:</strong> {tenure} months</p>
-                    <p><strong>Monthly EMI:</strong> ₹{emi:,.2f}</p>
+                    <p><strong>Monthly EMI:</strong> GHS {emi:,.2f}</p>
                     <p><strong>Application ID:</strong> {session_id}</p>
                 </div>
-                
+
                 <h3>Next Steps</h3>
                 <ul>
                     <li>Complete the e-signature process</li>
                     <li>Upload required documents</li>
                     <li>Loan will be disbursed within 24-48 hours</li>
                 </ul>
-                
+
                 <p style="text-align: center; margin: 30px 0;">
                     <a href="#" class="btn">View Loan Details</a>
                 </p>
             </div>
-            
+
             <div class="footer">
-                <p>Thank you for choosing FinServe NBFC!</p>
+                <p>Thank you for choosing Gidfine!</p>
                 <p>This is an automated message. Please do not reply to this email.</p>
             </div>
         </body>
@@ -249,13 +249,13 @@ class EmailService:
         <body>
             <div class="header">
                 <h1>📝 Loan Application Update</h1>
-                <p>Regarding your application for ₹{principal:,.2f}</p>
+                <p>Regarding your application for GHS {principal:,.2f}</p>
             </div>
-            
+
             <div class="content">
                 <h2>Dear {customer_name},</h2>
                 <p>After careful consideration of your loan application, we regret to inform you that we are unable to approve your request at this time.</p>
-                
+
                 <h3>What You Can Do</h3>
                 <ul>
                     <li>Check your credit score for any discrepancies</li>
@@ -263,12 +263,12 @@ class EmailService:
                     <li>Apply again after 3 months with improved financial profile</li>
                     <li>Contact our advisory team for personalized guidance</li>
                 </ul>
-                
+
                 <p>Our advisory team will contact you shortly to discuss ways to improve your eligibility for future applications.</p>
             </div>
-            
+
             <div class="footer">
-                <p>Thank you for considering FinServe NBFC!</p>
+                <p>Thank you for considering Gidfine!</p>
                 <p>This is an automated message. Please do not reply to this email.</p>
             </div>
         </body>
@@ -293,15 +293,15 @@ class EmailService:
         <body>
             <div class="header">
                 <h1>📋 Loan Application Received</h1>
-                <p>FinServe NBFC has received your application</p>
+                <p>Gidfine has received your application</p>
             </div>
-            
+
             <div class="content">
                 <h2>Dear {customer_name},</h2>
-                <p>Thank you for applying for a loan of ₹{principal:,.2f} with FinServe NBFC.</p>
-                
+                <p>Thank you for applying for a loan of GHS {principal:,.2f} with Gidfine.</p>
+
                 <p>Your application is now being processed through our automated underwriting system. You will receive an update within 2-3 business days.</p>
-                
+
                 <h3>Application Process</h3>
                 <ul>
                     <li>✅ Application received</li>
@@ -310,12 +310,12 @@ class EmailService:
                     <li>⏳ Underwriting review</li>
                     <li>⏳ Final decision</li>
                 </ul>
-                
+
                 <p>You can check your application status anytime by contacting our customer service.</p>
             </div>
-            
+
             <div class="footer">
-                <p>Thank you for choosing FinServe NBFC!</p>
+                <p>Thank you for choosing Gidfine!</p>
                 <p>This is an automated message. Please do not reply to this email.</p>
             </div>
         </body>
@@ -339,27 +339,27 @@ class EmailService:
         <body>
             <div class="header">
                 <h1>🔐 OTP Verification</h1>
-                <p>FinServe NBFC - One-Time Password</p>
+                <p>Gidfine - One-Time Password</p>
             </div>
-            
+
             <div class="content">
                 <h2>Dear {customer_name},</h2>
                 <p>Your One-Time Password (OTP) for login is:</p>
-                
+
                 <div class="otp">{otp}</div>
-                
+
                 <p><strong>Important:</strong></p>
                 <ul>
                     <li>This OTP is valid for 5 minutes only</li>
                     <li>Please do not share this OTP with anyone</li>
-                    <li>FinServe NBFC will never ask for your OTP</li>
+                    <li>Gidfine will never ask for your OTP</li>
                 </ul>
-                
+
                 <p>If you didn't request this OTP, please contact our customer service immediately.</p>
             </div>
-            
+
             <div class="footer">
-                <p>Thank you for using FinServe NBFC!</p>
+                <p>Thank you for using Gidfine!</p>
                 <p>This is an automated message. Please do not reply to this email.</p>
             </div>
         </body>
@@ -386,32 +386,32 @@ class EmailService:
         <body>
             <div class="header">
                 <h1>⚠️ Complete Your Profile</h1>
-                <p>FinServe NBFC - Action Required</p>
+                <p>Gidfine - Action Required</p>
             </div>
-            
+
             <div class="content">
                 <h2>Dear {customer_name},</h2>
                 <p>To continue with your loan application, please complete the following missing information in your profile:</p>
-                
+
                 <div class="missing-fields">
                     <h3>Missing Information:</h3>
                     {fields_list}
                 </div>
-                
+
                 <p>Having complete information helps us:</p>
                 <ul>
                     <li>Process your application faster</li>
                     <li>Provide better loan offers</li>
                     <li>Ensure accurate risk assessment</li>
                 </ul>
-                
+
                 <p style="text-align: center; margin: 30px 0;">
                     <a href="#" class="btn">Complete Profile Now</a>
                 </p>
             </div>
-            
+
             <div class="footer">
-                <p>Thank you for choosing FinServe NBFC!</p>
+                <p>Thank you for choosing Gidfine!</p>
                 <p>This is an automated message. Please do not reply to this email.</p>
             </div>
         </body>

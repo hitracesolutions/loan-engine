@@ -109,7 +109,7 @@ async def underwrite(session_id: str) -> dict:
     # Gate 3: Loan limit check (per workflow: Check Loan Limit → Low/Medium/High)
     # Gate 3: Loan limit & DTI enforcement — remove demo bypasses
     if principal > settings.MAX_EXPOSURE_MULTIPLIER * pre_approved:
-        reasons.append(f"⚠️ Requested loan (₹{principal:,}) exceeds maximum exposure ({settings.MAX_EXPOSURE_MULTIPLIER}× limit).")
+        reasons.append(f"⚠️ Requested loan (GHS {principal:,}) exceeds maximum exposure ({settings.MAX_EXPOSURE_MULTIPLIER}× limit).")
         decision = "hard_reject"
     elif principal > pre_approved:
         if not docs.get("verified"):
@@ -139,30 +139,30 @@ async def underwrite(session_id: str) -> dict:
     if decision == "approve":
         message = (
             f"✅ **LOAN APPROVED FOR {customer_name.upper()}**\n\n"
-            f"Congratulations {customer_name}! Your application for ₹{principal:,} is fully approved. "
+            f"Congratulations {customer_name}! Your application for GHS {principal:,} is fully approved. "
             f"Because your {score} credit score is strong and your calculated Debt-to-Income ratio ({dti*100:.1f}%) "
-            f"is perfectly manageable within your ₹{salary:,} monthly income, we're happy to grant this standard sanction. "
-            f"Your EMI of ₹{emi:,.2f} is locked in!"
+            f"is perfectly manageable within your GHS {salary:,} monthly income, we're happy to grant this standard sanction. "
+            f"Your EMI of GHS {emi:,.2f} is locked in!"
         )
     elif decision == "pending_docs":
         message = (
             f"⚠️ **ADDITIONAL REVIEW REQUIRED FOR {customer_name.upper()}**\n\n"
-            f"Hi {customer_name}, the requested amount (₹{principal:,}) exceeds your instant pre-approved limit. "
+            f"Hi {customer_name}, the requested amount (GHS {principal:,}) exceeds your instant pre-approved limit. "
             f"To proceed, we require a Salary Slip to verify your income and recalculate your approval mathematically."
         )
     elif decision == "soft_reject":
         message = (
             f"⚠️ **LOAN UNDER REVIEW FOR {customer_name.upper()}**\n\n"
-            f"Hi {customer_name}, your credit profile (Score: {score}) is solid, but the requested ₹{principal:,} "
+            f"Hi {customer_name}, your credit profile (Score: {score}) is solid, but the requested GHS {principal:,} "
             f"forces your Debt-to-Income mapping to {dti*100:.1f}%, which exceeds our safety threshold ({settings.MAX_DTI_RATIO*100:.0f}%). "
-            f"To protect your financial health, we can comfortably approve a revised amount of ₹{alternative_offer:,.0f}."
+            f"To protect your financial health, we can comfortably approve a revised amount of GHS {alternative_offer:,.0f}."
             f"Arjun will discuss restructure options with you now."
         )
     else:
         reason_list = "\n".join(f"• {r}" for r in reasons)
         message = (
             f"❌ **LOAN REJECTED FOR {customer_name.upper()}**\n\n"
-            f"We're sorry {customer_name}, but your application for ₹{principal:,} could not be approved at this time.\n"
+            f"We're sorry {customer_name}, but your application for GHS {principal:,} could not be approved at this time.\n"
             f"{reason_list}\n\n"
             f"For further help regarding your financial health, our Advisor is available to chat."
         )

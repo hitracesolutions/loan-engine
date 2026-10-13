@@ -20,12 +20,12 @@ RAZORPAY_KEY_SECRET = "simulated_secret_key"
 _razorpay_orders: dict = {}
 
 
-async def create_razorpay_order(session_id: str, amount_paise: int, currency: str = "INR") -> dict:
+async def create_razorpay_order(session_id: str, amount_paise: int, currency: str = "GHS") -> dict:
     """Simulate Razorpay order creation.
 
     Args:
         session_id: Current session ID
-        amount_paise: Amount in paise (₹1 = 100 paise)
+        amount_paise: Amount in paise (GHS 1 = 100 paise)
         currency: Currency code (default INR)
 
     Returns: Simulated Razorpay order response
@@ -185,7 +185,7 @@ async def process_emi_payment(session_id: str, razorpay_payment_id: Optional[str
     payment_method = "via Razorpay" if razorpay_payment_id else "direct"
     return {
         "success": True,
-        "message": f"Payment of ₹{emi:,.2f} successful {payment_method}!",
+        "message": f"Payment of GHS {emi:,.2f} successful {payment_method}!",
         "loan_terms": updated_terms,
         "razorpay": {
             "order_id": next((k for k, v in _razorpay_orders.items() if v.get("notes", {}).get("session_id") == session_id), None),
@@ -227,7 +227,7 @@ async def initiate_razorpay_payment(session_id: str) -> dict:
         "success": True,
         "razorpay_key": RAZORPAY_KEY_ID,
         "amount": amount_paise,
-        "currency": "INR",
+        "currency": "GHS",
         "order_id": order["id"],
         "prefill": {
             "contact": state.get("customer_data", {}).get("phone", ""),
@@ -239,7 +239,7 @@ async def initiate_razorpay_payment(session_id: str) -> dict:
             "emi_number": payments_made + 1,
             "total_emis": tenure,
         },
-        "message": f"Razorpay order created for ₹{emi:,.2f}. Open checkout to complete payment.",
+        "message": f"Razorpay order created for GHS {emi:,.2f}. Open checkout to complete payment.",
     }
 
 

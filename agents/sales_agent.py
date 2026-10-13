@@ -71,7 +71,7 @@ def _safe_float(val, default=0.0):
         if isinstance(val, (int, float)): return float(val)
         if not val: return default
         # Remove symbols and handle fractions if any
-        clean = str(val).lower().replace("₹", "").replace("₵", "").replace("ghs", "").replace(",", "").replace("%", "").strip()
+        clean = str(val).lower().replace("GHS ", "").replace("₵", "").replace("ghs", "").replace(",", "").replace("%", "").strip()
         if "tbd" in clean or "discuss" in clean: return default
         nums = re.findall(r"[\d.]+", clean)
         return float(nums[0]) if nums else default
@@ -183,7 +183,7 @@ CRITICAL RULES TO PREVENT HALLUCINATION & CONTEXT LOSS:
    - If salary is mentioned, don't ask "what's your monthly income?"
    - If loan purpose stated (personal/business), don't ask "what will you use it for?" and don't suggest "maybe for business instead?"
    - If tenure is confirmed (3 years = 36 months), NEVER suggest "4 months" or "12 months" as alternatives.
-   - If amount stated (₹12 lakh), don't suggest "what about ₹10 lakh?"
+   - If amount stated (GHS 12 lakh), don't suggest "what about GHS 10 lakh?"
    - STRICT: Once customer provides information in a category, STOP asking about that category.
    - If rate is negotiated to 14%, don't suggest other rates.
 
@@ -195,7 +195,7 @@ CRITICAL RULES TO PREVENT HALLUCINATION & CONTEXT LOSS:
 📌 RULE #3: IF ALL TERMS ARE SET, REQUEST FINAL CONFIRMATION ONLY.
    - If you have Amount + Tenure + Rate + Purpose, ask for one final confirmation.
    - Do NOT start suggesting other options or tenures.
-   - Example: "So we have ₹12 lakh for 36 months @ 14%. Is this correct? Please confirm to proceed."
+   - Example: "So we have GHS 12 lakh for 36 months @ 14%. Is this correct? Please confirm to proceed."
 
 📌 RULE #4: OUTPUT FORMAT.
    - Maximum 3 short sentences per response (2-3 only).
@@ -417,18 +417,18 @@ async def _advisor_mode(state: dict):
             amount = pl.get('amount') or 0
             if status in ("Approved", "Disbursed"):
                 active_loans_found = True
-                past_loans_summary += f"✅ ACTIVE: ₹{amount:,} loan with ₹{emi_val:,} monthly EMI. "
+                past_loans_summary += f"✅ ACTIVE: GHS {amount:,} loan with GHS {emi_val:,} monthly EMI. "
                 if pl.get('tenure'):
                     past_loans_summary += f"Tenure: {pl.get('tenure')} months. "
                 past_loans_summary += "\n"
             else:
-                past_loans_summary += f"🕒 PAST: ₹{amount:,} {pl.get('type','loan')} - Status: {status}\n"
+                past_loans_summary += f"🕒 PAST: GHS {amount:,} {pl.get('type','loan')} - Status: {status}\n"
     else:
         past_loans_summary = "No previous loan history found in sessions."
 
     if not active_loans_found:
         if existing_emi > 0:
-            past_loans_summary += f"\nNote: Customer has external EMI obligations of ₹{existing_emi:,}/month."
+            past_loans_summary += f"\nNote: Customer has external EMI obligations of GHS {existing_emi:,}/month."
 
     # Suggest viable alternate amount if DTI rejection
     suggested_amount = 0
@@ -450,7 +450,7 @@ async def _advisor_mode(state: dict):
     
     docs_text = f"- **Currently Uploaded & Verified Document**: {verified_doc} (Score: {(docs.get('confidence') or 0):.0%})\n"
     if docs.get("salary_extracted"):
-        docs_text += f"- **Verified OCR Monthly Income**: ₹{(docs.get('salary_extracted') or 0):,}\n"
+        docs_text += f"- **Verified OCR Monthly Income**: GHS {(docs.get('salary_extracted') or 0):,}\n"
     if docs.get("address_extracted"):
         docs_text += f"- **Verified Address**: {docs.get('address_extracted')}\n"
     
@@ -471,17 +471,17 @@ async def _advisor_mode(state: dict):
 
     profile_context = f"""Name: {customer.get("name", "Customer")}
 City: {customer.get("city", "N/A")}
-Monthly Salary: ₹{salary:,}
+Monthly Salary: GHS {salary:,}
 Credit Score: {customer.get("credit_score", "N/A")}
-Pre-Approved Limit: ₹{(customer.get("pre_approved_limit") or 0):,}
-Current EMI Burden: ₹{existing_emi:,}/month
+Pre-Approved Limit: GHS {(customer.get("pre_approved_limit") or 0):,}
+Current EMI Burden: GHS {existing_emi:,}/month
 Active Loans: {', '.join(customer.get("current_loans", [])) or "None"}
 """
 
     reasons_str = "; ".join(reasons) if reasons else "N/A"
     loan_context = f"""Decision: {adj_decision.upper()}
-Requested Amount: ₹{(principal or 0):,}
-Monthly EMI: ₹{(emi or 0):,.2f}
+Requested Amount: GHS {(principal or 0):,}
+Monthly EMI: GHS {(emi or 0):,.2f}
 Tenure: {(tenure or 0)} months
 Loan Type: {terms.get("loan_type", "Personal").capitalize()}
 DTI (Debt-to-Income) Ratio: {dti * 100:.1f}%
@@ -506,14 +506,14 @@ CASE: HARD_REJECT
 
 CASE: SOFT_REJECT (NEGOTIATION)
 - Acknowledge the original request was rejected, but they are eligible for a restructured offer.
-- If Suggested Amount is ₹{suggested_amount:,} and is > 500: Mention it explicitly: "You can apply for ₹{suggested_amount:,} instead."
-- If Suggested Amount is too low (< ₹50000) or zero: Suggest alternatives like:
+- If Suggested Amount is GHS {suggested_amount:,} and is > 500: Mention it explicitly: "You can apply for GHS {suggested_amount:,} instead."
+- If Suggested Amount is too low (< GHS 50000) or zero: Suggest alternatives like:
   * "Your current EMI burden is high. Paying down existing loans could free up more capacity."
   * "Consider restructuring your current loans to improve eligibility."
   * "In 6-12 months of maintaining good payment history, you'll likely qualify for higher amounts."
 
 CASE: NO ACTIVE LOANS (ADVICE ONLY)
-- If the user expressed interest in a loan but 'principal' is ₹0: DO NOT give generic budget advice. Instead, warmly redirect them to Arjun (our Sales Specialist) to start their application.
+- If the user expressed interest in a loan but 'principal' is GHS 0: DO NOT give generic budget advice. Instead, warmly redirect them to Arjun (our Sales Specialist) to start their application.
 """
 
     sys_msg = SystemMessage(content=ADVISOR_PROMPT_TEMPLATE + rejection_guidance)
@@ -522,7 +522,7 @@ CASE: NO ACTIVE LOANS (ADVICE ONLY)
         SystemMessage(content=f"### CUSTOMER PROFILE\n{_build_customer_context(customer)}"),
         SystemMessage(content=f"### LOAN APPLICATION RESULT\n{loan_context}"),
         SystemMessage(content=f"### ADDITIONAL MEMORIES\n{docs_text}"),
-        SystemMessage(content=f"### ALTERNATIVE OFFER\nSuggested Amount: ₹{suggested_amount:,}\nSuggested EMI: ₹{suggested_emi:,}")
+        SystemMessage(content=f"### ALTERNATIVE OFFER\nSuggested Amount: GHS {suggested_amount:,}\nSuggested EMI: GHS {suggested_emi:,}")
     ]
 
     messages = [sys_msg] + context_msgs + state.get("messages", [])
@@ -557,8 +557,8 @@ CASE: NO ACTIVE LOANS (ADVICE ONLY)
         
         response.content = (
             f"✅ **E-Signature Complete!** 🎉\n\n"
-            f"Your loan of **₹{terms.get('principal', 0):,.0f}** has been digitally signed.\n\n"
-            f"**Net Disbursement Amount:** ₹{net_amount:,.2f} (after processing fees)\n\n"
+            f"Your loan of **GHS {terms.get('principal', 0):,.0f}** has been digitally signed.\n\n"
+            f"**Net Disbursement Amount:** GHS {net_amount:,.2f} (after processing fees)\n\n"
             f"To proceed with **IMPS disbursement** to your linked bank account, "
             f"please confirm by typing **'Proceed with disbursement'** or **'Disburse now'**.\n\n"
             f"Or click the button below to authorize the transfer."
@@ -606,12 +606,12 @@ CASE: NO ACTIVE LOANS (ADVICE ONLY)
                     response.content = (
                         f"\n\n✅ **Disbursement Successful!** 🎉\n\n"
                         f"**Reference ID:** `{result['disbursement_id']}`\n"
-                        f"**Amount:** ₹{result['amount']:,.2f}\n"
+                        f"**Amount:** GHS {result['amount']:,.2f}\n"
                         f"**Bank:** {result['bank_name']} | **Account:** {result['bank_account']} | **IFSC:** {result['ifsc']}\n"
                         f"**Date:** {result['date']} | **First EMI:** {result['first_emi_date']}\n\n"
-                        f"Your loan has been disbursed via IMPS. The first EMI of ₹{terms.get('emi', 0):,.2f} will be auto-debuted on {result['first_emi_date']}."
+                        f"Your loan has been disbursed via IMPS. The first EMI of GHS {terms.get('emi', 0):,.2f} will be auto-debuted on {result['first_emi_date']}."
                     )
-                    log.append(f"✅ Disbursed: {result['disbursement_id']} → ₹{result['amount']:,.2f}")
+                    log.append(f"✅ Disbursed: {result['disbursement_id']} → GHS {result['amount']:,.2f}")
                 else:
                     updates["disbursement_status"] = "failed"
                     response.content += f"\n\n⚠️ Disbursement failed: {result.get('error', 'Unknown error')}"
@@ -692,7 +692,7 @@ async def _sales_mode(state: dict):
         p_amt = _parse_amount_inr(user_msg)
         if p_amt:
             principal = p_amt
-            log.append(f"🔢 Deterministically extracted amount: ₹{principal:,.0f}")
+            log.append(f"🔢 Deterministically extracted amount: GHS {principal:,.0f}")
             
     if tenure == 0:
         p_ten = _parse_tenure_months(user_msg)
@@ -757,7 +757,7 @@ async def _sales_mode(state: dict):
     extracted_summary = "## INFORMATION ALREADY GATHERED\n"
     already_have = []
     if principal > 0:
-        already_have.append(f"- Loan Amount: ₹{principal:,.0f}")
+        already_have.append(f"- Loan Amount: GHS {principal:,.0f}")
     if tenure > 0:
         already_have.append(f"- Tenure: {tenure} months ({tenure // 12} years)")
     if new_terms.get("loan_purpose"):
@@ -858,7 +858,7 @@ async def _sales_mode(state: dict):
                 # Minimal fallback if agent forgot JSON field but confirmed
                 updates["required_documents"] = ["Identity (PAN or Aadhaar)"]
                 
-            log.append(f"✅ Terms confirmed: ₹{(new_terms.get('principal') or 0):,.0f} for {new_terms.get('tenure')} months @ {new_terms.get('rate')}%.")
+            log.append(f"✅ Terms confirmed: GHS {(new_terms.get('principal') or 0):,.0f} for {new_terms.get('tenure')} months @ {new_terms.get('rate')}%.")
             log.append(f"📄 Required Documents: {', '.join(updates['required_documents'])}")
 
     # ─── DEADLOCK BREAKER: FORCE CONFIRMATION ───
@@ -950,21 +950,21 @@ async def _sales_mode(state: dict):
                             visible_reply = (
                                 f"Here's what I found after checking with our lenders:\n\n"
                                 f"{reasons_text}\n\n"
-                                f"However, I can offer you up to **₹{max_amt:,.0f}** over **{suggested_tenure} months** "
+                                f"However, I can offer you up to **GHS {max_amt:,.0f}** over **{suggested_tenure} months** "
                                 f"based on your profile. Would you like to proceed with this adjusted amount?\n\n"
                                 f"💡 Tip: Tap 'View Lender Rules' to see each lender's eligibility criteria."
                             )
                             updates["show_rules_button"] = True
                         else:
                             visible_reply = (
-                                f"I can't offer ₹{new_terms['principal']:,.0f} for {new_terms['tenure']} months, "
-                                f"but I can get you up to ₹{max_amt:,.0f} over {suggested_tenure} months.\n\n"
+                                f"I can't offer GHS {new_terms['principal']:,.0f} for {new_terms['tenure']} months, "
+                                f"but I can get you up to GHS {max_amt:,.0f} over {suggested_tenure} months.\n\n"
                                 f"Would you like to proceed with this adjusted offer?"
                             )
                     else:
                         visible_reply = (
-                            f"I can't offer ₹{new_terms['principal']:,.0f} for {new_terms['tenure']} months, "
-                            f"but I can get you up to ₹{max_amt:,.0f} over {suggested_tenure} months.\n\n"
+                            f"I can't offer GHS {new_terms['principal']:,.0f} for {new_terms['tenure']} months, "
+                            f"but I can get you up to GHS {max_amt:,.0f} over {suggested_tenure} months.\n\n"
                             f"Would you like to proceed with this adjusted offer?"
                         )
                     new_terms["tenure"] = suggested_tenure
@@ -985,7 +985,7 @@ async def _sales_mode(state: dict):
                         
                         visible_reply = (
                             f"I checked with all our partner lenders, and here's why none can offer "
-                            f"₹{new_terms['principal']:,.0f} for {new_terms['tenure']} months:\n\n"
+                            f"GHS {new_terms['principal']:,.0f} for {new_terms['tenure']} months:\n\n"
                             f"{reasons_block}\n\n"
                             f"**Options to proceed:**\n"
                             f"• Reduce the loan amount\n"
@@ -998,7 +998,7 @@ async def _sales_mode(state: dict):
                         if new_terms.get("loan_purpose"):
                             visible_reply = (
                                 f"I've checked our lenders, but unfortunately none can offer "
-                                f"₹{new_terms['principal']:,.0f} for {new_terms['tenure']} months right now. "
+                                f"GHS {new_terms['principal']:,.0f} for {new_terms['tenure']} months right now. "
                                 f"Would you consider a longer tenure or a different amount?"
                             )
                         else:
@@ -1016,14 +1016,14 @@ async def _sales_mode(state: dict):
 
         # Fix any incorrect EMI mentions in visible_reply from LLM hallucination
         if new_terms["emi"] > 0:
-            correct_emi_str = f"₹{new_terms['emi']:,.2f}"
+            correct_emi_str = f"GHS {new_terms['emi']:,.2f}"
             visible_reply = _re.sub(
-                r'₹[\d,]+(?:\.\d{2})?\s*(per month|/month|monthly)',
+                r'GHS [\d,]+(?:\.\d{2})?\s*(per month|/month|monthly)',
                 lambda m: f'{correct_emi_str} {m.group(1)}',
                 visible_reply
             )
             visible_reply = _re.sub(
-                r'(EMI\s*(?:would be|is|of|:)\s*(?:around|about|approximately|~)?\s*)₹[\d,]+(?:\.\d{2})?',
+                r'(EMI\s*(?:would be|is|of|:)\s*(?:around|about|approximately|~)?\s*)GHS [\d,]+(?:\.\d{2})?',
                 lambda m: f'{m.group(1)}{correct_emi_str}',
                 visible_reply,
                 flags=_re.IGNORECASE

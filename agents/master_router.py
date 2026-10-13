@@ -31,13 +31,13 @@ def route_next_agent(state: MasterState):
         has_reduction_keyword = any(keyword in last_msg for keyword in 
             ["lower", "less", "smaller", "different", "another", "reduce", "different amount", "lower loan"])
         
-        # Check for explicit amount mentions (k, lakh, rupees, ₹, etc.)
+        # Check for explicit amount mentions (k, lakh, rupees, GHS , etc.)
         has_explicit_amount = bool(
             _re.search(r"\d+\s*k\b", last_msg) or         # 75k
             _re.search(r"\d+\s*lakh", last_msg) or        # 1.4 lakh
             _re.search(r"\d+\s*lac\b", last_msg) or       # 1.4 lac
             _re.search(r"\d+\s*thousand", last_msg) or    # 75 thousand
-            _re.search(r"₹\s*\d+", last_msg) or           # ₹75000
+            _re.search(r"GHS \s*\d+", last_msg) or           # GHS 75000
             (_re.search(r"\d{5,}", last_msg) and (       # 75000 (5+ digits)
                 "rupee" in last_msg or "loan" in last_msg or "amount" in last_msg))
         )

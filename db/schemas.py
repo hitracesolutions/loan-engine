@@ -16,7 +16,7 @@ class LenderOffer(BaseModel):
     lender_name: str
     lender_type: str  # "bank", "nbfc", "fintech", "cooperative"
     interest_rate: float = Field(..., description="Annual interest rate percentage")
-    processing_fee: float = Field(..., description="Processing fee in INR")
+    processing_fee: float = Field(..., description="Processing fee in GHS")
     max_loan_amount: float
     tenure_options: List[int]
     risk_profile: str  # "low", "medium", "high"
@@ -31,7 +31,7 @@ class LoanComparison(BaseModel):
     lender_name: str
     lender_type: str
     interest_rate: float
-    emi: float = Field(..., description="Monthly EMI in INR")
+    emi: float = Field(..., description="Monthly EMI in GHS")
     total_repayment: float = Field(..., description="Total amount to be repaid")
     total_interest: float = Field(..., description="Total interest payable")
     processing_fee: float

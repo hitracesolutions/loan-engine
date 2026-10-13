@@ -131,7 +131,7 @@ async def underwriting_agent_node(state: dict) -> dict:
         market_value = principal / 0.8  # Assume user needs 80% LTV
         ltv = principal / market_value
         if ltv > 0.85:
-            reasons.append(f"Loan-to-Value (LTV) ratio is {ltv*100:.1f}%, which exceeds the safe lending limit of 85%. Requested: ₹{principal:,} | Asset Value: ₹{market_value:,.0f}.")
+            reasons.append(f"Loan-to-Value (LTV) ratio is {ltv*100:.1f}%, which exceeds the safe lending limit of 85%. Requested: GHS {principal:,} | Asset Value: GHS {market_value:,.0f}.")
             decision = "soft_reject"
             alternative_offer = 0.80 * market_value
 
@@ -161,7 +161,7 @@ async def underwriting_agent_node(state: dict) -> dict:
         
         # Hard reject: Extreme exposure
         elif principal > 2 * pre_approved:
-            reasons.append(f"Requested loan (₹{principal:,}) exceeds absolute exposure limit (2× ₹{pre_approved:,}).")
+            reasons.append(f"Requested loan (GHS {principal:,}) exceeds absolute exposure limit (2× GHS {pre_approved:,}).")
             decision = "hard_reject"
         
         # Hard reject: Credit score too low
@@ -200,7 +200,7 @@ async def underwriting_agent_node(state: dict) -> dict:
             alt_p = (alt_p // 5000) * 5000
             alternative_offer = alt_p
             # Just provide information about alternative options - no complex negotiation
-            print(f"💡 [UNDERWRITING] Customer qualifies for alternative: ₹{alternative_offer:,.0f}")
+            print(f"💡 [UNDERWRITING] Customer qualifies for alternative: GHS {alternative_offer:,.0f}")
         else:
             alternative_offer = 0
 
@@ -209,21 +209,21 @@ async def underwriting_agent_node(state: dict) -> dict:
     if decision == "approve":
         lender_text = f" with {selected_lender_name}" if selected_lender_name else ""
         msg = (f"🎉 **EXCELLENT NEWS!**\n\n"
-               f"I've personally reviewed your request, and your application for ₹{principal:,} is **FULLY APPROVED** {lender_text}. "
+               f"I've personally reviewed your request, and your application for GHS {principal:,} is **FULLY APPROVED** {lender_text}. "
                f"Your disciplined credit profile and consistent history make you a preferred customer for us. "
                f"We're offering this at {rate:.1f}% p.a.")
     
     elif decision == "pending_docs":
         missing = "Salary Slip" if principal > pre_approved else "KYC Documents"
         msg = (f"⏳ **ALMOST THERE!**\n\n"
-               f"Your application for ₹{principal:,} looks very promising. Since this is above your standard pre-approved limit, "
+               f"Your application for GHS {principal:,} looks very promising. Since this is above your standard pre-approved limit, "
                f"I just need one small thing to wrap this up: **your latest {missing}**. "
                f"Once you upload that, we can push this straight to sanction!")
 
     elif decision == "soft_reject":
         msg = (f"🤝 **Let's work something out...**\n\n"
-               f"I see you're aiming for ₹{principal:,}. While our current underwriting rules for student/new profiles "
-               f"are a bit tight, I've managed to secure a revised offer of **₹{alternative_offer:,.0f}** for you instantly.\n\n"
+               f"I see you're aiming for GHS {principal:,}. While our current underwriting rules for student/new profiles "
+               f"are a bit tight, I've managed to secure a revised offer of **GHS {alternative_offer:,.0f}** for you instantly.\n\n"
                f"Would you like to proceed with this amount, or should we discuss a different tenure?")
 
     else:
@@ -282,7 +282,7 @@ async def underwriting_agent_node(state: dict) -> dict:
         "options": (
             ["✅ Accept Loan Offer", "❓ Ask Questions Before Proceeding"]
             if decision == "approve"
-            else [f"💪 Try ₹{alternative_offer:,.0f} Instead", "❌ Exit Application"]
+            else [f"💪 Try GHS {alternative_offer:,.0f} Instead", "❌ Exit Application"]
             if decision == "soft_reject"
             else ["🔄 Reapply in 90 Days", "💬 Speak to Customer Support"]
         )

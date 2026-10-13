@@ -21,10 +21,10 @@ async def bank_verification_agent_node(state: dict) -> dict:
     
     if penny_drop != "verified":
         # Simulate Penny Drop API call
-        print(f"💸 [PENNY DROP] Depositing ₹1 to {bank_name} A/C {account_no}...")
+        print(f"💸 [PENNY DROP] Depositing GHS 1 to {bank_name} A/C {account_no}...")
         
         msg = (f"🏦 **Bank Account Verification (Penny Drop)**\n\n"
-               f"We are initiating a ₹1 test deposit to your {bank_name} account ending in **{account_no[-4:] if len(account_no) > 4 else account_no}** to verify the beneficiary name.\n\n"
+               f"We are initiating a GHS 1 test deposit to your {bank_name} account ending in **{account_no[-4:] if len(account_no) > 4 else account_no}** to verify the beneficiary name.\n\n"
                f"Status: **VERIFIED ✅**\n\n"
                f"Now, let's set up your Auto-Debit (eNACH) mandate so your EMI is deducted automatically on the due date.")
         

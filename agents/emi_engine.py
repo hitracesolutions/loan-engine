@@ -41,7 +41,7 @@ async def emi_engine_node(state: dict) -> dict:
             days_to_due = (next_emi_date - today).days
             if 0 <= days_to_due <= 3:
                 emi_value = (terms.get('emi') or 0)
-                reminder_msg = f"🔔 **EMI Reminder**: Your payment of ₹{emi_value:,.2f} is due in {days_to_due} days ({next_emi_str})."
+                reminder_msg = f"🔔 **EMI Reminder**: Your payment of GHS {emi_value:,.2f} is due in {days_to_due} days ({next_emi_str})."
                 await manager.broadcast_to_session(session_id, {
                     "type": "NOTIFICATION",
                     "priority": "high",
@@ -87,13 +87,13 @@ async def emi_engine_node(state: dict) -> dict:
             new_limit = old_limit + limit_boost
             customer["pre_approved_limit"] = new_limit
             
-            log.append(f"🏆 Loan fully repaid! Credit Score boosted to {new_score} and Limit increased to ₹{new_limit:,}.")
+            log.append(f"🏆 Loan fully repaid! Credit Score boosted to {new_score} and Limit increased to GHS {new_limit:,}.")
             
             updates["messages"] = [AIMessage(content=(
                 f"🎉 **Congratulations!** Your loan has been fully repaid.\n\n"
                 f"Because of your consistent repayment:\n"
                 f"- Your Credit Score increased to **{new_score}** (↑ {score_boost})\n"
-                f"- Your Pre-approved Limit is now **₹{new_limit:,}** (↑ ₹{limit_boost:,})\n\n"
+                f"- Your Pre-approved Limit is now **GHS {new_limit:,}** (↑ GHS {limit_boost:,})\n\n"
                 f"We're excited to support your next big goal!"
             ))]
             

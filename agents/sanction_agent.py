@@ -233,7 +233,7 @@ async def sanction_agent_node(state: dict):
             "lender_rate": selected_rate,
         }
         await loan_applications_collection.insert_one(loan_record)
-        print(f"📊 [SANCTION AGENT] Loan persisted: {cust_name} — {'Approved' if is_approved else 'Rejected'} — ₹{principal:,}")
+        print(f"📊 [SANCTION AGENT] Loan persisted: {cust_name} — {'Approved' if is_approved else 'Rejected'} — GHS {principal:,}")
 
         # Also update the customer's existing_emi_total in mock customers JSON
         if is_approved and emi > 0:
@@ -244,7 +244,7 @@ async def sanction_agent_node(state: dict):
                     if c.get("phone") == cust_phone:
                         old_emi = c.get("existing_emi_total", 0) or 0
                         c["existing_emi_total"] = old_emi + emi
-                        print(f"💰 [SANCTION AGENT] Updated existing_emi_total for {cust_phone}: ₹{old_emi} → ₹{c['existing_emi_total']:.2f}")
+                        print(f"💰 [SANCTION AGENT] Updated existing_emi_total for {cust_phone}: GHS {old_emi} → GHS {c['existing_emi_total']:.2f}")
                         break
                 save_mock_customers(customers)
             except Exception as emi_err:

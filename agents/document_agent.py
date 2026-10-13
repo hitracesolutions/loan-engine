@@ -1,4 +1,4 @@
-"""Document Verification Agent — Gemini Vision OCR for PAN/Aadhaar/Salary Slip/Bank Statement/ITR.
+"""Document Verification Agent — Gemini Vision OCR for ID/Salary Slip/Bank Statement.
 
 Extracts structured data from the uploaded document image using a detailed forensic prompt.
 Saves all uploads to data/uploads/ for audit trail.
@@ -46,7 +46,7 @@ def _calculate_name_similarity(doc_name: str, customer_name: str) -> float:
     return similarity
 
 
-DOCUMENT_VISION_AGENT_PROMPT = """You are the **Forensic Document Vision Agent** for a regulated Indian NBFC.
+DOCUMENT_VISION_AGENT_PROMPT = """You are the **Forensic Document Vision Agent** for Gidfine.
 
 SYSTEM ROLE:
 You operate between raw user uploads and downstream systems (Underwriting + Fraud Engine).
@@ -61,13 +61,13 @@ You are NOT a conversational agent.
 You MUST output ONLY structured JSON.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SUPPORTED INDIAN DOCUMENT TYPES
+SUPPORTED DOCUMENT TYPES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-- PAN Card (Format: AAAAA9999A)
-- Aadhaar Card (12-digit UID)
+- National ID / SSNIT Card
+- Passport
+- Driver's License
 - Salary Slip / Pay Stub
 - Bank Statement (3–6 months)
-- Form 16 / ITR
 
 If document type cannot be confidently identified → use "Unknown"
 
@@ -102,20 +102,20 @@ Do NOT guess missing values.
 3. DATA NORMALIZATION
 
 - Dates → YYYY-MM-DD format ONLY
-- Currency → remove ₹, Rs, commas → return integer
-  Example: "₹50,000" → 50000
+- Currency → remove GHS, cedis, commas → return integer
+  Example: "GHS 50,000" → 50000
 - Names → preserve exact spelling (no corrections)
 
 ---
 
 4. DOCUMENT-SPECIFIC VALIDATION
 
-- PAN:
-  - Must match pattern: [A-Z]{5}[0-9]{4}[A-Z]
+- National ID / SSNIT:
+  - Extract ID number format
   - If invalid → add fraud_signal
 
-- Aadhaar:
-  - Must be 12 digits
+- Passport:
+  - Must be valid Ghanaian passport format
   - If not → add fraud_signal
 
 - Salary Slip:
@@ -188,7 +188,7 @@ No explanations. No extra text.
   "total_documents_processed": <integer>,
   "extracted_documents": [
     {{
-      "document_type": "<PAN | Aadhaar | Salary Slip | Bank Statement | Form16 | Unknown>",
+      "document_type": "<National ID | Passport | Driver's License | Salary Slip | Bank Statement | Unknown>",
       "extracted_data": {{
         "full_name": "<string or null>",
         "document_number": "<string or null>",

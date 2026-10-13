@@ -89,7 +89,7 @@ async def intent_node(state: dict):
             # Helper to parse amounts
             def parse_amt(val):
                 if isinstance(val, str):
-                    s = val.lower().replace("₹", "").replace(",", "").strip()
+                    s = val.lower().replace("GHS ", "").replace(",", "").strip()
                     if "lakh" in s or "lac" in s:
                         nums = re.findall(r"[\d.]+", s)
                         return float(nums[0]) * 100000 if nums else 0
@@ -108,9 +108,9 @@ async def intent_node(state: dict):
 
             log.append(f"✅ Intent: '{intent}' — {data.get('reason', '')}")
             if extracted_amount > 0:
-                log.append(f"💰 Extracted Loan: ₹{extracted_amount:,.0f}")
+                log.append(f"💰 Extracted Loan: GHS {extracted_amount:,.0f}")
             if extracted_salary > 0:
-                log.append(f"💼 Extracted Salary: ₹{extracted_salary:,.0f}")
+                log.append(f"💼 Extracted Salary: GHS {extracted_salary:,.0f}")
         else:
             # Fallback
             lower = content.lower()
@@ -159,7 +159,7 @@ async def intent_node(state: dict):
     if extracted_salary > 0:
         customer_data["salary"] = extracted_salary
         updates["customer_data"] = customer_data
-        log.append(f"📝 Profile updated with new salary: ₹{extracted_salary:,.0f}")
+        log.append(f"📝 Profile updated with new salary: GHS {extracted_salary:,.0f}")
 
     if intent == "loan":
         # Reset Logic for Re-application
