@@ -8,18 +8,18 @@
   <img src="https://img.shields.io/badge/LangGraph-%E2%9C%93-purple" alt="LangGraph">
 </p>
 
-<h1 align="center">gidfin NBFC</h1>
+<h1 align="center">Gidfine</h1>
 <p align="center"><strong>AI-powered loan origination platform with a multi-agent pipeline, real-time decisioning, and a multi-lender marketplace.</strong></p>
 
 <br>
 
-> **NBFC** = Non-Banking Financial Company. This platform handles the full loan lifecycle — from a customer saying *"I need ₹5 lakh"* to funds being disbursed — using a deterministic chain of LLM-powered agents, rule-based underwriting, and document forensics.
+> This platform handles the full loan lifecycle — from a customer saying *"I need GHS 50,000"* to funds being disbursed — using a deterministic chain of LLM-powered agents, rule-based underwriting, and document forensics.
 
 ---
 
 ## The Problem
 
-Applying for a loan at an Indian NBFC is a fragmented, high-friction process:
+Applying for a loan in Ghana is a fragmented, high-friction process:
 
 - **Manual underwriting** takes 3–7 days and requires constant back-and-forth
 - **Paper documents** get lost, re-uploaded, or flagged incorrectly
@@ -47,7 +47,7 @@ sequenceDiagram
     P->>P: Sales conversation (amount, tenure, purpose)
     P->>L: Fetch offers from 5+ lenders (parallel)
     L-->>P: Best rates & terms
-    P->>C: "Here are your options from HDFC, Bajaj..."
+    P->>C: "Here are your options from Access Bank, Fidelity..."
     C->>P: Upload PAN, salary slip
     P->>P: OCR + Forensics (Gemini Vision)
     P->>P: KYC + Fraud (parallel)
@@ -179,7 +179,7 @@ flowchart LR
 ## Repository Structure
 
 ```
-NBFC/
+Gidfine/
 ├── agents/                    # LangGraph agent nodes
 │   ├── master_graph.py        # Pipeline graph definition (edges + nodes)
 │   ├── master_router.py       # Deterministic rule-based router (NO LLM)
@@ -304,8 +304,8 @@ if intent == "loan" and documents_uploaded and kyc == "pending":
 
 ```bash
 # 1. Clone
-git clone https://github.com/SarangRao20/NBFC.git
-cd NBFC
+git clone https://github.com/SarangRao20/Gidfine.git
+cd Gidfine
 
 # 2. Backend
 python -m venv venv && source venv/bin/activate
@@ -393,27 +393,27 @@ sequenceDiagram
     participant NBFC
     participant Lender
 
-    User->>NBFC: "Hi, I need a loan"
-    NBFC->>NBFC: Intent Agent → "loan"
-    NBFC-->>User: "What's the goal for this loan?"
-    User->>NBFC: "I want ₹12 lakh for my business"
-    NBFC->>NBFC: Sales Agent extracts amount, purpose
-    NBFC->>Lender: Fetch offers from 6 lenders (parallel)
-    Lender-->>NBFC: 4 offers returned
-    NBFC-->>User: "Here are offers from HDFC (13.5%), Bajaj (14%), ICICI (13%)..."
-    User->>NBFC: "HDFC looks good"
-    NBFC->>NBFC: Selected lender saved
-    NBFC-->>User: "Please upload PAN and salary slip"
-    User->>NBFC: Uploads documents
-    NBFC->>NBFC: Document Agent (Gemini Vision OCR)
-    NBFC->>NBFC: KYC + Fraud (parallel)
-    NBFC->>NBFC: Underwriting → Approved
-    NBFC-->>User: "🎉 Approved! Rate: 13.5%, EMI: ₹38,412"
-    NBFC->>NBFC: Generate sanction letter PDF
-    NBFC-->>User: "Please e-sign to disburse"
-    User->>NBFC: E-signs
-    NBFC-->>User: "Loan disbursed! First EMI due Nov 5"
-    Note over User,NBFC: Total time: ~4 minutes
+    User->>Gidfine: "Hi, I need a loan"
+    Gidfine->>Gidfine: Intent Agent → "loan"
+    Gidfine-->>User: "What's the goal for this loan?"
+    User->>Gidfine: "I want GHS 50,000 for my business"
+    Gidfine->>Gidfine: Sales Agent extracts amount, purpose
+    Gidfine->>Lender: Fetch offers from 6 lenders (parallel)
+    Lender-->>Gidfine: 4 offers returned
+    Gidfine-->>User: "Here are offers from Access Bank (18%), Fidelity (19%), Zenith (17.5%)..."
+    User->>Gidfine: "Access Bank looks good"
+    Gidfine->>Gidfine: Selected lender saved
+    Gidfine-->>User: "Please upload identification and income proof"
+    User->>Gidfine: Uploads documents
+    Gidfine->>Gidfine: Document Agent (Gemini Vision OCR)
+    Gidfine->>Gidfine: KYC + Fraud (parallel)
+    Gidfine->>Gidfine: Underwriting → Approved
+    Gidfine-->>User: "🎉 Approved! Rate: 18%, EMI: GHS 1,245"
+    Gidfine->>Gidfine: Generate sanction letter PDF
+    Gidfine-->>User: "Please e-sign to disburse"
+    User->>Gidfine: E-signs
+    Gidfine-->>User: "Loan disbursed! First EMI due Nov 5"
+    Note over User,Gidfine: Total time: ~4 minutes
 ```
 
 ---
