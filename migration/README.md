@@ -30,3 +30,7 @@ This directory archives all formal audit, integration, decommissioning, and conv
    - Complete parity confirmation for all 42 Vue components against React 19 equivalents.
    - Complete pruning of Vue components, composables, Pinia stores, and Vue dependencies.
    - Final production build and test suite verification.
+
+7. **[VUE_MIGRATION_PLAN.md](file:///c:/Users/Administrator/Desktop/development/loan-engine-1/migration/VUE_MIGRATION_PLAN.md)** (Archived Roadmap)
+   - Historical planning document created by Matthias detailing the original Vue migration roadmap. Preserved for reference.
+
