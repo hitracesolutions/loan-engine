@@ -440,8 +440,8 @@ export default function ChatPane({ appState, setAppState, chatHistory, onSendMes
                   className={`border-dashed border-2 rounded-2xl flex flex-col items-center justify-center p-6 transition-all cursor-pointer group relative overflow-hidden ${
                     file ? 'border-emerald-500 bg-emerald-50/30' : 'border-slate-300 bg-slate-50/50 hover:bg-white hover:border-emerald-400 hover:shadow-md'
                   }`}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
+                  onDragOver={(e: React.DragEvent) => e.preventDefault()}
+                  onDrop={(e: React.DragEvent) => {
                     e.preventDefault();
                     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
                       setSelectedFiles(prev => ({ ...prev, [idx]: e.dataTransfer.files[0] }));
