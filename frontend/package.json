@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "convex:dev": "convex dev",
+    "convex:codegen": "convex codegen"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
@@ -18,6 +20,7 @@
     "chart.js": "^4.5.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "convex": "^1.47.0",
     "framer-motion": "^12.38.0",
     "lucide-react": "^0.577.0",
     "marked": "^18.1.1",
