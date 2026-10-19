@@ -34,3 +34,14 @@ This directory archives all formal audit, integration, decommissioning, and conv
 7. **[VUE_MIGRATION_PLAN.md](file:///c:/Users/Administrator/Desktop/development/loan-engine-1/migration/VUE_MIGRATION_PLAN.md)** (Archived Roadmap)
    - Historical planning document created by Matthias detailing the original Vue migration roadmap. Preserved for reference.
 
+8. **[DEV_GUIDE_ALIGNMENT_AUDIT_REPORT.pdf](file:///c:/Users/Administrator/Desktop/development/loan-engine-1/migration/DEV_GUIDE_ALIGNMENT_AUDIT_REPORT.pdf)** (Architecture & Dev Guide Audit)
+   - Comprehensive alignment assessment comparing current React 19 codebase against `Gidfine_Dev_Guide.md` (v1.1).
+   - Reusable asset inventory, spec gap analysis, mini-scale Convex scope, and decisions requiring Matthias's approval.
+
+9. **[CONVEX_FOUNDATION_REPORT.pdf](file:///c:/Users/Administrator/Desktop/development/loan-engine-1/migration/CONVEX_FOUNDATION_REPORT.pdf)** (Convex Foundation Initialization)
+   - Verification baseline, package dependency alignment, and minimal Convex infrastructure.
+   - Foundational schema, server-side auth helpers, graceful React provider fallback, test execution records, and blocking decisions log.
+
+10. **[CONVEX_FOUNDATION_VERIFICATION_AUDIT.pdf](file:///c:/Users/Administrator/Desktop/development/loan-engine-1/migration/CONVEX_FOUNDATION_VERIFICATION_AUDIT.pdf)** (Pre-Implementation Verification Audit)
+    - Formal verification audit confirming branch tracking, zero commits/pushes to main, working tree inventory, build and test results, security analysis, and cloud provisioning disclosures.
+
