@@ -217,4 +217,153 @@ All assumptions in this v1.0 guide remain proposed until approved. Product decis
 
 ---
 
+### Technology Stack — React + Convex
+
+The Gidfine Loan Agency Management Platform will be developed using **React + TypeScript for the frontend** and **Convex as the primary backend**.
+
+**Core Technology Stack:**
+- **Frontend:** React + TypeScript
+- **Backend:** Convex (serverless functions, database, and real-time synchronization)
+- **UI:** Tailwind CSS with reusable components
+- **Authentication:** Convex-compatible authentication provider
+- **Database:** Convex Database
+- **File Storage:** Convex File Storage
+- **Deployment:** Modern React hosting integrated with Convex
+
+**Development Requirements:**
+
+All loan applications, lender matching, approvals, interest calculations, repayment processing, notifications, and audit logging must use secure Convex backend functions.
+
+The development team must:
+1. Enforce role-based access control and strict tenant-level data isolation.
+2. Protect borrower and lender information through server-side authorization.
+3. Use transactional mutations for financial operations.
+4. Maintain append-only financial ledgers and comprehensive audit logs.
+5. Use precise monetary calculations to prevent floating-point rounding errors.
+6. Reuse existing components and business logic wherever possible rather than duplicating functionality.
+7. Follow React and Convex best practices for security, scalability, maintainability, and performance.
+
+**Architecture Decision:** React + TypeScript + Convex replaces the previously proposed Vue, Laravel, PostgreSQL, and Redis stack. All functional requirements, security controls, and business workflows defined in this document remain applicable.
+
+### 13.1 Convex Schema and Backend Function Conventions
+
+The Gidfine platform will use **Convex as its primary database and backend execution environment**, with React + TypeScript as the frontend. All development must follow consistent schema, function, security, and naming conventions.
+
+#### A. Convex Schema Conventions
+
+1. Define all application tables and indexes centrally in `convex/schema.ts` using `defineSchema` and `defineTable`.
+2. Use TypeScript and Convex validators (`v`) to enforce data structures and function argument validation.
+3. Use Convex-generated document IDs (`Id<"tableName">`) rather than manually generated database primary keys.
+4. Use camelCase for field names and descriptive plural names for tables.
+5. Define indexes for frequently accessed fields, including agency, application status, lender, borrower, and creation date.
+6. Use `agencyId` to associate agency-owned records with the correct agency and enforce strict tenant isolation.
+7. Maintain explicit `createdAt`, `updatedAt`, and relevant business timestamps where necessary.
+8. Never store monetary values using imprecise floating-point calculations. Use integer minor units (pesewas for GHS) or an approved exact-decimal representation.
+9. Separate sensitive identity information, lender pricing, borrower offers, and financial records according to access requirements.
+10. Preserve financial history through append-only ledger records and reversal transactions instead of deleting or overwriting posted transactions.
+
+**Suggested Core Tables:**
+
+- `agencies`
+- `users`
+- `agencyMemberships`
+- `borrowerProfiles`
+- `lenderProfiles`
+- `lenderProducts`
+- `loanApplications`
+- `applicationDocuments`
+- `lenderAssignments`
+- `lenderProposals`
+- `proposalVersions`
+- `pricingPolicies`
+- `borrowerOffers`
+- `loanConsents`
+- `loans`
+- `disbursements`
+- `repaymentSchedules`
+- `repaymentInstallments`
+- `paymentTransactions`
+- `paymentAllocations`
+- `ledgerEntries`
+- `disclosurePolicies`
+- `notifications`
+- `auditEvents`
+
+These are conceptual tables and must be finalized according to the approved product requirements.
+
+#### B. Convex Function Conventions
+
+Organize backend functions by business domain rather than placing all logic in a single file.
+
+**Recommended structure:**
+
+```text
+convex/
+├── schema.ts
+├── auth.ts
+├── users.ts
+├── agencies.ts
+├── borrowers.ts
+├── lenders.ts
+├── applications.ts
+├── proposals.ts
+├── pricing.ts
+├── approvals.ts
+├── loans.ts
+├── disbursements.ts
+├── repayments.ts
+├── ledger.ts
+├── notifications.ts
+├── audit.ts
+├── crons.ts
+└── lib/
+    ├── authorization.ts
+    ├── tenantAccess.ts
+    ├── disclosure.ts
+    ├── money.ts
+    ├── loanCalculator.ts
+    └── validators.ts
+```
+
+**Function Rules:**
+
+1. **Queries:** Use Convex `query` functions for read-only operations.
+2. **Mutations:** Use Convex `mutation` functions for database changes and transactional business operations.
+3. **Actions:** Use Convex `action` functions for external services, payment providers, emails, SMS, and other integrations.
+4. **Internal functions:** Use `internalQuery`, `internalMutation`, and `internalAction` for operations that must not be directly accessible to clients.
+5. **Validation:** Every public function must define explicit `args` and `returns` validators.
+6. **Authorization:** Every protected function must independently verify authentication, role permissions, record ownership, and agency membership.
+7. **Disclosure:** Apply borrower and lender field-level disclosure rules before returning data. Never return sensitive records and rely on React to hide restricted fields.
+8. **Business logic:** Keep interest calculations, lender matching, approvals, repayment allocation, and ledger rules within reusable backend domain functions.
+9. **State transitions:** Validate the current loan/application state and authorized transition before applying changes.
+10. **Idempotency:** Prevent duplicate financial postings, payment confirmations, and external webhook processing.
+11. **Auditability:** Record the actor, action, timestamp, affected resource, and relevant before/after changes for sensitive operations.
+12. **Scheduling:** Use Convex scheduled functions and cron jobs for repayment reminders, overdue checks, and approved background workflows.
+
+#### C. React and Convex Integration
+
+- Use Convex's React client and hooks, including `useQuery` and `useMutation`, for application data access.
+- Use `useAction` for operations requiring approved backend actions.
+- Develop reusable React components and custom hooks organized around business features.
+- Use generated Convex APIs and TypeScript types instead of manually duplicating backend interfaces.
+- Never expose backend secrets, administrative functions, or unrestricted database access in frontend code.
+- Handle loading, empty, error, and permission-denied states consistently.
+
+#### D. Engineering Standards
+
+Before introducing any new schema, function, component, or subsystem, the development agent must inspect the existing implementation.
+
+**Mandatory rules:**
+
+- Reuse and extend existing code wherever practical.
+- Fix underlying defects rather than building parallel functionality around them.
+- Avoid duplicate tables, functions, business logic, and unnecessary abstractions.
+- Apply schema changes through controlled, backward-compatible migrations.
+- Write automated tests for authorization, loan calculations, approvals, financial transactions, and tenant isolation.
+- Preserve existing functionality unless a change has been explicitly approved.
+- Document important architectural decisions and business-rule changes.
+
+**Critical Requirement:** Convex is the authoritative backend for all Gidfine business operations. Financial calculations, approval workflows, access-control decisions, and audit records must be validated and enforced server-side. React must never be the authoritative source for financial or security-critical business logic.
+
 *Internal working specification • Version 1.1 • 13 October 2026*
+
