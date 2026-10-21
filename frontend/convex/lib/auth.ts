@@ -1,5 +1,5 @@
-import { QueryCtx, MutationCtx } from "../_generated/server";
-import { Doc } from "../_generated/dataModel";
+import type { QueryCtx, MutationCtx } from "../_generated/server.js";
+import type { Doc } from "../_generated/dataModel";
 
 export type AllowedRole = Doc<"users">["role"];
 
