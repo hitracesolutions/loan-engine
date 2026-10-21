@@ -12,6 +12,12 @@ interface ConvexClientProviderProps {
   children: React.ReactNode;
 }
 
+const ConvexClientContext = React.createContext<ConvexReactClient | null>(null);
+
+export function useOptionalConvex(): ConvexReactClient | null {
+  return React.useContext(ConvexClientContext);
+}
+
 export function ConvexClientProvider({ children }: ConvexClientProviderProps) {
   const convexUrl = import.meta.env.VITE_CONVEX_URL;
 
@@ -22,11 +28,11 @@ export function ConvexClientProvider({ children }: ConvexClientProviderProps) {
     return new ConvexReactClient(convexUrl);
   }, [convexUrl]);
 
-  if (!client) {
-    return <>{children}</>;
-  }
-
-  return <ConvexProvider client={client}>{children}</ConvexProvider>;
+  return (
+    <ConvexClientContext.Provider value={client}>
+      {client ? <ConvexProvider client={client}>{children}</ConvexProvider> : children}
+    </ConvexClientContext.Provider>
+  );
 }
 
 export { api } from '../../convex/_generated/api';
