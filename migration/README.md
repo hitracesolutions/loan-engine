@@ -45,3 +45,23 @@ This directory archives all formal audit, integration, decommissioning, and conv
 10. **[CONVEX_FOUNDATION_VERIFICATION_AUDIT.pdf](file:///c:/Users/Administrator/Desktop/development/loan-engine-1/migration/CONVEX_FOUNDATION_VERIFICATION_AUDIT.pdf)** (Pre-Implementation Verification Audit)
     - Formal verification audit confirming branch tracking, zero commits/pushes to main, working tree inventory, build and test results, security analysis, and cloud provisioning disclosures.
 
+11. **[CONVEX_CLOUD_READINESS_REPORT.pdf](file:///c:/Users/Administrator/Desktop/development/loan-engine-1/migration/CONVEX_CLOUD_READINESS_REPORT.pdf)** (Convex Cloud Readiness Audit)
+    - Pre-deployment audit verifying local configuration status, zero-cloud resource state, authentication prerequisites, Gidfine Dev Guide v1.1 schema gaps, non-destructive linking steps, and team blockers.
+
+12. **[MINI_SCALE_IMPLEMENTATION_READINESS_AUDIT.pdf](file:///c:/Users/Administrator/Desktop/development/loan-engine-1/migration/MINI_SCALE_IMPLEMENTATION_READINESS_AUDIT.pdf)** (Mini-Scale Implementation Readiness Audit)
+    - Detailed end-to-end workflow specification, reusable React component mapping, transition authority matrix, audit log invariants, Act 843 redaction rules, and phased milestone plan.
+
+13. **[GIDFINE_PHASE1_SCHEMA_STATE_MACHINE_REPORT.pdf](file:///c:/Users/Administrator/Desktop/development/loan-engine-1/migration/GIDFINE_PHASE1_SCHEMA_STATE_MACHINE_REPORT.pdf)** (Phase 1: Schema & State Machine)
+    - Foundational data structures for applications, versioned proposals, and immutable Act 843 consent snapshots.
+    - Centralized 20-status state-machine transition guard engine with SHA-256 consent fingerprinting.
+
+14. **[GIDFINE_PHASE2_MUTATIONS_REPORT.pdf](file:///c:/Users/Administrator/Desktop/development/loan-engine-1/migration/GIDFINE_PHASE2_MUTATIONS_REPORT.pdf)** (Phase 2: Secure Convex Mutations)
+    - Server-side mutations: `submitApplication`, `proposeTerms`, `decideLenderProposal`, `approveOffer`, `recordConsent`.
+    - Server-side queries: `getLenderProposal` (with strict borrower PII redaction) and `checkDisbursementReadiness` (with payment lockout).
+    - 16 passing unit tests covering role authorization, tenant isolation, proposal version preservation, affirmative consent, and disbursement lockouts.
+
+15. **[GIDFINE_PHASE2_SECURITY_AND_PHASE3_READINESS_REPORT.pdf](file:///c:/Users/Administrator/Desktop/development/loan-engine-1/migration/GIDFINE_PHASE2_SECURITY_AND_PHASE3_READINESS_REPORT.pdf)** (Phase 2 Security Review & Phase 3 Readiness Audit)
+    - Independent audit of schema, state machine guards, mutations, and caller authorization.
+    - Assessment of Convex Auth configuration, PII redaction, cryptographic consent hashing under Act 843, and append-only audit trail.
+    - Go/no-go recommendation for Phase 3 React UI integration.
+
