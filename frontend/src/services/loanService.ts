@@ -357,4 +357,165 @@ export const loanService = {
       throw new Error(err.message || "Failed to check disbursement readiness.");
     }
   },
+
+  // ===========================================================================
+  // PHASE 4: DISBURSEMENT MAKER-CHECKER & FINANCIAL LEDGER
+  // ===========================================================================
+
+  /**
+   * Maker requests disbursement for an application in PENDING_DISBURSEMENT.
+   */
+  async requestDisbursement(
+    client: ConvexReactClient | null,
+    params: {
+      applicationId: Id<"applications">;
+      amountGhs: number;
+      channel?: "MOMO" | "BANK_TRANSFER" | "CHEQUE" | "CASH";
+      note?: string;
+      idempotencyKey?: string;
+    }
+  ) {
+    const c = assertClient(client);
+    const amountPesewas = ghsToPesewas(params.amountGhs);
+    const idempotencyKey = params.idempotencyKey || `disb_${params.applicationId}_${Date.now()}`;
+    try {
+      return await c.mutation((api as any).ledger.requestDisbursement, {
+        applicationId: params.applicationId,
+        amountPesewas,
+        channel: params.channel,
+        note: params.note,
+        idempotencyKey,
+      });
+    } catch (err: any) {
+      throw new Error(err.message || "Failed to request disbursement.");
+    }
+  },
+
+  /**
+   * Checker approves disbursement (strictly Maker !== Checker).
+   */
+  async approveDisbursement(
+    client: ConvexReactClient | null,
+    params: {
+      disbursementRequestId: Id<"disbursementRequests">;
+      externalReference?: string;
+    }
+  ) {
+    const c = assertClient(client);
+    try {
+      return await c.mutation((api as any).ledger.approveDisbursement, params);
+    } catch (err: any) {
+      throw new Error(err.message || "Failed to approve disbursement.");
+    }
+  },
+
+  /**
+   * Checker rejects disbursement request.
+   */
+  async rejectDisbursement(
+    client: ConvexReactClient | null,
+    params: {
+      disbursementRequestId: Id<"disbursementRequests">;
+      rejectionReason: string;
+    }
+  ) {
+    const c = assertClient(client);
+    try {
+      return await c.mutation((api as any).ledger.rejectDisbursement, params);
+    } catch (err: any) {
+      throw new Error(err.message || "Failed to reject disbursement.");
+    }
+  },
+
+  /**
+   * Executes disbursement and activates loan.
+   */
+  async executeDisbursement(
+    client: ConvexReactClient | null,
+    params: {
+      disbursementRequestId: Id<"disbursementRequests">;
+      externalReference: string;
+    }
+  ) {
+    const c = assertClient(client);
+    try {
+      return await c.mutation((api as any).ledger.executeDisbursement, params);
+    } catch (err: any) {
+      throw new Error(err.message || "Failed to execute disbursement.");
+    }
+  },
+
+  /**
+   * Queries disbursement requests for cashier/underwriter review.
+   */
+  async getDisbursementRequests(
+    client: ConvexReactClient | null,
+    status?: string
+  ) {
+    const c = assertClient(client);
+    try {
+      return await c.query((api as any).ledger.getDisbursementRequests, { status });
+    } catch (err: any) {
+      throw new Error(err.message || "Failed to load disbursement requests.");
+    }
+  },
+
+  /**
+   * Records a repayment receipt and applies waterfall allocation.
+   */
+  async recordRepayment(
+    client: ConvexReactClient | null,
+    params: {
+      applicationId: Id<"applications">;
+      amountGhs: number;
+      channel: "MOMO" | "BANK_TRANSFER" | "CASH" | "CHEQUE";
+      externalReference?: string;
+      idempotencyKey?: string;
+    }
+  ) {
+    const c = assertClient(client);
+    const amountPesewas = ghsToPesewas(params.amountGhs);
+    const idempotencyKey = params.idempotencyKey || `repay_${params.applicationId}_${Date.now()}`;
+    try {
+      return await c.mutation((api as any).ledger.recordRepayment, {
+        applicationId: params.applicationId,
+        amountPesewas,
+        channel: params.channel,
+        externalReference: params.externalReference,
+        idempotencyKey,
+      });
+    } catch (err: any) {
+      throw new Error(err.message || "Failed to record repayment.");
+    }
+  },
+
+  /**
+   * Retrieves repayment instalment schedule for an application.
+   */
+  async getRepaymentSchedule(
+    client: ConvexReactClient | null,
+    applicationId: Id<"applications">
+  ) {
+    const c = assertClient(client);
+    try {
+      return await c.query((api as any).ledger.getRepaymentSchedule, { applicationId });
+    } catch (err: any) {
+      throw new Error(err.message || "Failed to load repayment schedule.");
+    }
+  },
+
+  /**
+   * Retrieves double-entry general ledger transactions.
+   */
+  async getJournalTransactions(
+    client: ConvexReactClient | null,
+    applicationId?: Id<"applications">
+  ) {
+    const c = assertClient(client);
+    try {
+      return await c.query((api as any).ledger.getJournalTransactions, { applicationId });
+    } catch (err: any) {
+      throw new Error(err.message || "Failed to load journal transactions.");
+    }
+  },
 };

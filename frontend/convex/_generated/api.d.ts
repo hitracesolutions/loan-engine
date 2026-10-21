@@ -13,6 +13,7 @@ import type { ApiFromModules, FilterApi, FunctionReference } from "convex/server
 import type * as health from "../health.js";
 import type * as loans from "../loans.js";
 import type * as auth from "../auth.js";
+import type * as ledger from "../ledger.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -26,6 +27,7 @@ declare const fullApi: ApiFromModules<{
   health: typeof health;
   loans: typeof loans;
   auth: typeof auth;
+  ledger: typeof ledger;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,
