@@ -36,20 +36,20 @@ The target is **one** runtime, **one** data plane, **one** state machine — all
 
 ## 3. Current state → target state
 
-| Capability | Today | Target |
-| --- | --- | --- |
-| Web app | React 19 + Vite in `frontend/` | Same, deployed to **Cloudflare Pages** |
-| Hosting config | `frontend/vercel.json` | Pages project + `frontend/public/_redirects` |
-| HTTP API | FastAPI (`archive/python-backend/`) + Convex | `workers/api` (Worker, `api.gidfine.com`) |
-| Real-time chat | FastAPI WebSocket + Convex reactivity | Durable Object `LoanSession` (WebSocket hibernation) |
-| Database | MongoDB Atlas + Convex DB | **D1** (`gidfine-db`) |
-| Documents | GridFS | **R2** (`gidfine-documents`) with signed URLs |
-| Cache | Redis | **KV** + Cache API |
-| Background work | In-process `asyncio` + cron | **Queues** + **Cron Triggers** |
-| LLM / OCR | LangChain → Groq/Gemini/OpenRouter | **Workers AI** + **AI Gateway** |
-| PDF letters | ReportLab (Python) | `pdf-lib` in the Worker |
-| Auth | Session-based + OTP | JWT (`jose`) + PBKDF2 via Web Crypto; optional Cloudflare Access for staff |
-| Tests | pytest (Python) | `node:test` with `--experimental-strip-types` |
+| Capability | At migration start | Target | Status |
+| --- | --- | --- | --- |
+| Web app | React 19 + Vite in `frontend/` | Same, deployed to **Cloudflare Pages** | ⬜ Pages project pending |
+| Hosting config | `frontend/vercel.json` | Pages project + `frontend/public/_redirects` | ✅ Vercel removed, `_redirects` added |
+| HTTP API | FastAPI (`archive/python-backend/`) + Convex | `workers/api` (Worker, `api.gidfine.com`) | 🟡 health, auth, applications |
+| Real-time chat | FastAPI WebSocket + Convex reactivity | Durable Object `LoanSession` (WebSocket hibernation) | ⬜ |
+| Database | MongoDB Atlas + Convex DB | **D1** (`gidfine-db`) | 🟡 core tables migrated |
+| Documents | GridFS | **R2** (`gidfine-documents`) with signed URLs | ⬜ |
+| Cache | Redis | **KV** + Cache API | ⬜ |
+| Background work | In-process `asyncio` + cron | **Queues** + **Cron Triggers** | ⬜ |
+| LLM / OCR | LangChain → Groq/Gemini/OpenRouter | **Workers AI** + **AI Gateway** | ⬜ |
+| PDF letters | ReportLab (Python) | `pdf-lib` in the Worker | ⬜ |
+| Auth | Session-based + OTP | JWT (`jose`) + PBKDF2 via Web Crypto; optional Cloudflare Access for staff | ✅ JWT + PBKDF2 |
+| Tests | pytest (Python) | `node:test` with `--experimental-strip-types` | ✅ 34 Worker + 52 frontend |
 
 ---
 
@@ -82,30 +82,33 @@ The target is **one** runtime, **one** data plane, **one** state machine — all
 - [x] Docs rebased onto Cloudflare (this directory + README + Dev Guide).
 - **Exit criterion:** no build, test or deploy path references Python.
 
-### Phase 1 — Worker skeleton and D1 schema 📐
+### Phase 1 — Worker skeleton and D1 schema ✅
 
-- Create `workers/api` with Wrangler config, `nodejs_compat`, observability.
-- Implement `GET /health`, structured error envelope, CORS allow-list, request IDs.
-- Author migrations `0001_core.sql` … covering agencies, users, memberships, applications, documents, proposals, consents, approvals, audit.
-- Port the state machine and guards to `domain/stateMachine.ts` with a `node:test` suite.
-- **Exit criterion:** state-machine and schema tests green; `/health` deployed to staging.
+- [x] `workers/api` with Wrangler config, `nodejs_compat`, observability, staging + production envs.
+- [x] `GET /health` (liveness + D1 probe), unified JSON error envelope, CORS allow-list, request ids.
+- [x] `0001_core.sql` — agencies, users, `loan_applications`, `idempotency_keys`, `audit_events`, with tenancy indexes and CHECK constraints.
+- [x] State machine and guards ported to `domain/stateMachine.ts` with a `node:test` suite.
+- [x] `wrangler types` generated bindings; `AppEnv` narrows them.
+- **Exit criterion:** met locally — 34 Worker tests, `tsc --noEmit` clean, `wrangler dev` verified end to end. Staging deploy still pending (see Phase 7).
 
-### Phase 2 — Identity and tenancy 📐
+### Phase 2 — Identity and tenancy 🟡
 
-- `POST /auth/register`, `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout`.
-- PBKDF2-HMAC-SHA-256 (Web Crypto) password hashing; JWT access + refresh tokens.
-- Middleware resolves `{ userId, agencyId, role }` from the token; **never** from the request body.
-- Rate-limit auth and OTP routes with the Cloudflare rate-limiting binding.
-- **Exit criterion:** unauthenticated and cross-tenant requests are rejected in tests.
+- [x] `POST /auth/register`, `POST /auth/login`, `GET /auth/me`.
+- [x] PBKDF2-HMAC-SHA-256 (210k iterations, per-user salt) via Web Crypto; HS256 access tokens via `jose`.
+- [x] Middleware resolves `{ userId, agencyId, role }` from the token only.
+- [x] Constant response for unknown-user and wrong-password; disabled-account check.
+- [ ] `POST /auth/refresh` / `POST /auth/logout` with refresh-token rotation.
+- [ ] Rate-limit auth routes with the Cloudflare rate-limiting binding.
+- **Exit criterion:** partially met — unauthenticated calls return `401` and cross-tenant actors are rejected in the state-machine suite; refresh/logout and rate limits outstanding.
 
-### Phase 3 — Loan workflow API 📐
+### Phase 3 — Loan workflow API 🟡
 
-- `POST /applications` (borrower submit), `GET /applications` (borrower list).
-- `POST /applications/:id/proposals` (agency proposes terms, versioned).
-- `POST /proposals/:id/decision` (assigned lender accepts/declines).
-- `POST /applications/:id/approval` (agency approval — blocked without lender acceptance).
-- `POST /applications/:id/consent` (borrower affirmative consent + SHA-256 terms snapshot).
-- `GET /applications/:id/disbursement-readiness` (read-only audit).
+- [x] `POST /applications` (borrower submit, idempotent), `GET /applications` (borrower own / agency queue).
+- [ ] `POST /applications/:id/proposals` (agency proposes terms, versioned).
+- [ ] `POST /proposals/:id/decision` (assigned lender accepts/declines).
+- [ ] `POST /applications/:id/approval` (agency approval — blocked without lender acceptance).
+- [ ] `POST /applications/:id/consent` (borrower affirmative consent + SHA-256 terms snapshot).
+- [ ] `GET /applications/:id/disbursement-readiness` (read-only audit).
 - **Exit criterion:** the 8-step lifecycle passes the end-to-end security suite.
 
 ### Phase 4 — Documents, chat and async work 📐
@@ -122,13 +125,16 @@ The target is **one** runtime, **one** data plane, **one** state machine — all
 - Reconciliation query: debits = credits per transaction.
 - **Exit criterion:** duplicate idempotency key cannot double-post; reversals balance.
 
-### Phase 6 — Frontend cutover ✅ / 📐
+### Phase 6 — Frontend cutover 🟡
 
 - [x] React 19 + Vite SPA exists.
+- [x] Delete `frontend/vercel.json`; add `frontend/public/_redirects`.
+- [x] Single `VITE_API_BASE` resolution in `src/lib/config.ts` — the hard-coded Render host is gone, and the legacy REST/WebSocket clients now derive from it.
+- [x] Remove the unverified OAuth identity fallback in `App.tsx` (query parameters are no longer treated as identity).
+- [x] Repair `frontend/package-lock.json` so `npm ci`, `tsc -b` and the full test suite work.
 - [ ] Replace the Convex adapter with the Worker HTTP client.
 - [ ] Delete `frontend/convex/` and the Convex dependency.
-- [ ] Delete `frontend/vercel.json`; add `frontend/public/_redirects`.
-- [ ] Point `VITE_API_BASE` at the Worker per environment.
+- [ ] Point `VITE_API_BASE` at the Worker per environment in the Pages project.
 - **Exit criterion:** `npm run build` and `node --test` pass with no Convex import; Pages preview works against staging.
 
 ### Phase 7 — Decommission and harden 📐

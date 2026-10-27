@@ -35,14 +35,18 @@ This directory contains the original **FastAPI + LangGraph + MongoDB** implement
 
 ## Where behaviour now lives
 
-| Python module | Cloudflare replacement (target) |
+Paths marked ✅ exist in `workers/api` today; the rest are the planned home for the remaining port.
+
+| Python module | Cloudflare replacement |
 | --- | --- |
-| `agents/master_router.py`, `master_graph.py` | `workers/api/src/domain/stateMachine.ts` + route dispatch |
+| `agents/master_router.py`, `master_graph.py` | ✅ `workers/api/src/domain/stateMachine.ts` + route dispatch |
 | `agents/intent_agent.py` | `workers/api/src/domain/intent.ts` (Workers AI classification) |
 | `agents/sales_agent.py` | `workers/api/src/routes/chat.ts` + Durable Object session |
 | `agents/document_agent.py`, `api/services/document_service.py` | `workers/api/src/jobs/ocr.ts` (AI Gateway → Gemini Vision) + R2 |
 | `agents/kyc_agent.py`, `agents/fraud_agent.py` | `workers/api/src/domain/kyc.ts`, `domain/fraud.ts` |
 | `agents/underwriting.py`, `utils/financial_rules.py` | `workers/api/src/domain/underwriting.ts`, `domain/pricing.ts` |
 | `agents/sanction_agent.py`, `utils/pdf_generator.py` | `workers/api/src/lib/pdf.ts` (`pdf-lib`) + R2 |
-| `agents/emi_engine.py`, `agents/repayment_agent.py` | `workers/api/src/domain/allocation.ts` + D1 ledger tables |
-| `db/*`, `api/core/*` | `workers/api/src/lib/*` + D1, KV, R2 bindings |
+| `agents/emi_engine.py`, `agents/repayment_agent.py` | `domain/allocation.ts` + D1 ledger tables |
+| `api/routers/auth.py`, `api/services/auth_service.py` | ✅ `workers/api/src/routes/auth.ts`, `src/lib/auth.ts` |
+| `api/routers/session.py`, `api/services/session_service.py` | ✅ partially — `workers/api/src/routes/applications.ts` |
+| `db/*`, `api/core/*` | ✅ partially — `workers/api/src/lib/*` + D1, KV, R2 bindings |

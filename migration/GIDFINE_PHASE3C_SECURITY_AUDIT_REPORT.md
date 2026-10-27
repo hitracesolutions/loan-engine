@@ -4,7 +4,7 @@
 **Specification:** `Gidfine_Dev_Guide.md` v1.2 (Sections 7 and 12)
 **Architecture stack:** React 19 + Vite (Cloudflare Pages) → Cloudflare Workers → D1 / R2 / Durable Objects
 **Date:** 27 October 2026
-**Status:** 📐 Audit plan and control requirements — full audit runs after the Worker cutover
+**Status:** 🟡 High findings closed; full audit runs after the remaining Worker routes land
 
 > This record replaces the Convex-era Phase 3C report of the same name. The PDF of the same name in this directory is superseded evidence.
 
@@ -47,41 +47,49 @@ Out of scope: lender-side systems, mobile clients, physical security.
 
 ## 3. Control matrix
 
-| Control | Requirement | Status |
-| --- | --- | --- |
-| Authentication | Worker-issued JWT; `jose` verification on every protected route | ⬜ |
-| Password storage | PBKDF2-HMAC-SHA-256, ≥ 210,000 iterations, per-user salt | ⬜ |
-| Session tokens | Access ≤ 15 min, refresh rotation, revocation table | ⬜ |
-| Authorisation | Role + ownership + tenant check per route | ⬜ |
-| Field disclosure | Explicit column allow-list per audience | ⬜ |
-| Transport | TLS only; HSTS; no mixed content | ⬜ |
-| CORS | Exact allow-list (`ALLOWED_ORIGINS`), no `*` with credentials | ⬜ |
-| Rate limiting | Auth, OTP, upload, export routes | ⬜ |
-| Input validation | Schema validation on body, query and path params | ⬜ |
-| SQL safety | Parameterised D1 statements only; no string interpolation | ⬜ |
-| Idempotency | Required on financial POSTs | ⬜ |
-| Audit trail | Append-only `audit_events` for 5 milestones + postings | ⬜ |
-| Document access | R2 private; signed URLs ≤ 5 min, tenant-scoped keys | ⬜ |
-| Secret management | `wrangler secret`, per-environment; never in git or `VITE_*` | ⬜ |
-| Logging | No tokens, document contents, full PII, or raw request bodies | ⬜ |
-| Dependency hygiene | `npm audit` in CI; pinned lockfile | 🟡 |
+| Control | Requirement | Status | Evidence |
+| --- | --- | --- | --- |
+| Authentication | Worker-issued JWT; `jose` verification on every protected route | ✅ | `lib/auth.ts#requireActor`, used by `/auth/me` and `/applications` |
+| Password storage | PBKDF2-HMAC-SHA-256, ≥ 210,000 iterations, per-user salt | ✅ | `lib/auth.ts#hashPassword`, 5 tests |
+| Session tokens | Access ≤ 15 min, refresh rotation, revocation table | 🟡 | 15-min access tokens live; refresh/revocation outstanding (F11) |
+| Authorisation | Role + ownership + tenant check per route | ✅ | Route guards + `validateStateTransition` |
+| Field disclosure | Explicit column allow-list per audience | 🟡 | `loan_applications` selects explicit columns; lender matrix pending |
+| Transport | TLS only; HSTS; no mixed content | ⬜ | Cloudflare default; HSTS header to be set at cutover |
+| CORS | Exact allow-list (`ALLOWED_ORIGINS`), no `*` with credentials | ✅ | `lib/http.ts#corsHeaders`, verified against an unlisted origin |
+| Rate limiting | Auth, OTP, upload, export routes | ⬜ | F10 |
+| Input validation | Schema validation on body, query and path params | ✅ | `lib/validation.ts`, `lib/money.ts` |
+| SQL safety | Parameterised D1 statements only; no string interpolation | ✅ | Every statement uses `.bind()` |
+| Idempotency | Required on financial POSTs | ✅ | `lib/idempotency.ts`; replay verified on `POST /applications` |
+| Audit trail | Append-only `audit_events` for 5 milestones + postings | 🟡 | Registration and submission recorded; milestones land with those routes |
+| Document access | R2 private; signed URLs ≤ 5 min, tenant-scoped keys | ⬜ | R2 binding not yet added |
+| Secret management | `wrangler secret`, per-environment; never in git or `VITE_*` | ✅ | `JWT_SIGNING_KEY` via `wrangler secret` / `.dev.vars` (git-ignored) |
+| Logging | No tokens, document contents, full PII, or raw request bodies | ✅ | Structured 5xx logging with request id only |
+| Dependency hygiene | `npm audit` in CI; pinned lockfile | ✅ | Both lockfiles committed; 0 vulnerabilities |
 
 ---
 
-## 4. Findings in the current tree
+## 4. Findings
 
-These were observed during the documentation rebase and must be closed before cutover.
+### 4.1 Closed
+
+| # | Severity | File | Finding | Fix applied |
+| --- | --- | --- | --- | --- |
+| F1 | 🟠 High | `frontend/src/App.tsx` | OAuth callback handling trusted `name`, `email`, `picture`, `phone` from the query string and, when `session_id` was absent, populated the user store with no server verification — client-side identity spoofing. | Unverified branch removed. Only a server-resolved `session_id` can populate the session, and `cust.name` is now required before `setUser` is called. |
+| F2 | 🟠 High | `frontend/src/lib/config.ts`, `frontend/src/api/client.ts` | Production API host was hard-coded (`nbfc-inc.onrender.com`); a build missing the env var silently targeted a retired host. | Single resolution point in `src/lib/config.ts`: `VITE_API_BASE` → dev `http://localhost:8787` → production same-origin **with a warning**. No hard-coded host remains anywhere in `src/`. |
+| F3 | 🟡 Medium | `frontend/src/api/client.ts` | `console.log` of base URL and environment on every import — configuration disclosure and noisy logs. | Debug logging removed; the client now imports the resolved `API_BASE`. |
+| F6 | 🟡 Medium | `frontend/public/` | No `_redirects`, so deep links such as `/docs` would 404 on Cloudflare Pages. | `frontend/public/_redirects` added with `/* /index.html 200`. |
+| F8 | ⚪ Low | `frontend/vercel.json` | Stale deployment target. | Deleted. |
+| F9 | 🟡 Medium | `frontend/package-lock.json` | `convex` was declared in `package.json` but absent from the lockfile, so `npm ci`, `tsc -b` and four test files failed. | Lockfile regenerated; `npm ci`, `npm run build` and all 52 frontend tests pass. |
+
+### 4.2 Open
 
 | # | Severity | File | Finding | Required fix |
 | --- | --- | --- | --- | --- |
-| F1 | 🟠 High | `frontend/src/App.tsx` | OAuth callback handling trusts `name`, `email`, `picture`, `phone` from the query string and, when `session_id` is absent, populates the user store without any server verification. This allows client-side identity spoofing (the server remains authoritative, but the UI can display a forged identity). | Remove the unverified branch; accept only a server-verified session, then fetch the profile from the API. |
-| F2 | 🟠 High | `frontend/src/lib/config.ts`, `frontend/src/api/client.ts` | Production API host is hard-coded (`nbfc-inc.onrender.com`). A build with a missing env var silently targets a retired host rather than failing. | Require `VITE_API_BASE`; fail the build when it is absent in production. |
-| F3 | 🟡 Medium | `frontend/src/api/client.ts` | `console.log` of base URL and environment on every import — configuration disclosure and noisy production logs. | Remove debug logging; add a single gated dev-only logger. |
 | F4 | 🟡 Medium | `frontend/src/lib/convex.tsx` | The Convex provider degrades silently to "no backend" when `VITE_CONVEX_URL` is unset, masking misconfiguration. | Delete at cutover; replace with an explicit API-unavailable state. |
-| F5 | 🟡 Medium | `frontend/src/lib/api.ts`, `src/api/client.ts`, `src/api/websocket.ts` | Three overlapping clients with different base-URL, error and retry behaviour. | Consolidate into `src/services/http.ts`. |
-| F6 | 🟡 Medium | `frontend/public/` | No `_redirects`; deep links such as `/docs` will 404 on Cloudflare Pages. | Add `/* /index.html 200`. |
-| F7 | ⚪ Low | `frontend/tests/*.test.ts` | Tests import `../convex/**`; they block removal of the Convex backend. | Repoint to `workers/api/src/domain/**`. |
-| F8 | ⚪ Low | `frontend/vercel.json` | Stale deployment target. | Delete when Pages takes over. |
+| F5 | 🟡 Medium | `frontend/src/lib/api.ts`, `src/api/client.ts`, `src/api/websocket.ts` | Three overlapping clients with different error and retry behaviour. They now share one base URL but remain duplicated. | Consolidate into `src/services/http.ts` once the Worker routes cover those calls. |
+| F7 | ⚪ Low | `frontend/tests/*.test.ts` | Tests import `../convex/**`, which blocks removal of the Convex backend. | Repoint to `workers/api/src/domain/**` (the ported state machine is already covered by `workers/api/tests/stateMachine.test.ts`). |
+| F10 | 🟡 Medium | `workers/api/src/index.ts` | No rate limiting on `/auth/*` yet. | Add the Cloudflare rate-limiting binding before production cutover. |
+| F11 | 🟡 Medium | `workers/api` | Access tokens have no refresh/rotation or revocation path. | Add `POST /auth/refresh` and a revocation table (migration `0002`). |
 
 > Severity scale: 🔴 critical (exploitable, financial or PII impact) · 🟠 high (exploitable with preconditions) · 🟡 medium (defence-in-depth or misconfiguration) · ⚪ low (hygiene).
 
