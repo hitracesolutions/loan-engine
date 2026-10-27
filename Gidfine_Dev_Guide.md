@@ -1,10 +1,11 @@
 # Gidfine Loan Agency Management Platform
 
-**Product Requirements Document (PRD) & Development Guide | Draft v1.1**
+**Product Requirements Document (PRD) & Development Guide | Draft v1.2**
 
 **Prepared for:** Gidfine / HiTrace Solutions delivery team  
-**Date:** 13 October 2026  
-**Status:** Working draft — business decisions in Section 15 must be approved before implementation.
+**Date:** 13 October 2026 · **Revision:** 27 October 2026 (Cloudflare platform baseline)  
+**Status:** Working draft — business decisions in Section 15 must be approved before implementation.  
+**Platform:** Cloudflare (Pages + Workers + D1 + R2 + Durable Objects). React + Vite frontend. No Python runtime.
 
 ## 1. Executive summary
 
@@ -176,7 +177,7 @@ All agency-owned records must carry `tenant_id` if implemented as SaaS. Enforce 
 
 ## 13. Suggested technical architecture (subject to repository audit)
 
-Frontend: Vue 3 + TypeScript. Backend: Laravel API. Database: PostgreSQL. Queue/cache: Redis. Authentication: Laravel Sanctum or a verified alternative appropriate to the chosen deployment. Authorisation: policies and role permissions with explicit field-disclosure layer. Deployment: Docker/Coolify. Automated tests: backend integration/security tests, Vue component tests and end-to-end tests. This is a recommendation, not permission to replace a viable existing application.
+Frontend: React 19 + TypeScript, built with Vite and hosted on Cloudflare Pages. Backend: Cloudflare Workers (TypeScript). Database: Cloudflare D1. Object storage: Cloudflare R2. Queue/cache: Cloudflare Queues, Cron Triggers and KV. Real-time: Durable Objects. Authentication: Worker-issued JWT (PBKDF2 password hashing via Web Crypto) or Cloudflare Access for staff portals. Authorisation: role and permission checks with an explicit server-side field-disclosure layer. Deployment: Wrangler and Pages Git integration. Automated tests: Worker integration/security tests, React component tests and end-to-end tests. This is a recommendation, not permission to replace a viable existing application.
 
 A shared-database multi-tenant model is appropriate only if Gidfine is intended to serve multiple independent agency businesses; if Gidfine alone is the agency, an agency-scoped single-tenant implementation may be simpler. Confirm commercial tenancy before schema design.
 
@@ -217,153 +218,177 @@ All assumptions in this v1.0 guide remain proposed until approved. Product decis
 
 ---
 
-### Technology Stack — React + Convex
+### Technology Stack — Cloudflare (React + Vite + Workers)
 
-The Gidfine Loan Agency Management Platform will be developed using **React + TypeScript for the frontend** and **Convex as the primary backend**.
+The Gidfine Loan Agency Management Platform is built and operated on **Cloudflare**. The single-page application is written in **React + TypeScript with Vite**; all server-side business logic runs in **Cloudflare Workers** written in **TypeScript**. There is no Python runtime in the product.
 
 **Core Technology Stack:**
-- **Frontend:** React + TypeScript
-- **Backend:** Convex (serverless functions, database, and real-time synchronization)
-- **UI:** Tailwind CSS with reusable components
-- **Authentication:** Convex-compatible authentication provider
-- **Database:** Convex Database
-- **File Storage:** Convex File Storage
-- **Deployment:** Modern React hosting integrated with Convex
+
+- **Frontend:** React 19 + TypeScript, built with Vite, hosted on **Cloudflare Pages**
+- **Styling:** Tailwind CSS with reusable, accessible components
+- **Edge API:** **Cloudflare Workers** (TypeScript) — one Worker (`gidfine-api`) serving REST and WebSocket upgrade requests
+- **Database:** **Cloudflare D1** (SQLite), accessed only through Worker bindings
+- **Object storage:** **Cloudflare R2** for borrower documents and generated PDFs
+- **Real-time:** **Durable Objects** for per-session chat state and streaming
+- **Cache:** **Cloudflare KV** and the Cache API for rate cards, model responses and idempotency lookups
+- **Async work:** **Cloudflare Queues** and **Cron Triggers** for OCR fan-out, notifications and overdue sweeps
+- **AI:** **Workers AI** for in-platform inference, fronted by **AI Gateway** for external providers, caching, retries and observability
+- **Authentication:** JWT issued by the Worker (`jose`), PBKDF2-HMAC-SHA-256 password hashing via Web Crypto; optional Cloudflare Access for staff portals
+- **Deployment:** Wrangler (`workers/api`), Cloudflare Pages Git integration (`frontend`), GitHub Actions for CI
 
 **Development Requirements:**
 
-All loan applications, lender matching, approvals, interest calculations, repayment processing, notifications, and audit logging must use secure Convex backend functions.
+All loan applications, lender matching, approvals, interest calculations, repayment processing, notifications and audit logging must be implemented as secure Worker endpoints backed by D1 and R2. The React client is never authoritative.
 
 The development team must:
-1. Enforce role-based access control and strict tenant-level data isolation.
-2. Protect borrower and lender information through server-side authorization.
-3. Use transactional mutations for financial operations.
+
+1. Enforce role-based access control and strict tenant-level data isolation in the Worker.
+2. Protect borrower and lender information through server-side authorization and field-level redaction before serialization.
+3. Use D1 transactions (`batch` / `BEGIN … COMMIT`) or guarded conditional updates for financial operations.
 4. Maintain append-only financial ledgers and comprehensive audit logs.
-5. Use precise monetary calculations to prevent floating-point rounding errors.
-6. Reuse existing components and business logic wherever possible rather than duplicating functionality.
-7. Follow React and Convex best practices for security, scalability, maintainability, and performance.
+5. Use integer minor units (pesewas) for money and integer basis points for rates — never floating point.
+6. Reuse existing React components and business rules rather than rewriting them.
+7. Follow React, Vite, Workers and D1 best practices for security, scalability, maintainability and performance.
 
-**Architecture Decision:** React + TypeScript + Convex replaces the previously proposed Vue, Laravel, PostgreSQL, and Redis stack. All functional requirements, security controls, and business workflows defined in this document remain applicable.
+**Architecture Decision:** React + TypeScript + Cloudflare (Pages, Workers, D1, R2, Durable Objects, KV, Queues, Workers AI) replaces the previously proposed Vue, Laravel, PostgreSQL and Redis stack, and supersedes the interim Convex implementation. All functional requirements, security controls and business workflows defined in this document remain applicable.
 
-### 13.1 Convex Schema and Backend Function Conventions
+### 13.1 Cloudflare Schema and Worker Conventions
 
-The Gidfine platform will use **Convex as its primary database and backend execution environment**, with React + TypeScript as the frontend. All development must follow consistent schema, function, security, and naming conventions.
+All development must follow consistent schema, function, security and naming conventions.
 
-#### A. Convex Schema Conventions
+#### A. D1 Schema Conventions
 
-1. Define all application tables and indexes centrally in `convex/schema.ts` using `defineSchema` and `defineTable`.
-2. Use TypeScript and Convex validators (`v`) to enforce data structures and function argument validation.
-3. Use Convex-generated document IDs (`Id<"tableName">`) rather than manually generated database primary keys.
-4. Use camelCase for field names and descriptive plural names for tables.
-5. Define indexes for frequently accessed fields, including agency, application status, lender, borrower, and creation date.
-6. Use `agencyId` to associate agency-owned records with the correct agency and enforce strict tenant isolation.
-7. Maintain explicit `createdAt`, `updatedAt`, and relevant business timestamps where necessary.
-8. Never store monetary values using imprecise floating-point calculations. Use integer minor units (pesewas for GHS) or an approved exact-decimal representation.
-9. Separate sensitive identity information, lender pricing, borrower offers, and financial records according to access requirements.
-10. Preserve financial history through append-only ledger records and reversal transactions instead of deleting or overwriting posted transactions.
+1. Define all tables and indexes in versioned SQL migrations under `workers/api/migrations/`; never mutate a production schema by hand.
+2. Apply migrations with `wrangler d1 migrations apply` — forward-only, reviewed in version control, one logical change per migration.
+3. Use `TEXT` primary keys generated server-side (ULID or UUID v7) for stable, sortable identifiers; never reuse business data as a key.
+4. Use `snake_case` for columns and plural table names.
+5. Define indexes for frequently filtered columns, including agency, application status, lender, borrower and creation date.
+6. Include `agency_id` on every agency-owned table and enforce tenant isolation in the Worker query layer.
+7. Maintain explicit `created_at`, `updated_at` and relevant business timestamps (ISO-8601 UTC strings or epoch milliseconds — pick one and apply it consistently).
+8. Store monetary values as `INTEGER` **pesewas** (GH₵ 1.00 = 100 pesewas) and rates as `INTEGER` **basis points** (1% = 100 bps). Floating point is prohibited in financial paths.
+9. Separate sensitive identity information, lender pricing, borrower offers and financial records according to access requirements.
+10. Preserve financial history through append-only journal rows and compensating reversal rows; deleting or overwriting posted transactions is prohibited.
+11. Enable `PRAGMA foreign_keys = ON` and declare `REFERENCES` constraints where the relationship is mandatory.
 
-**Suggested Core Tables:**
+**Core tables:**
 
 - `agencies`
 - `users`
-- `agencyMemberships`
-- `borrowerProfiles`
-- `lenderProfiles`
-- `lenderProducts`
-- `loanApplications`
-- `applicationDocuments`
-- `lenderAssignments`
-- `lenderProposals`
-- `proposalVersions`
-- `pricingPolicies`
-- `borrowerOffers`
-- `loanConsents`
+- `agency_memberships`
+- `borrower_profiles`
+- `lender_profiles`
+- `lender_products`
+- `loan_applications`
+- `application_documents`
+- `lender_assignments`
+- `lender_proposals`
+- `proposal_versions`
+- `pricing_policies`
+- `borrower_offers`
+- `loan_consents`
 - `loans`
 - `disbursements`
-- `repaymentSchedules`
-- `repaymentInstallments`
-- `paymentTransactions`
-- `paymentAllocations`
-- `ledgerEntries`
-- `disclosurePolicies`
+- `repayment_schedules`
+- `repayment_installments`
+- `payment_transactions`
+- `payment_allocations`
+- `journal_transactions`
+- `journal_lines`
+- `ledger_entries`
+- `disclosure_policies`
 - `notifications`
-- `auditEvents`
+- `audit_events`
 
-These are conceptual tables and must be finalized according to the approved product requirements.
+These are conceptual tables and must be finalised against the approved product requirements.
 
-#### B. Convex Function Conventions
+#### B. Worker Module Conventions
 
-Organize backend functions by business domain rather than placing all logic in a single file.
+Organise backend code by business domain rather than in a single entry file.
 
 **Recommended structure:**
 
 ```text
-convex/
-├── schema.ts
-├── auth.ts
-├── users.ts
-├── agencies.ts
-├── borrowers.ts
-├── lenders.ts
-├── applications.ts
-├── proposals.ts
-├── pricing.ts
-├── approvals.ts
-├── loans.ts
-├── disbursements.ts
-├── repayments.ts
-├── ledger.ts
-├── notifications.ts
-├── audit.ts
-├── crons.ts
-└── lib/
-    ├── authorization.ts
-    ├── tenantAccess.ts
-    ├── disclosure.ts
-    ├── money.ts
-    ├── loanCalculator.ts
-    └── validators.ts
+workers/api/
+├── wrangler.jsonc
+├── migrations/
+│   ├── 0001_core.sql
+│   ├── 0002_proposals.sql
+│   └── ...
+└── src/
+    ├── index.ts              # fetch handler, router, error mapping
+    ├── routes/
+    │   ├── auth.ts
+    │   ├── applications.ts
+    │   ├── proposals.ts
+    │   ├── lender.ts
+    │   ├── approvals.ts
+    │   ├── documents.ts
+    │   ├── ledger.ts
+    │   └── admin.ts
+    ├── domain/
+    │   ├── stateMachine.ts
+    │   ├── pricing.ts
+    │   ├── underwriting.ts
+    │   ├── fraud.ts
+    │   └── allocation.ts
+    ├── durable/
+    │   └── loanSession.ts
+    ├── jobs/
+    │   ├── ocr.ts
+    │   ├── notifications.ts
+    │   └── overdueSweep.ts
+    └── lib/
+        ├── auth.ts
+        ├── authorization.ts
+        ├── tenantAccess.ts
+        ├── disclosure.ts
+        ├── money.ts
+        ├── idempotency.ts
+        ├── pdf.ts
+        └── validators.ts
 ```
 
 **Function Rules:**
 
-1. **Queries:** Use Convex `query` functions for read-only operations.
-2. **Mutations:** Use Convex `mutation` functions for database changes and transactional business operations.
-3. **Actions:** Use Convex `action` functions for external services, payment providers, emails, SMS, and other integrations.
-4. **Internal functions:** Use `internalQuery`, `internalMutation`, and `internalAction` for operations that must not be directly accessible to clients.
-5. **Validation:** Every public function must define explicit `args` and `returns` validators.
-6. **Authorization:** Every protected function must independently verify authentication, role permissions, record ownership, and agency membership.
-7. **Disclosure:** Apply borrower and lender field-level disclosure rules before returning data. Never return sensitive records and rely on React to hide restricted fields.
-8. **Business logic:** Keep interest calculations, lender matching, approvals, repayment allocation, and ledger rules within reusable backend domain functions.
-9. **State transitions:** Validate the current loan/application state and authorized transition before applying changes.
-10. **Idempotency:** Prevent duplicate financial postings, payment confirmations, and external webhook processing.
-11. **Auditability:** Record the actor, action, timestamp, affected resource, and relevant before/after changes for sensitive operations.
-12. **Scheduling:** Use Convex scheduled functions and cron jobs for repayment reminders, overdue checks, and approved background workflows.
+1. **Queries** are `GET` handlers that never mutate state.
+2. **Mutations** are `POST`/`PATCH` handlers that wrap their writes in a D1 transaction or a guarded conditional update.
+3. **External calls** (lender APIs, model providers, email/SMS) run in Worker handlers or Queues consumers — never in the request path of a write that must stay transactional.
+4. **Internal-only operations** are not routed publicly; keep them in `domain/` or `jobs/` and invoke them directly.
+5. **Validation:** every public route validates its body and query parameters with an explicit schema before touching D1.
+6. **Authorization:** every protected route independently verifies authentication, role permissions, record ownership and agency membership.
+7. **Disclosure:** apply borrower and lender field-level disclosure rules before returning data. Never return sensitive records and rely on React to hide restricted fields.
+8. **Business logic:** keep interest calculations, lender matching, approvals, repayment allocation and ledger rules in reusable domain modules.
+9. **State transitions:** validate the current loan/application state and permitted transition via the central state machine before applying changes.
+10. **Idempotency:** require an idempotency key for financial postings and webhook handlers; reject or replay deterministically on duplicates.
+11. **Auditability:** record actor, action, timestamp, affected resource and before/after values for sensitive operations in `audit_events`.
+12. **Scheduling:** use Cron Triggers and Queues for repayment reminders, overdue checks, OCR and other approved background workflows.
+13. **Observability:** enable Workers Logs and structured JSON logging; never log tokens, document contents or full PII.
 
-#### C. React and Convex Integration
+#### C. React and Worker Integration
 
-- Use Convex's React client and hooks, including `useQuery` and `useMutation`, for application data access.
-- Use `useAction` for operations requiring approved backend actions.
-- Develop reusable React components and custom hooks organized around business features.
-- Use generated Convex APIs and TypeScript types instead of manually duplicating backend interfaces.
-- Never expose backend secrets, administrative functions, or unrestricted database access in frontend code.
-- Handle loading, empty, error, and permission-denied states consistently.
+- Put every server call behind the typed service layer in `frontend/src/services/`; components must not call `fetch` directly.
+- Derive API and response types once in the service layer and reuse them across components.
+- Use the API base from `VITE_API_BASE`; never hard-code hostnames or localhost origins in components.
+- Open WebSocket connections only to the session Durable Object route, and always handle reconnect, backoff and auth expiry.
+- Never expose backend secrets, administrative endpoints or unrestricted data access in frontend code.
+- Handle loading, empty, error and permission-denied states consistently.
+- Treat server redaction as authoritative: do not implement client-side "unhiding" of fields the API withheld.
 
 #### D. Engineering Standards
 
-Before introducing any new schema, function, component, or subsystem, the development agent must inspect the existing implementation.
+Before introducing any new schema, route, component or subsystem, the development agent must inspect the existing implementation.
 
 **Mandatory rules:**
 
 - Reuse and extend existing code wherever practical.
 - Fix underlying defects rather than building parallel functionality around them.
-- Avoid duplicate tables, functions, business logic, and unnecessary abstractions.
+- Avoid duplicate tables, routes, business logic and unnecessary abstractions.
 - Apply schema changes through controlled, backward-compatible migrations.
-- Write automated tests for authorization, loan calculations, approvals, financial transactions, and tenant isolation.
+- Write automated tests for authorization, loan calculations, approvals, financial transactions and tenant isolation.
 - Preserve existing functionality unless a change has been explicitly approved.
 - Document important architectural decisions and business-rule changes.
+- Keep the retired Python implementation untouched in `archive/python-backend/`; it is reference material, not a fallback.
 
-**Critical Requirement:** Convex is the authoritative backend for all Gidfine business operations. Financial calculations, approval workflows, access-control decisions, and audit records must be validated and enforced server-side. React must never be the authoritative source for financial or security-critical business logic.
+**Critical Requirement:** the Cloudflare Worker is the authoritative backend for all Gidfine business operations. Financial calculations, approval workflows, access-control decisions and audit records must be validated and enforced server-side. React must never be the source of truth for financial or security-critical business logic.
 
-*Internal working specification • Version 1.1 • 13 October 2026*
-
+*Internal working specification • Version 1.2 • 27 October 2026*

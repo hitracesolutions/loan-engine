@@ -1,229 +1,267 @@
-# GIDFINE — PHASE 4 READINESS REVIEW: FINANCIAL LEDGER & DUAL-AUTHORIZATION DISBURSEMENT
+# GIDFINE — PHASE 4: FINANCIAL LEDGER AND MAKER-CHECKER DISBURSEMENT
 
-**Repository:** `hitracesolutions/loan-engine`  
-**Branch:** `development`  
-**HEAD Commit:** `afb4323 feat: initialize Convex backend foundation`  
-**Specification:** `Gidfine_Dev_Guide.md` v1.1  
-**Architecture Stack:** React 19 + TypeScript + Convex (Convex Auth)  
-**Date:** October 21, 2026  
-**Status:** PLANNING & READINESS AUDIT COMPLETE (Zero code changes made; awaiting approval)
+**Repository:** `hitracesolutions/loan-engine`
+**Specification:** `Gidfine_Dev_Guide.md` v1.2 (Sections 6, 11 and 12)
+**Architecture stack:** Cloudflare Workers → D1 (SQLite) → R2 (receipts)
+**Date:** 27 October 2026
+**Status:** 📐 Schema and workflow design approved; implementation pending the Worker cutover
 
----
-
-## 1. Repository-State Verification
-
-Before proceeding with Phase 4 planning, a comprehensive verification of the local repository was performed:
-
-* **Active Branch & HEAD:**
-  * Current branch: `development`.
-  * HEAD commit: `afb4323 feat: initialize Convex backend foundation`.
-  * Tracking status: Synchronized with `origin/development`.
-* **Recent Commit History:**
-  * `afb4323` — `feat: initialize Convex backend foundation`
-  * `ec023d2` — `Rename Gidfine_Loan_Agency_General_Development_Guide_v1.1.md to Gidfine_Dev_Guide.md`
-  * `8d49975` — `edits reqs`
-  * `b4a488f` — `added the dev guide for the project`
-  * `7059684` — `docs: archive VUE_MIGRATION_PLAN.md into migration directory`
-* **Untouched `main` Branch:**
-  * `main` remains at commit `f7ed8d1 docs: redesign README for better web presentation`.
-  * `git diff main origin/main` returned zero output. The `main` branch has never been modified, committed to, or pushed.
-* **Physical Verification of Phase 1 - 3C Changes:**
-  * **Phase 1 (Schema & State Machine):** Present in `frontend/convex/schema.ts` and `frontend/convex/lib/stateMachine.ts`.
-  * **Phase 2 (Mutations & Guards):** Present in `frontend/convex/loans.ts` (`submitApplication`, `proposeTerms`, `decideLenderProposal`, `approveOffer`, `recordConsent`, `checkDisbursementReadiness`).
-  * **Phase 3A (Borrower & Agency UI):** Present in `frontend/src/components/workspace/BorrowerLoanManager.tsx`, `AgencyReviewQueue.tsx`, and `frontend/src/services/loanService.ts`.
-  * **Phase 3B (Lender Portal):** Present in `frontend/src/components/LenderPortal.tsx` and `getLenderProposals`.
-  * **Phase 3C (Security Audit & Test Suites):** Confirmed with 30/30 Node unit tests passing, 6/6 Python regression tests passing, and 0 TypeScript build errors.
-* **Python Backend Preservation:**
-  * All existing FastAPI endpoints and models in `api/`, `db/`, and `tests/` remain intact.
+> This record replaces the Convex-era Phase 4 readiness report of the same name. The PDFs of the same name in this directory are superseded evidence.
 
 ---
 
-## 2. Review of Existing Financial Data Structures
+## 1. Objective
 
-An audit of existing schema and mutations was conducted to identify financial primitives and gaps:
+Provide an auditable money model on D1:
 
-| Component | Current Implementation | Status / Gap for Phase 4 |
-|---|---|---|
-| **Financial Ledger** | Does **NOT** exist. No general ledger or sub-ledger tables exist in Convex. | Must be designed in Phase 4 as an auditable, append-only journal. |
-| **Monetary Precision** | Stored strictly as **integer minor units (pesewas)** (`principalPesewas`, `proposedAmountPesewas`, `requestedAmountPesewas`). 1 GHS = 100 pesewas. | Preserved. Floating-point numbers are prohibited. |
-| **Rates & Margins** | Stored strictly as **integer basis points** (`lenderBaseRateBps`, `agencyMarginBps`, `borrowerRateBps`). 1% = 100 bps. | Preserved. Prevents rounding errors during quotation. |
-| **Approved Terms Protection** | Proposals use revision versioning (`version: nextVersion`) and automatic superseding. Final agreements store an immutable SHA-256 fingerprint snapshot (`termsSnapshotHash`) in `consents`. | Established and verified. Prevents retroactive tampering of agreed terms. |
-| **Disbursement Representation** | Only a read-only audit check exists (`checkDisbursementReadiness`). Returns `readyForDisbursement: boolean` with explicit lockouts (`paymentInitiated: false`, `fundingConfirmed: false`, `repaymentScheduleActive: false`). | **Missing:** Formal disbursement recording, dual-authorization approval, and funding confirmation date. |
-| **Repayments & Allocations** | **Zero implementation.** No payment receipt, allocation waterfall, or arrears tracking exists. | Must be planned without inventing unresolved business policy. |
-| **Audit Events** | Recorded via append-only `auditLogs` table (`agencyId`, `actorId`, `action`, `resource`, `details`, `timestamp`). | Working and tested across 5 milestones. Phase 4 will emit events for disbursement and ledger entries. |
-| **Duplicate Prevention** | Governed by state machine guards (e.g. non-pending proposals cannot be decided). | **Missing:** Transaction-level idempotency keys to prevent network double-posting. |
+- every movement is a **double-entry journal transaction** (debits = credits),
+- history is **append-only**; corrections are **compensating reversals**,
+- disbursements require **maker-checker** separation of duties,
+- every write is **idempotent**.
 
 ---
 
-## 3. Append-Only Financial Ledger Design
+## 2. Data model
 
-To satisfy Gidfine PRD Sections 6, 7, and 11, the ledger must follow an **immutable append-only journal model**:
+Tables are created by versioned migrations in `workers/api/migrations/`.
 
-### 3.1. Proposed Schema Additions (`frontend/convex/schema.ts`)
+### 2.1 Journal core
 
-```typescript
-// Immutable Financial Journal
-ledgerEntries: defineTable({
-  agencyId: v.id("agencies"),                    // Multi-tenant isolation boundary
-  applicationId: v.id("applications"),          // Associated loan case
-  entryReference: v.string(),                    // Human-readable reference: "TX-ACC-202610-000456"
-  idempotencyKey: v.string(),                    // Client/network idempotency token
-  entryType: v.union(
-    v.literal("DISBURSEMENT_PRINCIPAL"),         // Fund release to borrower
-    v.literal("REPAYMENT_COLLECTION"),           // Borrower payment received
-    v.literal("FEE_ASSESSMENT"),                 // Upfront/processing fee applied
-    v.literal("REVERSAL_COMPENSATION")           // Compensating entry for error correction
-  ),
-  direction: v.union(v.literal("DEBIT"), v.literal("CREDIT")),
-  amountPesewas: v.number(),                     // Positive integer in minor units
-  currency: v.literal("GHS"),
-  status: v.union(
-    v.literal("RECORDED"),
-    v.literal("SETTLED"),
-    v.literal("REVERSED")
-  ),
-  isReversed: v.boolean(),                       // Flagged when a compensating entry is posted
-  reversalEntryId: v.optional(v.id("ledgerEntries")), // Links to compensating reversal record
-  externalReference: v.optional(v.string()),     // Bank transfer slip / MoMo transaction ID
-  makerId: v.id("users"),                        // Cashier/staff who entered transaction
-  checkerId: v.optional(v.id("users")),          // Authorizing staff member
-  notes: v.optional(v.string()),
-  postedAt: v.number(),
-  effectiveDate: v.number(),
-})
-  .index("by_agency", ["agencyId"])
-  .index("by_application", ["applicationId"])
-  .index("by_idempotency", ["agencyId", "idempotencyKey"])
-  .index("by_entry_reference", ["entryReference"]),
+```sql
+CREATE TABLE journal_transactions (
+  id                TEXT PRIMARY KEY,
+  agency_id         TEXT NOT NULL REFERENCES agencies(id),
+  application_id    TEXT REFERENCES loan_applications(id),
+  reference         TEXT NOT NULL,              -- human readable: TX-ACC-202610-000456
+  idempotency_key   TEXT NOT NULL,
+  entry_type        TEXT NOT NULL CHECK (entry_type IN (
+                      'DISBURSEMENT_PRINCIPAL',
+                      'REPAYMENT_COLLECTION',
+                      'FEE_ASSESSMENT',
+                      'REVERSAL_COMPENSATION')),
+  status            TEXT NOT NULL CHECK (status IN ('RECORDED','SETTLED','REVERSED')),
+  maker_id          TEXT NOT NULL REFERENCES users(id),
+  checker_id        TEXT REFERENCES users(id),
+  external_reference TEXT,
+  notes             TEXT,
+  effective_date    INTEGER NOT NULL,            -- epoch ms, business date
+  posted_at         INTEGER NOT NULL,            -- epoch ms, system time
+  CHECK (checker_id IS NULL OR checker_id <> maker_id)
+);
+
+CREATE UNIQUE INDEX idx_journal_tx_idempotency
+  ON journal_transactions (agency_id, idempotency_key);
+CREATE INDEX idx_journal_tx_application ON journal_transactions (application_id);
+CREATE INDEX idx_journal_tx_agency_date ON journal_transactions (agency_id, posted_at);
+
+CREATE TABLE journal_lines (
+  id             TEXT PRIMARY KEY,
+  transaction_id TEXT NOT NULL REFERENCES journal_transactions(id),
+  agency_id      TEXT NOT NULL,
+  account        TEXT NOT NULL CHECK (account IN (
+                   'LOAN_RECEIVABLE','CASH','BANK','INTEREST_INCOME',
+                   'FEE_INCOME','PENALTY_INCOME','SUSPENSE')),
+  direction      TEXT NOT NULL CHECK (direction IN ('DEBIT','CREDIT')),
+  amount_pesewas INTEGER NOT NULL CHECK (amount_pesewas > 0),
+  currency       TEXT NOT NULL DEFAULT 'GHS',
+  created_at     INTEGER NOT NULL
+);
+
+CREATE INDEX idx_journal_lines_tx ON journal_lines (transaction_id);
+CREATE INDEX idx_journal_lines_agency_account ON journal_lines (agency_id, account);
 ```
 
-### 3.2. Core Ledger Invariants
-1. **Never Delete or Overwrite History:** Physical deletion or patching of financial ledger amounts is strictly prohibited. Error correction is handled exclusively through compensating reversal entries (`REVERSAL_COMPENSATION`) that balance out prior debit/credits and reference the original record.
-2. **Deterministic Idempotency:** Mutations verify `by_idempotency` index before executing. If an identical `idempotencyKey` exists within the tenant, the mutation returns the existing record rather than double-posting.
-3. **Transaction Consistency:** Convex mutations run as serializable, ACID database transactions. Concurrent writes to the same loan case are serialized by Convex's optimistic concurrency control.
-4. **Tenant-Scoped Authorization:** All queries filter by verified `user.agencyId`. Cashiers can record entries; only agency admins and auditors can view full ledger balances. Lenders see only their assigned loan settlement ledger.
+### 2.2 Disbursement (maker-checker)
 
----
+```sql
+CREATE TABLE disbursement_requests (
+  id                TEXT PRIMARY KEY,
+  agency_id         TEXT NOT NULL,
+  application_id    TEXT NOT NULL UNIQUE REFERENCES loan_applications(id),
+  amount_pesewas    INTEGER NOT NULL CHECK (amount_pesewas > 0),
+  status            TEXT NOT NULL CHECK (status IN ('PENDING','APPROVED','REJECTED','POSTED')),
+  maker_id          TEXT NOT NULL REFERENCES users(id),
+  checker_id        TEXT REFERENCES users(id),
+  idempotency_key   TEXT NOT NULL,
+  external_reference TEXT,
+  requested_at      INTEGER NOT NULL,
+  decided_at        INTEGER,
+  posted_at         INTEGER,
+  CHECK (checker_id IS NULL OR checker_id <> maker_id)
+);
 
-## 4. Dual-Authorization Disbursement Workflow
-
-To ensure fiduciary safety under Ghanaian banking norms, disbursements must use a **Maker-Checker workflow**:
-
-```
-[Borrower Consented: BORROWER_ACCEPTED]
-                   │
-                   ▼
-┌─────────────────────────────────────────────────────────┐
-│ 1. Maker Initiates: requestDisbursementHandler          │
-│    - Actor: Cashier or Loan Officer                     │
-│    - Verifies: checkDisbursementReadiness               │
-│    - Confirms: Funding channel, payout account, amount  │
-│    - Inserts: disbursementRequests (PENDING_APPROVAL)   │
-└─────────────────────────────────────────────────────────┘
-                   │
-                   ▼
-┌─────────────────────────────────────────────────────────┐
-│ 2. Checker Authorizes: approveDisbursementHandler       │
-│    - Actor: Agency Admin or Underwriter                 │
-│    - INVARIANT: Checker != Maker (No self-approval)     │
-│    - Re-verifies: Consent hash and proposal status      │
-│    - Updates: disbursementRequests (APPROVED)           │
-│    - Advances Application: PENDING_DISBURSEMENT         │
-└─────────────────────────────────────────────────────────┘
-                   │
-                   ▼
-┌─────────────────────────────────────────────────────────┐
-│ 3. Maker Finalizes: recordDisbursementSettlementHandler │
-│    - Actor: Cashier                                     │
-│    - Inputs: Confirmed bank/MoMo transaction reference  │
-│    - Inserts: ledgerEntries (DISBURSEMENT_PRINCIPAL)    │
-│    - Advances Application: ACTIVE                       │
-│    - Confirmed funding date sets repayment start date   │
-└─────────────────────────────────────────────────────────┘
+CREATE UNIQUE INDEX idx_disbursement_idempotency
+  ON disbursement_requests (agency_id, idempotency_key);
 ```
 
-### Key Safety Invariants:
-* **Anti-Self-Approval:** The mutation explicitly enforces: `if (request.makerId === actor._id) throw new Error("FORBIDDEN: Dual-authorization violation: Maker cannot self-approve disbursement.")`.
-* **Terms Stale Protection:** The request references the `termsSnapshotHash`. If any term or proposal was altered between request and approval, the check immediately halts.
-* **No Real Payment Initiation:** The system records verified external confirmations; it does not connect to bank APIs or MoMo gateways in this phase (consistent with Gidfine MVP scope).
+### 2.3 Repayments
 
----
+```sql
+CREATE TABLE repayment_receipts (
+  id             TEXT PRIMARY KEY,
+  agency_id      TEXT NOT NULL,
+  loan_id        TEXT NOT NULL REFERENCES loans(id),
+  amount_pesewas INTEGER NOT NULL CHECK (amount_pesewas > 0),
+  channel        TEXT NOT NULL CHECK (channel IN ('CASH','BANK_TRANSFER','MOBILE_MONEY','CARD')),
+  external_reference TEXT,
+  idempotency_key TEXT NOT NULL,
+  status         TEXT NOT NULL CHECK (status IN ('RECORDED','ALLOCATED','REVERSED')),
+  received_at    INTEGER NOT NULL,
+  recorded_by    TEXT NOT NULL REFERENCES users(id)
+);
 
-## 5. Repayment Allocation Analysis & Unresolved Business Decisions
+CREATE UNIQUE INDEX idx_repayment_idempotency
+  ON repayment_receipts (agency_id, idempotency_key);
 
-Section 6 and Section 15 of `Gidfine_Dev_Guide.md` identify multiple critical financial decisions that remain unresolved by Gidfine stakeholders:
+CREATE TABLE repayment_allocations (
+  id                TEXT PRIMARY KEY,
+  receipt_id        TEXT NOT NULL REFERENCES repayment_receipts(id),
+  installment_id    TEXT NOT NULL REFERENCES repayment_installments(id),
+  penalty_pesewas   INTEGER NOT NULL DEFAULT 0 CHECK (penalty_pesewas >= 0),
+  interest_pesewas  INTEGER NOT NULL DEFAULT 0 CHECK (interest_pesewas >= 0),
+  principal_pesewas INTEGER NOT NULL DEFAULT 0 CHECK (principal_pesewas >= 0),
+  created_at        INTEGER NOT NULL
+);
 
-1. **Repayment Allocation Waterfall Policy:**
-   * When a payment is recorded, in what order are funds applied?
-     * Standard order A: Arrears Fees $\rightarrow$ Past-due Interest $\rightarrow$ Current Interest $\rightarrow$ Principal?
-     * Standard order B: Principal-first?
-     * How is the agency margin split from the lender interest at the collection level?
-2. **Interest Calculation Engine:**
-   * Gidfine Section 6 explicitly states: *"Illustrative flat-interest model only (not an approved Gidfine pricing policy)... product must never infer whether a percentage is monthly, annual, flat, effective or reducing-balance; these are separate fields."*
-   * Reducing-balance vs. Flat-rate calculation cannot be hardcoded without stakeholder signoff.
-3. **Overpayment & Early Settlement Rules:**
-   * Does an early settlement rebate interest? What prepayment penalty rules apply?
-
-### Recommended Architecture:
-Do **NOT** hardcode an arbitrary allocation waterfall. Instead, Phase 4 will implement:
-* An unallocated payment receipt ledger (`repayments` table).
-* A modular, parameter-driven allocation handler that separates payment recording from schedule application, allowing stakeholders to plug in their approved waterfall formula without database restructuring.
-
----
-
-## 6. Authentication & Deployment Dependencies
-
-The following prerequisites require Matthias’s involvement before Convex Cloud can run live:
-
-1. **Convex Cloud Project Provisioning:**
-   * Matthias must execute `npx convex dev` or `npx convex deploy` to link the repository to a Convex Cloud project.
-   * Generate `VITE_CONVEX_URL` and set it in `.env.local`.
-2. **Convex Auth Provider Deployment:**
-   * Configure production JWT issuer and JWKS in `frontend/convex/auth.config.ts`.
-   * Add `@convex-dev/auth` or configure Clerk/Auth0 domain if external OIDC is selected.
-3. **No Mock Credentials:**
-   * The local checkout remains clean and avoids speculative or fake authentication providers.
-
----
-
-## 7. Phased Implementation Plan for Phase 4
-
-```
-Phase 4A: Financial Ledger Schema & Idempotency Foundation
-├── Add ledgerEntries, disbursementRequests, and repayments tables to schema.ts
-├── Add idempotency index and reference generator
-└── Update mock database fixtures for ledger tables
-
-Phase 4B: Dual-Authorization Disbursement Backend
-├── Implement requestDisbursement mutation (Cashier maker)
-├── Implement approveDisbursement mutation (Admin checker, anti-self-approval)
-├── Implement recordDisbursementSettlement mutation (Posts to ledger, activates loan)
-└── State machine transition: BORROWER_ACCEPTED -> PENDING_DISBURSEMENT -> ACTIVE
-
-Phase 4C: Compensating Reversals & Read-Only Auditing
-├── Implement reverseLedgerEntry mutation (Maker-checker compensating debit/credit)
-├── Implement getApplicationLedger query (Role-based transaction history)
-└── Implement getAgencyFinancialOverview query (Disbursement & collection metrics)
-
-Phase 4D: Repayment Receipt Recording
-├── Implement recordRepayment mutation (Cashier receipt entry with external reference)
-└── Implement flexible allocation stub (Awaiting waterfall policy approval)
-
-Phase 4E: UI Integration
-├── Create CashierDisbursementManager.tsx (Maker-checker dashboard)
-├── Create LoanLedgerView.tsx (Append-only journal component)
-└── Mount Cashier & Ledger tabs in AdminDashboard.tsx
-
-Phase 4F: Test Suite & Verification
-├── Concurrency & duplicate-execution tests
-├── Maker-checker anti-self-approval tests
-├── Reversal compensation tests
-└── Full production build & Python regression runs
+CREATE INDEX idx_allocations_receipt ON repayment_allocations (receipt_id);
+CREATE INDEX idx_allocations_installment ON repayment_allocations (installment_id);
 ```
 
+### 2.4 Reversals
+
+```sql
+CREATE TABLE reversal_requests (
+  id                  TEXT PRIMARY KEY,
+  agency_id           TEXT NOT NULL,
+  original_transaction_id TEXT NOT NULL REFERENCES journal_transactions(id),
+  reason              TEXT NOT NULL,
+  status              TEXT NOT NULL CHECK (status IN ('PENDING','APPROVED','REJECTED','POSTED')),
+  maker_id            TEXT NOT NULL REFERENCES users(id),
+  checker_id          TEXT REFERENCES users(id),
+  created_at          INTEGER NOT NULL,
+  decided_at          INTEGER,
+  CHECK (checker_id IS NULL OR checker_id <> maker_id)
+);
+```
+
+> `ledger_entries` referenced in the Dev Guide is the per-loan read model. It is derived from `journal_lines` by query and **must not** be written independently.
+
 ---
 
-## 8. Current Action Item
-**No files have been modified, committed, pushed, or deployed.**  
-The repository remains clean on branch `development` with all 30 Phase 3 tests and 6 Python tests passing.  
-Awaiting your review and explicit approval to proceed with Phase 4 implementation.
+## 3. Invariants
+
+| # | Invariant | Enforcement |
+| --- | --- | --- |
+| L1 | Debits equal credits for every transaction | Computed before insert; verified by the reconciliation query |
+| L2 | No `UPDATE` or `DELETE` on posted journal rows | Database permissions + code review; correction is a reversal |
+| L3 | Maker ≠ checker | `CHECK` constraint + route guard |
+| L4 | One disbursement per application | `UNIQUE (application_id)` |
+| L5 | Duplicate idempotency keys never double-post | Unique index + catch-and-return-existing |
+| L6 | All amounts are positive integers in pesewas | `CHECK (amount_pesewas > 0)` |
+| L7 | Allocations never exceed the receipt | Sum check inside the same `batch()` |
+| L8 | Tenant isolation on every statement | `agency_id = ?` from the JWT |
+
+---
+
+## 4. Posting patterns
+
+### 4.1 Disbursement (approved)
+
+```
+DEBIT   LOAN_RECEIVABLE   5,000,000 pesewas
+CREDIT  CASH/BANK         5,000,000 pesewas
+```
+
+### 4.2 Repayment (waterfall: penalty → interest → principal)
+
+```
+DEBIT   CASH/BANK         1,008,330
+CREDIT  PENALTY_INCOME       12,500
+CREDIT  INTEREST_INCOME     210,000
+CREDIT  LOAN_RECEIVABLE     785,830
+```
+
+Rounding is applied once, at the final line, so the transaction always balances.
+
+### 4.3 Reversal
+
+Create a **new** transaction of type `REVERSAL_COMPENSATION` that mirrors the original with directions swapped, and set `original.status = 'REVERSED'`. The original rows are never modified.
+
+---
+
+## 5. Atomicity on D1
+
+D1 has no interactive transactions across `await`. Use one atomic `batch()` per business operation:
+
+```ts
+const statements = [
+  env.DB.prepare(
+    `INSERT INTO journal_transactions
+       (id, agency_id, application_id, reference, idempotency_key, entry_type, status,
+        maker_id, checker_id, effective_date, posted_at)
+     VALUES (?, ?, ?, ?, ?, 'DISBURSEMENT_PRINCIPAL', 'RECORDED', ?, ?, ?, ?)`
+  ).bind(...),
+  ...lines.map(l => env.DB.prepare(
+    `INSERT INTO journal_lines
+       (id, transaction_id, agency_id, account, direction, amount_pesewas, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`
+  ).bind(...)),
+  env.DB.prepare(
+    `UPDATE disbursement_requests SET status='POSTED', posted_at=? WHERE id=? AND status='APPROVED'`
+  ).bind(now, requestId),
+];
+
+await env.DB.batch(statements);
+```
+
+If the batch throws a unique-constraint error on the idempotency index, read the existing transaction and return it — never retry blindly.
+
+---
+
+## 6. Reconciliation
+
+Nightly cron (`0 6 * * *`) runs:
+
+```sql
+SELECT t.id,
+       SUM(CASE WHEN l.direction = 'DEBIT' THEN l.amount_pesewas
+                ELSE -l.amount_pesewas END) AS imbalance_pesewas
+FROM journal_transactions t
+JOIN journal_lines l ON l.transaction_id = t.id
+WHERE t.posted_at >= ?
+GROUP BY t.id
+HAVING imbalance_pesewas <> 0;
+```
+
+Any non-empty result pages the on-call engineer and blocks further postings for the affected agency until resolved.
+
+---
+
+## 7. Verification
+
+```bash
+cd frontend
+node --experimental-strip-types --test tests/*.test.ts
+```
+
+Ledger-specific checks (once the Worker exists):
+
+- [ ] Every generated transaction balances to zero.
+- [ ] Duplicate `Idempotency-Key` yields one row and an identical response body.
+- [ ] Maker cannot approve their own disbursement (`CHECK` violation surfaces as `FORBIDDEN`).
+- [ ] Two concurrent approvals with the same key produce a single posting.
+- [ ] Reversal pair nets to zero and the original is marked `REVERSED`.
+- [ ] Allocation rounding leaves no residual pesewa.
+- [ ] Cross-tenant ledger reads return nothing.
+
+---
+
+## 8. Open business decisions
+
+These block the final implementation and are carried from Dev Guide Section 15:
+
+1. Interest basis (monthly vs annual; flat vs reducing) and the rounding policy per installment.
+2. Whether agency margin is a spread, a fee, or both — and who receives which cash flow.
+3. Whether partial prepayment is allowed, and whether penalties apply.
+4. Whether reversal of a settled repayment requires dual authorisation or a single supervisor.
+5. Retention period for ledger and receipt evidence under Act 843.

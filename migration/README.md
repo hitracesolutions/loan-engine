@@ -1,67 +1,83 @@
-# Migration & Diagnostic Reports
+# Migration & Architecture Records
 
-This directory archives all formal audit, integration, decommissioning, and conversion reports generated during the Vue-to-React migration on the `development` branch.
+This directory holds the formal migration, design and audit records for the Gidfine loan platform.
+
+**Current platform baseline:** Cloudflare — Cloudflare Pages (React 19 + Vite), Cloudflare Workers (TypeScript), D1, R2, Durable Objects, KV, Queues, Workers AI. There is no Python runtime.
 
 ---
 
-### Chronological Report Index
+## Status legend
 
-1. **[MIGRATION_DIAGNOSIS_REPORT.pdf](file:///c:/Users/Administrator/Desktop/development/loan-engine-1/migration/MIGRATION_DIAGNOSIS_REPORT.pdf)** (Phase 1)
-   - Initial repository inspection and root-cause analysis of build and runtime failures.
-   - Diagnosed dual Vue/React conflicting dependencies, broken TypeScript configuration, and missing type shims.
+| Symbol | Meaning |
+| --- | --- |
+| ✅ | Implemented and verified on the current branch |
+| 🟡 | Partially implemented — see the individual record for what remains |
+| 📐 | Design complete, implementation pending |
+| ⬜ | Not started |
+| 🗄️ | Superseded / archived for provenance only |
 
-2. **[PHASE_2_RESTORATION_REPORT.pdf](file:///c:/Users/Administrator/Desktop/development/loan-engine-1/migration/PHASE_2_RESTORATION_REPORT.pdf)** (Phase 2)
-   - React 19 build restoration and type decoupling.
-   - Introduced `react-shim.d.ts`, updated `tsconfig.app.json`, and achieved clean compilation.
+---
 
-3. **[PHASE_3_AUDIT_REPORT.pdf](file:///c:/Users/Administrator/Desktop/development/loan-engine-1/migration/PHASE_3_AUDIT_REPORT.pdf)** (Phase 3)
-   - Runtime, API integration, and user-flow audit across authentication, chat, and loan workflows.
-   - Identified missing comparison endpoints and backend gaps.
+## Active records
 
-4. **[PHASE_4_INTEGRATION_REPORT.pdf](file:///c:/Users/Administrator/Desktop/development/loan-engine-1/migration/PHASE_4_INTEGRATION_REPORT.pdf)** (Phase 4)
-   - Implementation and verification of `api/routers/comparison.py`.
-   - 6/6 pytest validation covering loan comparisons, selection, and what-if calculations.
+| # | Document | Subject | Status |
+| --- | --- | --- | --- |
+| 1 | [CLOUDFLARE_MIGRATION_PLAN.md](CLOUDFLARE_MIGRATION_PLAN.md) | End-to-end migration from the Python/FastAPI + Convex implementation to Cloudflare; phases, cutover and rollback | 📐 |
+| 2 | [GIDFINE_PHASE3A_REACT_INTEGRATION_REPORT.md](GIDFINE_PHASE3A_REACT_INTEGRATION_REPORT.md) | React SPA ↔ Worker API integration, typed service boundary, borrower/agency UIs | 🟡 |
+| 3 | [GIDFINE_PHASE3B_LENDER_PORTAL_REPORT.md](GIDFINE_PHASE3B_LENDER_PORTAL_REPORT.md) | Lender portal, proposal workflow, server-side PII and margin redaction | 🟡 |
+| 4 | [GIDFINE_PHASE3C_SECURITY_AUDIT_REPORT.md](GIDFINE_PHASE3C_SECURITY_AUDIT_REPORT.md) | End-to-end security audit: tenancy, redaction, state tampering, auth, rate limits | 📐 |
+| 5 | [GIDFINE_PHASE4_READINESS_REVIEW_REPORT.md](GIDFINE_PHASE4_READINESS_REVIEW_REPORT.md) | D1 financial ledger, double-entry journal, maker-checker disbursement | 📐 |
+| 6 | [GIDFINE_MVP_COMPLETION_REPORT.md](GIDFINE_MVP_COMPLETION_REPORT.md) | MVP scope, acceptance criteria and remaining work before go-live | 🟡 |
 
-5. **[PHASE_5_DECOMMISSIONING_REPORT.pdf](file:///c:/Users/Administrator/Desktop/development/loan-engine-1/migration/PHASE_5_DECOMMISSIONING_REPORT.pdf)** (Phase 5)
-   - Assessment and strategic planning for FastAPI decommissioning and target Convex backend architecture.
-   - Schema mapping for sessions, documents, OCR, underwriting, and reactive state.
+---
 
-6. **[FINAL_CONVERSION_AND_PRUNING_REPORT.pdf](file:///c:/Users/Administrator/Desktop/development/loan-engine-1/migration/FINAL_CONVERSION_AND_PRUNING_REPORT.pdf)** (Final Verification)
-   - Complete parity confirmation for all 42 Vue components against React 19 equivalents.
-   - Complete pruning of Vue components, composables, Pinia stores, and Vue dependencies.
-   - Final production build and test suite verification.
+## How to read these records
 
-7. **[VUE_MIGRATION_PLAN.md](file:///c:/Users/Administrator/Desktop/development/loan-engine-1/migration/VUE_MIGRATION_PLAN.md)** (Archived Roadmap)
-   - Historical planning document created by Matthias detailing the original Vue migration roadmap. Preserved for reference.
+1. **Start with the migration plan.** It defines the phase order, the target resource layout and the cutover gates.
+2. **Phase records (3A–4) describe one subsystem each.** They state the invariants that must hold, the D1/Worker design that satisfies them, and the verification steps to run.
+3. **Where a record says "pending",** the design is agreed but the Cloudflare implementation is not merged. Treat the acceptance criteria as the definition of done.
+4. **Every record assumes** [Gidfine_Dev_Guide.md](../Gidfine_Dev_Guide.md) v1.2 as the authoritative specification.
 
-8. **[DEV_GUIDE_ALIGNMENT_AUDIT_REPORT.pdf](file:///c:/Users/Administrator/Desktop/development/loan-engine-1/migration/DEV_GUIDE_ALIGNMENT_AUDIT_REPORT.pdf)** (Architecture & Dev Guide Audit)
-   - Comprehensive alignment assessment comparing current React 19 codebase against `Gidfine_Dev_Guide.md` (v1.1).
-   - Reusable asset inventory, spec gap analysis, mini-scale Convex scope, and decisions requiring Matthias's approval.
+---
 
-9. **[CONVEX_FOUNDATION_REPORT.pdf](file:///c:/Users/Administrator/Desktop/development/loan-engine-1/migration/CONVEX_FOUNDATION_REPORT.pdf)** (Convex Foundation Initialization)
-   - Verification baseline, package dependency alignment, and minimal Convex infrastructure.
-   - Foundational schema, server-side auth helpers, graceful React provider fallback, test execution records, and blocking decisions log.
+## Superseded evidence (PDF archive)
 
-10. **[CONVEX_FOUNDATION_VERIFICATION_AUDIT.pdf](file:///c:/Users/Administrator/Desktop/development/loan-engine-1/migration/CONVEX_FOUNDATION_VERIFICATION_AUDIT.pdf)** (Pre-Implementation Verification Audit)
-    - Formal verification audit confirming branch tracking, zero commits/pushes to main, working tree inventory, build and test results, security analysis, and cloud provisioning disclosures.
+The PDFs in this directory are the original FastAPI/LangGraph and interim Convex audit records. They are retained **for provenance only** and do not describe the current or target architecture:
 
-11. **[CONVEX_CLOUD_READINESS_REPORT.pdf](file:///c:/Users/Administrator/Desktop/development/loan-engine-1/migration/CONVEX_CLOUD_READINESS_REPORT.pdf)** (Convex Cloud Readiness Audit)
-    - Pre-deployment audit verifying local configuration status, zero-cloud resource state, authentication prerequisites, Gidfine Dev Guide v1.1 schema gaps, non-destructive linking steps, and team blockers.
+| PDF | Original subject |
+| --- | --- |
+| `MIGRATION_DIAGNOSIS_REPORT.pdf` | Vue/React build diagnosis |
+| `PHASE_2_RESTORATION_REPORT.pdf` | React 19 build restoration |
+| `PHASE_3_AUDIT_REPORT.pdf` | Runtime and API audit (FastAPI era) |
+| `PHASE_4_INTEGRATION_REPORT.pdf` | Comparison endpoints (FastAPI era) |
+| `PHASE_5_DECOMMISSIONING_REPORT.pdf` | FastAPI decommissioning assessment |
+| `FINAL_CONVERSION_AND_PRUNING_REPORT.pdf` | Vue removal / React parity |
+| `DEV_GUIDE_ALIGNMENT_AUDIT_REPORT.pdf` | Dev guide alignment (v1.1) |
+| `CONVEX_FOUNDATION_REPORT.pdf` | Convex foundation |
+| `CONVEX_FOUNDATION_VERIFICATION_AUDIT.pdf` | Convex verification audit |
+| `CONVEX_CLOUD_READINESS_REPORT.pdf` | Convex cloud readiness |
+| `MINI_SCALE_IMPLEMENTATION_READINESS_AUDIT.pdf` | Mini-scale workflow readiness |
+| `GIDFINE_PHASE1_SCHEMA_STATE_MACHINE_REPORT.pdf` | Convex schema + state machine |
+| `GIDFINE_PHASE2_MUTATIONS_REPORT.pdf` | Convex mutations |
+| `GIDFINE_PHASE2_SECURITY_AND_PHASE3_READINESS_REPORT.pdf` | Convex security / Phase 3 readiness |
+| `GIDFINE_PHASE3A_REACT_INTEGRATION_REPORT.pdf` | Convex-era React integration |
+| `GIDFINE_PHASE3B_LENDER_PORTAL_REPORT.pdf` | Convex-era lender portal |
+| `GIDFINE_PHASE3C_SECURITY_AUDIT_REPORT.pdf` | Convex-era security audit |
+| `GIDFINE_PHASE4A_CORRECTION_PASS_REPORT.pdf` | Ledger correction pass |
+| `GIDFINE_PHASE4A_LEDGER_SCHEMA_REPORT.pdf` | Convex ledger schema |
+| `GIDFINE_PHASE4A_POST_IMPLEMENTATION_AUDIT_REPORT.pdf` | Convex post-implementation audit |
+| `GIDFINE_PHASE4_READINESS_REVIEW_REPORT.pdf` | Convex Phase 4 readiness |
+| `GIDFINE_PRE_PHASE4_WORKTREE_RECONCILIATION_REPORT.pdf` | Worktree reconciliation |
+| `GIDFINE_FINAL_PRE_PUSH_RELEASE_AUDIT_REPORT.pdf` | Pre-push release audit |
+| `GIDFINE_PHASE1_SCHEMA_STATE_MACHINE_REPORT.pdf` | Schema and state machine |
+| `VUE_MIGRATION_PLAN.pdf` | Original Vue migration roadmap |
 
-12. **[MINI_SCALE_IMPLEMENTATION_READINESS_AUDIT.pdf](file:///c:/Users/Administrator/Desktop/development/loan-engine-1/migration/MINI_SCALE_IMPLEMENTATION_READINESS_AUDIT.pdf)** (Mini-Scale Implementation Readiness Audit)
-    - Detailed end-to-end workflow specification, reusable React component mapping, transition authority matrix, audit log invariants, Act 843 redaction rules, and phased milestone plan.
+> The `.md` records in this directory supersede the PDFs of the same name. Do not cite the PDFs in new work.
 
-13. **[GIDFINE_PHASE1_SCHEMA_STATE_MACHINE_REPORT.pdf](file:///c:/Users/Administrator/Desktop/development/loan-engine-1/migration/GIDFINE_PHASE1_SCHEMA_STATE_MACHINE_REPORT.pdf)** (Phase 1: Schema & State Machine)
-    - Foundational data structures for applications, versioned proposals, and immutable Act 843 consent snapshots.
-    - Centralized 20-status state-machine transition guard engine with SHA-256 consent fingerprinting.
+---
 
-14. **[GIDFINE_PHASE2_MUTATIONS_REPORT.pdf](file:///c:/Users/Administrator/Desktop/development/loan-engine-1/migration/GIDFINE_PHASE2_MUTATIONS_REPORT.pdf)** (Phase 2: Secure Convex Mutations)
-    - Server-side mutations: `submitApplication`, `proposeTerms`, `decideLenderProposal`, `approveOffer`, `recordConsent`.
-    - Server-side queries: `getLenderProposal` (with strict borrower PII redaction) and `checkDisbursementReadiness` (with payment lockout).
-    - 16 passing unit tests covering role authorization, tenant isolation, proposal version preservation, affirmative consent, and disbursement lockouts.
+## Change log
 
-15. **[GIDFINE_PHASE2_SECURITY_AND_PHASE3_READINESS_REPORT.pdf](file:///c:/Users/Administrator/Desktop/development/loan-engine-1/migration/GIDFINE_PHASE2_SECURITY_AND_PHASE3_READINESS_REPORT.pdf)** (Phase 2 Security Review & Phase 3 Readiness Audit)
-    - Independent audit of schema, state machine guards, mutations, and caller authorization.
-    - Assessment of Convex Auth configuration, PII redaction, cryptographic consent hashing under Act 843, and append-only audit trail.
-    - Go/no-go recommendation for Phase 3 React UI integration.
-
+| Date | Change |
+| --- | --- |
+| 2026-10-27 | Rebased every record onto the Cloudflare platform; archived the Python backend to `archive/python-backend/`; renamed the Vue migration plan to `CLOUDFLARE_MIGRATION_PLAN.md`; replaced absolute `file:///…` links with repository-relative links. |

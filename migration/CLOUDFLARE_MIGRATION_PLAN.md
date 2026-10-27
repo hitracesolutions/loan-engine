@@ -1,402 +1,212 @@
-# 🚀 LoanNBFC — React → Vue.js Migration Plan
+# CLOUDFLARE MIGRATION PLAN
 
-> **Status Legend:** ⬜ Not Started · 🔄 In Progress · ✅ Done · ❌ Blocked
-
----
-
-## 📋 Project Overview
-
-**Current Stack:**
-- Framework: React 19 + TypeScript
-- Build tool: Vite
-- State: Zustand (with persist middleware)
-- Styling: Tailwind CSS v3 + shadcn/ui
-- Animation: Framer Motion
-- Charts: Recharts
-- HTTP: Native fetch (apiClient wrapper)
-- WebSocket: Native WebSocket
-- Icons: lucide-react
-
-**Target Stack:**
-- Framework: **Vue 3** + TypeScript (Composition API)
-- Build tool: Vite (same)
-- State: **Pinia** (Vue's official store, replaces Zustand)
-- Styling: Tailwind CSS v3 (same config)
-- Animation: **@vueuse/motion** (replaces Framer Motion)
-- Charts: **vue-chartjs** or **Chart.js** (replaces Recharts)
-- HTTP: Same native fetch wrapper (reusable as-is)
-- WebSocket: Same native WebSocket (reusable as-is)
-- Icons: **lucide-vue-next** (replaces lucide-react)
+**Repository:** `hitracesolutions/loan-engine`
+**Specification:** `Gidfine_Dev_Guide.md` v1.2
+**Target stack:** Cloudflare Pages · Workers · D1 · R2 · Durable Objects · KV · Queues · Workers AI
+**Date:** 27 October 2026
+**Status:** 📐 Approved target — no Cloudflare runtime is merged yet.
 
 ---
 
-## 📁 Files to Migrate
+## 1. Why migrate
 
-### Root / Entry
-| File | Description | Status |
-|------|-------------|--------|
-| `frontend/src/main.tsx` → `main.ts` | App entry, createApp, plugins mount | ⬜ |
-| `frontend/src/App.tsx` → `App.vue` | Root component, routing/auth logic | ⬜ |
-| `frontend/index.html` | Update script src to `main.ts` | ⬜ |
-| `frontend/vite.config.ts` | Add `@vitejs/plugin-vue` | ⬜ |
-| `frontend/tsconfig.app.json` | Add Vue type support | ⬜ |
-| `frontend/package.json` | Swap React deps for Vue deps | ⬜ |
+The repository currently carries **three** overlapping backends: a retired Python/FastAPI + LangGraph service, an interim Convex backend, and legacy REST clients in the SPA. None of them is a durable production story:
 
-### State Management (`src/store/`)
-| File | Description | Status |
-|------|-------------|--------|
-| `useLoanStore.ts` → `loanStore.ts` | Zustand store → Pinia store (persist plugin) | ⬜ |
+| Problem | Consequence |
+| --- | --- |
+| Python runtime (FastAPI, LangGraph, Motor, Redis, ReportLab) | Cannot run on Cloudflare; separate host, separate secrets, separate scaling |
+| Convex backend | Second vendor and a second data plane; no Cloudflare-native identity, R2 or Queues |
+| Legacy REST/WebSocket clients hard-coded to `nbfc-inc.onrender.com` | Production traffic depends on a Hostinger/Render-era deployment |
+| Three sources of truth for the loan state machine | Divergent rules between Python, Convex and the UI |
 
-### Types (`src/types/` & `src/types.ts`)
-| File | Description | Status |
-|------|-------------|--------|
-| `src/types.ts` | Pure TS interfaces — **reuse as-is** | ✅ |
-| `src/store/useLoanStore.ts` (types) | Move `AppState`, `UserProfile`, etc. to `src/types/` | ⬜ |
-
-### API Layer (`src/api/`)
-| File | Description | Status |
-|------|-------------|--------|
-| `src/api/client.ts` | Pure TS — **reuse as-is** | ✅ |
-| `src/api/websocket.ts` | Pure TS — **reuse as-is** | ✅ |
-
-### Hooks → Composables (`src/hooks/` → `src/composables/`)
-| React Hook | Vue Composable | Status |
-|-----------|---------------|--------|
-| `useAdminAPI.ts` | `useAdminAPI.ts` (rewrite with `ref`/`reactive`) | ⬜ |
-| `useComparisonAPI.ts` | `useComparisonAPI.ts` (rewrite with `ref`/`reactive`) | ⬜ |
-
-### Pages (`src/pages/`)
-| File | Vue Component | Status |
-|------|--------------|--------|
-| `Docs.tsx` | `Docs.vue` | ⬜ |
-
-### Components — Root Level (`src/components/`)
-| File | Vue Component | Status |
-|------|--------------|--------|
-| `LandingPage.tsx` | `LandingPage.vue` | ⬜ |
-| `Login.tsx` | `Login.vue` | ⬜ |
-| `Auth.tsx` | `Auth.vue` | ⬜ |
-| `AuthWrapper.tsx` | `AuthWrapper.vue` | ⬜ |
-| `Onboarding.tsx` | `Onboarding.vue` | ⬜ |
-| `AdminDashboard.tsx` | `AdminDashboard.vue` | ⬜ |
-| `AdminAnalytics.tsx` | `AdminAnalytics.vue` | ⬜ |
-| `ChatPane.tsx` | `ChatPane.vue` | ⬜ |
-| `DashboardPane.tsx` | `DashboardPane.vue` | ⬜ |
-| `LoanCard.tsx` | `LoanCard.vue` | ⬜ |
-| `LoanComparisonPane.tsx` | `LoanComparisonPane.vue` | ⬜ |
-| `LoanComparisonResults.tsx` | `LoanComparisonResults.vue` | ⬜ |
-| `LoanComparisonTable.tsx` | `LoanComparisonTable.vue` | ⬜ |
-| `MetricCard.tsx` | `MetricCard.vue` | ⬜ |
-| `EmiDonutChart.tsx` | `EmiDonutChart.vue` | ⬜ |
-| `AgentTypingIndicator.tsx` | `AgentTypingIndicator.vue` | ⬜ |
-| `WhatIfSimulator.tsx` | `WhatIfSimulator.vue` | ⬜ |
-| `PerformanceMetrics.tsx` | `PerformanceMetrics.vue` | ⬜ |
-| `ReportsPanel.tsx` | `ReportsPanel.vue` | ⬜ |
-| `LenderManagement.tsx` | `LenderManagement.vue` | ⬜ |
-
-### Components — Auth (`src/components/auth/`)
-| File | Vue Component | Status |
-|------|--------------|--------|
-| `AuthModal.tsx` | `AuthModal.vue` | ⬜ |
-| `ProfileCompletionModal.tsx` | `ProfileCompletionModal.vue` | ⬜ |
-
-### Components — Shared (`src/components/shared/`)
-| File | Vue Component | Status |
-|------|--------------|--------|
-| `AgentOverlay.tsx` | `AgentOverlay.vue` | ⬜ |
-
-### Components — Workspace Layout (`src/components/workspace/layout/`)
-| File | Vue Component | Status |
-|------|--------------|--------|
-| `DashboardLayout.tsx` | `DashboardLayout.vue` | ⬜ |
-
-### Components — Workspace Pages (`src/components/workspace/pages/`)
-| File | Vue Component | Status |
-|------|--------------|--------|
-| `ActiveLoans.tsx` | `ActiveLoans.vue` | ⬜ |
-| `AdvisorChat.tsx` | `AdvisorChat.vue` | ⬜ |
-| `AnalyticsDashboard.tsx` | `AnalyticsDashboard.vue` | ⬜ |
-| `GenUiApplication.tsx` | `GenUiApplication.vue` | ⬜ |
-| `LoanApplication.tsx` | `LoanApplication.vue` | ⬜ |
-| `UserProfile.tsx` | `UserProfile.vue` | ⬜ |
-| `Workspace.tsx` | `Workspace.vue` | ⬜ |
-
-### Components — Workspace Widgets (`src/components/workspace/widgets/`)
-| File | Vue Component | Status |
-|------|--------------|--------|
-| `ActiveContractWidget.tsx` | `ActiveContractWidget.vue` | ⬜ |
-| `GraphVisualizer.tsx` | `GraphVisualizer.vue` | ⬜ |
-| `KycWidget.tsx` | `KycWidget.vue` | ⬜ |
-| `OffersWidget.tsx` | `OffersWidget.vue` | ⬜ |
-| `OnboardingWidget.tsx` | `OnboardingWidget.vue` | ⬜ |
-| `ProfileWidget.tsx` | `ProfileWidget.vue` | ⬜ |
-| `RejectionWidget.tsx` | `RejectionWidget.vue` | ⬜ |
-| `SanctionViewer.tsx` | `SanctionViewer.vue` | ⬜ |
-| `ShapWidget.tsx` | `ShapWidget.vue` | ⬜ |
+The target is **one** runtime, **one** data plane, **one** state machine — all on Cloudflare.
 
 ---
 
-## 🗺️ Migration Steps (Phase by Phase)
+## 2. Principles
+
+1. **Single runtime.** TypeScript on Workers. No Python, no second backend vendor.
+2. **Server is authoritative.** Every financial, approval and disclosure rule is enforced in the Worker.
+3. **Edge-first.** The SPA ships from Pages; the API executes near the user; no origin server to patch.
+4. **Deterministic money.** Integer pesewas and basis points in D1, never floats.
+5. **Immutable history.** Append-only `audit_events` and journal rows; corrections are compensating entries.
+6. **No big-bang cutover.** Each phase is independently deployable and reversible.
 
 ---
 
-### Phase 1 — Project Setup & Config ⬜
-Scaffold new Vue project within `frontend/`, swap dependencies, verify dev server boots.
+## 3. Current state → target state
 
-- [ ] **1.1** Install Vue 3 and replace React deps in `package.json`
-- [ ] **1.2** Update `vite.config.ts` — replace `@vitejs/plugin-react` with `@vitejs/plugin-vue`
-- [ ] **1.3** Update `tsconfig.app.json` — add Vue type support
-- [ ] **1.4** Update `eslint.config.js` — swap React rules for Vue plugin rules
-- [ ] **1.5** Create `frontend/src/main.ts` (createApp, Pinia, mount)
-- [ ] **1.6** Create skeleton `App.vue` with `<template>`, `<script setup lang="ts">`, `<style>`
-- [ ] **1.7** Verify dev server runs with `npm run dev`
-
----
-
-### Phase 2 — State Management (Pinia) ⬜
-Migrate Zustand store to Pinia with persist plugin.
-
-- [ ] **2.1** Install `pinia` + `pinia-plugin-persistedstate`
-- [ ] **2.2** Create `src/stores/loanStore.ts`
-- [ ] **2.3** Export store as `useLoanStore()` composable
-- [ ] **2.4** Register Pinia in `main.ts` with `app.use(pinia)`
-- [ ] **2.5** Verify store works in browser devtools
+| Capability | Today | Target |
+| --- | --- | --- |
+| Web app | React 19 + Vite in `frontend/` | Same, deployed to **Cloudflare Pages** |
+| Hosting config | `frontend/vercel.json` | Pages project + `frontend/public/_redirects` |
+| HTTP API | FastAPI (`archive/python-backend/`) + Convex | `workers/api` (Worker, `api.gidfine.com`) |
+| Real-time chat | FastAPI WebSocket + Convex reactivity | Durable Object `LoanSession` (WebSocket hibernation) |
+| Database | MongoDB Atlas + Convex DB | **D1** (`gidfine-db`) |
+| Documents | GridFS | **R2** (`gidfine-documents`) with signed URLs |
+| Cache | Redis | **KV** + Cache API |
+| Background work | In-process `asyncio` + cron | **Queues** + **Cron Triggers** |
+| LLM / OCR | LangChain → Groq/Gemini/OpenRouter | **Workers AI** + **AI Gateway** |
+| PDF letters | ReportLab (Python) | `pdf-lib` in the Worker |
+| Auth | Session-based + OTP | JWT (`jose`) + PBKDF2 via Web Crypto; optional Cloudflare Access for staff |
+| Tests | pytest (Python) | `node:test` with `--experimental-strip-types` |
 
 ---
 
-### Phase 3 — API Layer (Reuse) ⬜
-The API client is pure TypeScript — copy as-is.
+## 4. Source → target mapping
 
-- [ ] **3.1** Copy `src/api/client.ts` unchanged
-- [ ] **3.2** Copy `src/api/websocket.ts` unchanged
-- [ ] **3.3** Copy `src/types.ts` → keep as `src/types/index.ts`
-- [ ] **3.4** Update all absolute import paths
-
----
-
-### Phase 4 — Composables (Hooks → Composables) ⬜
-React hooks use useState/useEffect — rewrite with Vue ref/reactive/onMounted/watch.
-
-- [ ] **4.1** Migrate `useAdminAPI.ts` → `src/composables/useAdminAPI.ts`
-- [ ] **4.2** Migrate `useComparisonAPI.ts` → `src/composables/useComparisonAPI.ts`
-
----
-
-### Phase 5 — Core Layout & App Shell ⬜
-Establish the routing/auth shell so all pages can be dropped in.
-
-- [ ] **5.1** Migrate `App.tsx` → `App.vue`
-- [ ] **5.2** Migrate `DashboardLayout.tsx` → `DashboardLayout.vue`
-- [ ] **5.3** Migrate `Workspace.tsx` → `Workspace.vue`
-- [ ] **5.4** Verify entire shell loads (landing/dashboard toggle)
+| Source | Target |
+| --- | --- |
+| `archive/python-backend/agents/master_router.py` | `workers/api/src/domain/stateMachine.ts` + route dispatch |
+| `archive/python-backend/agents/intent_agent.py` | `workers/api/src/domain/intent.ts` |
+| `archive/python-backend/agents/sales_agent.py` | `workers/api/src/routes/chat.ts` + `durable/loanSession.ts` |
+| `archive/python-backend/agents/document_agent.py` | `workers/api/src/jobs/ocr.ts` + R2 |
+| `archive/python-backend/agents/kyc_agent.py`, `fraud_agent.py` | `workers/api/src/domain/kyc.ts`, `domain/fraud.ts` |
+| `archive/python-backend/agents/underwriting.py`, `utils/financial_rules.py` | `workers/api/src/domain/underwriting.ts`, `domain/pricing.ts` |
+| `archive/python-backend/utils/pdf_generator.py` | `workers/api/src/lib/pdf.ts` |
+| `archive/python-backend/agents/emi_engine.py`, `repayment_agent.py` | `workers/api/src/domain/allocation.ts` + ledger tables |
+| `frontend/convex/schema.ts` | `workers/api/migrations/*.sql` |
+| `frontend/convex/loans.ts` | `workers/api/src/routes/applications.ts`, `proposals.ts`, `approvals.ts`, `lender.ts` |
+| `frontend/convex/ledger.ts` | `workers/api/src/routes/ledger.ts` + `domain/allocation.ts` |
+| `frontend/src/services/loanService.ts` (Convex adapter) | HTTP client against `VITE_API_BASE` |
+| `frontend/src/lib/api.ts`, `src/api/client.ts`, `src/api/websocket.ts` | Consolidated into the typed service layer |
 
 ---
 
-### Phase 6 — Auth Components ⬜
-Login, OAuth callback, modals.
+## 5. Phases
 
-- [ ] **6.1** Migrate `LandingPage.tsx` → `LandingPage.vue`
-- [ ] **6.2** Migrate `Login.tsx` → `Login.vue`
-- [ ] **6.3** Migrate `Auth.tsx` → `Auth.vue`
-- [ ] **6.4** Migrate `AuthWrapper.tsx` → `AuthWrapper.vue`
-- [ ] **6.5** Migrate `auth/AuthModal.tsx` → `auth/AuthModal.vue`
-- [ ] **6.6** Migrate `auth/ProfileCompletionModal.tsx` → `auth/ProfileCompletionModal.vue`
-- [ ] **6.7** Verify login + OAuth redirect flow
+### Phase 0 — Freeze and inventory ✅
 
----
+- [x] Branch protection on `main`; migration work on a feature branch.
+- [x] Python backend moved to `archive/python-backend/` (read-only).
+- [x] Docs rebased onto Cloudflare (this directory + README + Dev Guide).
+- **Exit criterion:** no build, test or deploy path references Python.
 
-### Phase 7 — Onboarding Flow ⬜
-Largest component — multi-step form with agent interactions.
+### Phase 1 — Worker skeleton and D1 schema 📐
 
-- [ ] **7.1** Migrate `Onboarding.tsx` → `Onboarding.vue`
-- [ ] **7.2** Migrate `OnboardingWidget.tsx` → `OnboardingWidget.vue`
-- [ ] **7.3** Test full onboarding flow end-to-end
+- Create `workers/api` with Wrangler config, `nodejs_compat`, observability.
+- Implement `GET /health`, structured error envelope, CORS allow-list, request IDs.
+- Author migrations `0001_core.sql` … covering agencies, users, memberships, applications, documents, proposals, consents, approvals, audit.
+- Port the state machine and guards to `domain/stateMachine.ts` with a `node:test` suite.
+- **Exit criterion:** state-machine and schema tests green; `/health` deployed to staging.
 
----
+### Phase 2 — Identity and tenancy 📐
 
-### Phase 8 — Chat & AI Advisor ⬜
-Complex streaming/WebSocket-driven UI.
+- `POST /auth/register`, `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout`.
+- PBKDF2-HMAC-SHA-256 (Web Crypto) password hashing; JWT access + refresh tokens.
+- Middleware resolves `{ userId, agencyId, role }` from the token; **never** from the request body.
+- Rate-limit auth and OTP routes with the Cloudflare rate-limiting binding.
+- **Exit criterion:** unauthenticated and cross-tenant requests are rejected in tests.
 
-- [ ] **8.1** Migrate `ChatPane.tsx` → `ChatPane.vue`
-- [ ] **8.2** Migrate `AgentTypingIndicator.tsx` → `AgentTypingIndicator.vue`
-- [ ] **8.3** Migrate `AgentOverlay.tsx` → `AgentOverlay.vue`
-- [ ] **8.4** Migrate `workspace/pages/AdvisorChat.tsx` → `AdvisorChat.vue`
-- [ ] **8.5** Verify WebSocket streaming and chat rendering
+### Phase 3 — Loan workflow API 📐
 
----
+- `POST /applications` (borrower submit), `GET /applications` (borrower list).
+- `POST /applications/:id/proposals` (agency proposes terms, versioned).
+- `POST /proposals/:id/decision` (assigned lender accepts/declines).
+- `POST /applications/:id/approval` (agency approval — blocked without lender acceptance).
+- `POST /applications/:id/consent` (borrower affirmative consent + SHA-256 terms snapshot).
+- `GET /applications/:id/disbursement-readiness` (read-only audit).
+- **Exit criterion:** the 8-step lifecycle passes the end-to-end security suite.
 
-### Phase 9 — Loan Application & Decision Pages ⬜
-KYC, offers, sanctions, rejection flows.
+### Phase 4 — Documents, chat and async work 📐
 
-- [ ] **9.1** Migrate `workspace/pages/LoanApplication.tsx` → `LoanApplication.vue`
-- [ ] **9.2** Migrate `workspace/pages/GenUiApplication.tsx` → `GenUiApplication.vue`
-- [ ] **9.3** Migrate `widgets/KycWidget.tsx` → `KycWidget.vue`
-- [ ] **9.4** Migrate `widgets/OffersWidget.tsx` → `OffersWidget.vue`
-- [ ] **9.5** Migrate `widgets/RejectionWidget.tsx` → `RejectionWidget.vue`
-- [ ] **9.6** Migrate `widgets/SanctionViewer.tsx` → `SanctionViewer.vue`
-- [ ] **9.7** Migrate `widgets/ShapWidget.tsx` → `ShapWidget.vue`
-- [ ] **9.8** Migrate `widgets/GraphVisualizer.tsx` → `GraphVisualizer.vue`
-- [ ] **9.9** Test complete loan application flow
+- R2 upload with tenant-scoped keys and signed download URLs.
+- OCR job via Queues → AI Gateway → Gemini Vision; results persisted to D1.
+- `LoanSession` Durable Object: chat history, streaming tokens, agent-status events.
+- **Exit criterion:** two concurrent sessions cannot read each other's transcript.
 
----
+### Phase 5 — Ledger and disbursement 📐
 
-### Phase 10 — Dashboard, Charts & Analytics ⬜
-Replace Recharts with vue-chartjs / Chart.js.
+- Journal tables, maker-checker disbursement, repayment allocation, reversals.
+- Cron trigger for overdue sweeps and repayment reminders.
+- Reconciliation query: debits = credits per transaction.
+- **Exit criterion:** duplicate idempotency key cannot double-post; reversals balance.
 
-- [ ] **10.1** Migrate `DashboardPane.tsx` → `DashboardPane.vue`
-- [ ] **10.2** Migrate `EmiDonutChart.tsx` → `EmiDonutChart.vue`
-- [ ] **10.3** Migrate `workspace/pages/AnalyticsDashboard.tsx` → `AnalyticsDashboard.vue`
-- [ ] **10.4** Migrate `PerformanceMetrics.tsx` → `PerformanceMetrics.vue`
-- [ ] **10.5** Migrate `MetricCard.tsx` → `MetricCard.vue`
-- [ ] **10.6** Migrate `WhatIfSimulator.tsx` → `WhatIfSimulator.vue`
-- [ ] **10.7** Migrate `workspace/pages/ActiveLoans.tsx` → `ActiveLoans.vue`
-- [ ] **10.8** Migrate `widgets/ActiveContractWidget.tsx` → `ActiveContractWidget.vue`
-- [ ] **10.9** Verify charts render correctly
+### Phase 6 — Frontend cutover ✅ / 📐
 
----
+- [x] React 19 + Vite SPA exists.
+- [ ] Replace the Convex adapter with the Worker HTTP client.
+- [ ] Delete `frontend/convex/` and the Convex dependency.
+- [ ] Delete `frontend/vercel.json`; add `frontend/public/_redirects`.
+- [ ] Point `VITE_API_BASE` at the Worker per environment.
+- **Exit criterion:** `npm run build` and `node --test` pass with no Convex import; Pages preview works against staging.
 
-### Phase 11 — User Profile & Settings ⬜
+### Phase 7 — Decommission and harden 📐
 
-- [ ] **11.1** Migrate `workspace/pages/UserProfile.tsx` → `UserProfile.vue`
-- [ ] **11.2** Migrate `widgets/ProfileWidget.tsx` → `ProfileWidget.vue`
+- Remove the archived Python tree from the working branch (keep a tagged release).
+- Rotate all Render/MongoDB/Convex credentials.
+- Enable Workers Logs, Tail Workers and alerting; document on-call runbook.
+- Penetration test the tenancy and redaction boundaries.
+- **Exit criterion:** production traffic served only by Cloudflare; legacy hosts shut down.
 
 ---
 
-### Phase 12 — Admin Panel ⬜
+## 6. Data migration
 
-- [ ] **12.1** Migrate `AdminDashboard.tsx` → `AdminDashboard.vue`
-- [ ] **12.2** Migrate `AdminAnalytics.tsx` → `AdminAnalytics.vue`
-- [ ] **12.3** Migrate `LenderManagement.tsx` → `LenderManagement.vue`
-- [ ] **12.4** Migrate `ReportsPanel.tsx` → `ReportsPanel.vue`
-- [ ] **12.5** Verify admin flow
+1. **Export** source records by tenant (MongoDB `mongoexport` / Convex export).
+2. **Transform** to SQL with a one-off script: ObjectId → ULID, `principalPesewas` remains integer, timestamps normalised to epoch milliseconds.
+3. **Load** into staging D1 with `wrangler d1 execute gidfine-db-staging --file=seed.sql --remote`.
+4. **Verify** counts and sums per table; reconcile the ledger to the pesewa.
+5. **Sign off** before promoting to production.
 
----
+Rules:
 
-### Phase 13 — Loan Comparison ⬜
-
-- [ ] **13.1** Migrate `LoanComparisonPane.tsx` → `LoanComparisonPane.vue`
-- [ ] **13.2** Migrate `LoanComparisonResults.tsx` → `LoanComparisonResults.vue`
-- [ ] **13.3** Migrate `LoanComparisonTable.tsx` → `LoanComparisonTable.vue`
-- [ ] **13.4** Migrate `LoanCard.tsx` → `LoanCard.vue`
-- [ ] **13.5** Verify loan comparison feature
+- Never import documents into D1 — they belong in R2.
+- Never import plaintext passwords; require a reset flow at cutover.
+- Keep the source export in an access-controlled bucket, not in git.
 
 ---
 
-### Phase 14 — Documentation Page ⬜
+## 7. Cutover and rollback
 
-- [ ] **14.1** Migrate `pages/Docs.tsx` → `pages/Docs.vue`
+**Cutover**
 
----
+1. Deploy `workers/api` to production with D1 migrations applied.
+2. Deploy the Pages production build with `VITE_API_BASE=https://api.gidfine.com`.
+3. Smoke test: register → submit → propose → lender decision → approval → consent → readiness.
+4. Monitor `wrangler tail` and Workers Analytics for 60 minutes.
 
-### Phase 15 — Final Polish & QA ⬜
+**Rollback**
 
-- [ ] **15.1** Remove all React packages from `package.json`
-- [ ] **15.2** Search codebase for any remaining `.tsx` files — convert or delete
-- [ ] **15.3** Run `npm run build` — fix all TypeScript/build errors
-- [ ] **15.4** Run `npm run lint` — fix all linting errors
-- [ ] **15.5** Full E2E test: Landing → Login → Onboarding → Chat → Sanction → Active Loan
-- [ ] **15.6** Admin flow test
-- [ ] **15.7** Loan Comparison flow test
-- [ ] **15.8** Docs page test
-- [ ] **15.9** Update `README.md` with new Vue stack info
-
----
-
-## 🔄 React → Vue 3 Cheat Sheet
-
-| React | Vue 3 Equivalent |
-|-------|-----------------|
-| `useState(val)` | `const x = ref(val)` |
-| `useRef(null)` | `const el = ref<HTMLElement \| null>(null)` |
-| `useEffect(() => {}, [])` | `onMounted(() => {})` |
-| `useEffect(() => {}, [dep])` | `watch(dep, () => {})` |
-| `useCallback(fn, [deps])` | Plain function (reactivity is automatic) |
-| `useMemo(fn, [deps])` | `computed(() => fn())` |
-| `props.children` | `<slot />` |
-| `className="..."` | `class="..."` |
-| `onClick={handler}` | `@click="handler"` |
-| `onChange={handler}` | `@change="handler"` or `v-model` |
-| `{condition && <Comp />}` | `<Comp v-if="condition" />` |
-| `{list.map(item => </>)}` | `<div v-for="item in list" :key="item.id">` |
-| `<motion.div animate={...}>` | `<div v-motion :initial="{}" :enter="{}">` |
-| Zustand `create(...)` | `defineStore(...)` (Pinia) |
-| `useStore(state => state.x)` | `storeToRefs(useLoanStore())` |
-| `React.FC<Props>` | `defineProps<Props>()` |
-| `forwardRef` | `defineExpose({})` |
-| Context API | Pinia or `provide` / `inject` |
-| `lucide-react` | `lucide-vue-next` |
-| `recharts` | `vue-chartjs` + `chart.js` |
-| `react-markdown` | `vue3-markdown-it` |
-| `react-countup` | `vue-countup-v3` |
-| `framer-motion` | `@vueuse/motion` |
+| Failure | Action |
+| --- | --- |
+| Worker error spike | `wrangler rollback` to the previous deployment |
+| Bad migration | Roll forward with a corrective migration (D1 has no down-migrations) |
+| Frontend regression | Pages → Deployments → roll back to the previous build |
+| Total outage | Repoint the Pages `VITE_API_BASE` to the frozen legacy API and redeploy |
 
 ---
 
-## ⚠️ Known Challenges
+## 8. Risks
 
-1. **`GenUiApplication.tsx`** (28KB) — Large complex component with dynamic AI-generated UI rendering. Vue's `<component :is>` and `v-html` will be needed carefully.
-2. **`ChatPane.tsx`** (27KB) — Streaming SSE/WebSocket updates; ensure reactivity is correctly set up.
-3. **`Onboarding.tsx`** (25KB) — Multi-step wizard with animations; Framer Motion → `@vueuse/motion` or CSS transitions.
-4. **shadcn/ui** — React-specific; Vue equivalent is **shadcn-vue** (`shadcn-vue.com`). Components must be re-generated.
-5. **`canvas-confetti`** — Framework agnostic, reuse directly.
-6. **Pinia Persist** — Map Zustand's `partialize` to Pinia's `persist: { paths: [...] }`.
-
----
-
-## 📦 New `package.json` Dependencies (Target)
-
-```json
-{
-  "dependencies": {
-    "vue": "^3.5.0",
-    "pinia": "^2.2.0",
-    "pinia-plugin-persistedstate": "^4.0.0",
-    "@vueuse/core": "^12.0.0",
-    "@vueuse/motion": "^2.2.0",
-    "lucide-vue-next": "^0.477.0",
-    "vue-chartjs": "^5.3.0",
-    "chart.js": "^4.4.0",
-    "vue3-markdown-it": "^1.0.0",
-    "vue-countup-v3": "^2.0.0",
-    "canvas-confetti": "^1.9.4",
-    "clsx": "^2.1.1",
-    "tailwind-merge": "^3.5.0",
-    "class-variance-authority": "^0.7.1"
-  },
-  "devDependencies": {
-    "@vitejs/plugin-vue": "^5.2.0",
-    "@vue/tsconfig": "^0.7.0",
-    "typescript": "~5.9.3",
-    "vite": "^5.4.21",
-    "tailwindcss": "^3.4.19",
-    "postcss": "^8.5.8",
-    "autoprefixer": "^10.4.27"
-  }
-}
-```
+| Risk | Impact | Mitigation |
+| --- | --- | --- |
+| D1 write throughput per database | Contention during batch postings | Single-writer per session via Durable Object; bounded batch sizes |
+| No interactive multi-statement transactions | Partial writes | `db.batch()` atomic batches; idempotency keys |
+| Workers CPU limits | Slow OCR / PDF | Offload to Queues; stream uploads to R2 |
+| Cold-start latency on DO | Chat lag | WebSocket hibernation; reconnect/backoff in client |
+| Secrets sprawl | Credential leakage | `wrangler secret`, per-environment scopes, rotation schedule |
+| Data migration loss | Financial misstatement | Row-count + sum reconciliation before cutover |
 
 ---
 
-## 🏁 Completion Tracker
+## 9. Decision log
 
-| Phase | Description | Status |
-|-------|-------------|--------|
-| Phase 1 | Project Setup & Config | ⬜ |
-| Phase 2 | Pinia State Store | ⬜ |
-| Phase 3 | API Layer (Reuse) | ⬜ |
-| Phase 4 | Composables | ⬜ |
-| Phase 5 | App Shell & Layout | ⬜ |
-| Phase 6 | Auth Components | ⬜ |
-| Phase 7 | Onboarding Flow | ⬜ |
-| Phase 8 | Chat & AI Advisor | ⬜ |
-| Phase 9 | Loan Application & Decisions | ⬜ |
-| Phase 10 | Dashboard, Charts & Analytics | ⬜ |
-| Phase 11 | User Profile | ⬜ |
-| Phase 12 | Admin Panel | ⬜ |
-| Phase 13 | Loan Comparison | ⬜ |
-| Phase 14 | Documentation Page | ⬜ |
-| Phase 15 | Final QA & Cleanup | ⬜ |
+| # | Decision | Rationale |
+| --- | --- | --- |
+| D1 | Retire Python entirely | Cannot run on Cloudflare; reduces to one language and one runtime |
+| D2 | Retire Convex | Single vendor; identity, storage and queues become native Cloudflare |
+| D3 | D1 over Hyperdrive/Postgres | Lowest operational overhead for the current data volume; revisit if write contention appears |
+| D4 | Durable Object per loan session | Serialises chat writes; enables hibernating WebSockets |
+| D5 | Integer pesewas / basis points | Deterministic financial arithmetic |
+| D6 | AI Gateway in front of external models | Caching, retries, provider fallback and observability in one place |
 
 ---
 
-*Generated: 2026-10-12 — LoanNBFC Vue Migration*
+## 10. Open questions
+
+1. Does the business require a second D1 database per tenant, or is `agency_id` row-scoping sufficient?
+2. Which identity provider backs staff MFA — Cloudflare Access, Google Workspace, or in-house TOTP?
+3. Are sanction letters legally required to be generated server-side and retained in R2, or may they be generated client-side?
+4. What retention period applies to KYC documents under Act 843?
+5. Is a custom domain required for the API (`api.gidfine.com`) or is `workers.dev` acceptable for staging only?
