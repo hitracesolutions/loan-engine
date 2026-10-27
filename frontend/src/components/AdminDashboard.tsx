@@ -8,8 +8,11 @@ import AdminAnalytics from './AdminAnalytics';
 import LenderManagement from './LenderManagement';
 import PerformanceMetrics from './PerformanceMetrics';
 import ReportsPanel from './ReportsPanel';
+import AgencyReviewQueue from './AgencyReviewQueue';
+import { LenderPortal } from './LenderPortal';
+import { CashierLedgerPortal } from './CashierLedgerPortal';
 
-type AdminView = 'dashboard' | 'analytics' | 'lenders' | 'performance' | 'reports' | 'settings';
+type AdminView = 'dashboard' | 'agency-queue' | 'lender-portal' | 'cashier-ledger' | 'analytics' | 'lenders' | 'performance' | 'reports' | 'settings';
 
 interface AdminDashboardProps {
   userName?: string;
@@ -41,6 +44,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   const navigationItems: { id: AdminView; label: string; icon: string; requires: string[] }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: '📊', requires: ['admin', 'analyst', 'viewer'] },
+    { id: 'agency-queue', label: 'Review Queue', icon: '📋', requires: ['admin', 'analyst', 'viewer'] },
+    { id: 'lender-portal', label: 'Lender Portal', icon: '🏛️', requires: ['admin', 'analyst', 'viewer'] },
+    { id: 'cashier-ledger', label: 'Cashier & Ledger', icon: '💵', requires: ['admin', 'analyst', 'viewer'] },
     { id: 'analytics', label: 'Analytics', icon: '📈', requires: ['admin', 'analyst', 'viewer'] },
     { id: 'lenders', label: 'Lenders', icon: '🏦', requires: ['admin'] },
     { id: 'performance', label: 'Performance', icon: '⭐', requires: ['admin', 'analyst'] },
@@ -157,6 +163,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
             {/* View Components */}
             {activeView === 'dashboard' && <DashboardView periodDays={selectedPeriodDays} />}
+            {activeView === 'agency-queue' && <AgencyReviewQueue />}
+            {activeView === 'lender-portal' && <LenderPortal />}
+            {activeView === 'cashier-ledger' && <CashierLedgerPortal />}
             {activeView === 'analytics' && <AdminAnalytics periodDays={selectedPeriodDays} />}
             {activeView === 'lenders' && canAccessView('lenders') && (
               <LenderManagement />
