@@ -1,0 +1,5 @@
+/*  Cloudflare Pages SPA fallback.
+ *  Every unknown path is served index.html so client-side routes such as /docs
+ *  resolve on a direct hit or a refresh. Static assets are matched first, so
+ *  this does not shadow files in the build output. */
+/*    /index.html   200

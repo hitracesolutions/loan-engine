@@ -8,61 +8,41 @@ import { ShieldCheck } from 'lucide-react';
 import { api } from './lib/api';
 
 function App() {
-  const { currentState, user, setUser, setSessionId } = useLoanStore();
+  const { currentState, setUser, setSessionId } = useLoanStore();
   const [showProfileCompletion, setShowProfileCompletion] = useState(false);
 
   useEffect(() => {
-    // Check URL for OAuth callback parameters
+    // OAuth/OIDC handoff: the provider returns a session_id that only the server
+    // can resolve. Query parameters are never trusted as identity — the user is
+    // populated exclusively from the verified session payload.
     const params = new URLSearchParams(window.location.search);
     const sessionId = params.get('session_id');
-    const name = params.get('name');
-    const email = params.get('email');
-    const picture = params.get('picture');
-    const phone = params.get('phone');
+    if (!sessionId) return;
 
-    if (sessionId) {
-      setSessionId(sessionId);
-      
-      api.verifySession(sessionId).then((res) => {
-        if (res.success && res.data?.customer_data) {
-          const cust = res.data.customer_data;
-          const userObj = {
-            name: cust.name || name || 'Borrower',
-            email: cust.email || email || '',
-            picture: cust.picture || picture || '',
-            phone: cust.phone || phone || '',
-            salary: cust.salary || 75000,
-            city: cust.city || 'Mumbai',
-            creditScore: cust.credit_score || 750,
-            preApprovedLimit: cust.pre_approved_limit || 500000,
-          };
-          setUser(userObj);
+    setSessionId(sessionId);
+    window.history.replaceState({}, document.title, window.location.pathname);
 
-          // Only prompt for profile completion if phone is missing or contains dummy placeholder
-          if (!userObj.phone || userObj.phone.startsWith('g_') || userObj.phone.length < 10) {
-            setShowProfileCompletion(true);
-          } else {
-            setShowProfileCompletion(false);
-          }
-        } else if (name || email) {
-          const userObj = {
-            name: name || 'Borrower',
-            email: email || '',
-            picture: picture || '',
-            phone: phone || '',
-            salary: 75000,
-            creditScore: 750,
-          };
-          setUser(userObj);
-          if (!userObj.phone || userObj.phone.length < 10) {
-            setShowProfileCompletion(true);
-          }
-        }
-      });
+    void api.verifySession(sessionId).then((res) => {
+      const cust = res.success ? res.data?.customer_data : undefined;
+      if (!cust?.name) return;
 
-      // Clean up URL parameters
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
+      const userObj = {
+        name: cust.name,
+        email: cust.email || '',
+        picture: cust.picture || '',
+        phone: cust.phone || '',
+        salary: cust.salary || 75000,
+        city: cust.city || 'Mumbai',
+        creditScore: cust.credit_score || 750,
+        preApprovedLimit: cust.pre_approved_limit || 500000,
+      };
+      setUser(userObj);
+
+      // Prompt for profile completion only when the phone is missing or a placeholder.
+      setShowProfileCompletion(
+        !userObj.phone || userObj.phone.startsWith('g_') || userObj.phone.length < 10,
+      );
+    });
   }, [setUser, setSessionId]);
 
   // Public routes accessible without authentication

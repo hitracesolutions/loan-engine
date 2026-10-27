@@ -1,0 +1,39 @@
+{
+  "name": "gidfine-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-27",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+  "vars": {
+    "APP_NAME": "Gidfine",
+    "APP_ENV": "development",
+    "ALLOWED_ORIGINS": "http://localhost:5173",
+    "ACCESS_TOKEN_TTL_SECONDS": "900"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "gidfine-db",
+      // Replace with the id printed by: wrangler d1 create gidfine-db
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "env": {
+    "staging": {
+      "vars": {
+        "APP_ENV": "staging",
+        "ALLOWED_ORIGINS": "https://staging.gidfine.pages.dev"
+      }
+    },
+    "production": {
+      "vars": {
+        "APP_ENV": "production",
+        "ALLOWED_ORIGINS": "https://app.gidfine.com"
+      }
+    }
+  }
+}
