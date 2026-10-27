@@ -2,20 +2,18 @@
 
 # ⚡ Gidfine
 
-### AI-Powered Loan Origination Platform
+### AI-Powered Loan Agency Management Platform
 
-**Instant approval. Automated decisioning. Multi-lender marketplace.**
-
-**Runs entirely on Cloudflare's edge — no Python runtime.**
+**Instant approval. Transparent pricing. Multi-lender marketplace.**
 
 ---
 
-[![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-F38020?style=flat-square&logo=cloudflare&logoColor=white)](https://workers.cloudflare.com/)
-[![Cloudflare Pages](https://img.shields.io/badge/Cloudflare-Pages-F38020?style=flat-square&logo=cloudflare&logoColor=white)](https://pages.cloudflare.com/)
-[![React 19](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=white)](https://react.dev/)
-[![Vite 5](https://img.shields.io/badge/Vite-5-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vite.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Cloudflare D1](https://img.shields.io/badge/D1-SQLite-F38020?style=flat-square&logo=cloudflare&logoColor=white)](https://developers.cloudflare.com/d1/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
+[![Cloudflare Pages](https://img.shields.io/badge/Cloudflare-Pages%20%2B%20Workers-orange?style=flat-square)](https://developers.cloudflare.com/)
+[![React 19](https://img.shields.io/badge/React-19-blue?style=flat-square)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat-square)](https://www.typescriptlang.org/)
+[![Cloudflare D1](https://img.shields.io/badge/Database-D1%20%28SQLite%29-darkblue?style=flat-square)](https://developers.cloudflare.com/d1/)
+[![Vite](https://img.shields.io/badge/Build-Vite-purple?style=flat-square)](https://vitejs.dev/)
 
 </div>
 
@@ -23,231 +21,85 @@
 
 ## 🚀 What is Gidfine?
 
-Gidfine transforms loan origination from a **7-day manual process** into a **4-minute conversational experience**.
+Gidfine is an **agency management platform** that simplifies loan origination by connecting borrowers, lenders, and agency staff in a transparent, auditable workflow.
 
-It combines:
+- 📋 Borrowers submit applications with documents
+- 🏦 Agency matches them to eligible lenders
+- 💰 Transparent pricing with agency margin control
+- ✅ Multi-stage approvals (lender → agency → borrower)
+- 📊 Full audit trail and repayment tracking
+- 🔐 Role-based access with field-level disclosure policies
 
-- 🤖 **AI-assisted agents** for intent routing and conversational intake
-- 🔍 **Document forensics** with Vision OCR (routed through AI Gateway)
-- 📊 **Rule-based underwriting** (transparent, auditable, no black boxes)
-- 🏦 **Multi-lender marketplace** with parallel offer fetching
-- ⚡ **Real-time UI** with WebSocket-driven agent thinking indicators
-- 💾 **Edge-native persistence** with D1, R2 and Durable Object sessions
-
-The entire product is deployed on Cloudflare:
-
-| Concern | Cloudflare product |
-| --- | --- |
-| Web app | **Pages** (React 19 + Vite static SPA) |
-| HTTP API / WebSocket gateway | **Workers** (TypeScript) |
-| Relational data | **D1** (SQLite) |
-| KYC documents & generated PDFs | **R2** |
-| Chat sessions & live agent streaming | **Durable Objects** (WebSocket hibernation) |
-| Caching & rate-limit counters | **KV** + Rate Limiting binding |
-| Async work (OCR, notifications, reminders) | **Queues** + Cron Triggers |
-| Model inference | **Workers AI** with **AI Gateway** for external providers |
-
-> **Python is retired.** The former FastAPI + LangGraph + MongoDB backend is preserved read-only in [`archive/python-backend/`](archive/python-backend) for reference only. It is not part of the build, the runtime, or the deployment.
+**Built entirely on Cloudflare** — no traditional backend servers, fully serverless and edge-based.
 
 ---
 
 ## 🎯 The Problem We Solve
 
-Applying for a loan in Ghana is still fragmented:
+Loan intermediation in Ghana is fragmented and opaque:
 
-| Problem | Status | Solution |
-|---------|--------|----------|
-| **Manual underwriting** takes 3–7 days | ❌ | Automated decisioning in <5 min |
-| Paper documents get lost/flagged | ❌ | Vision OCR + forensic tamper signals |
-| No visibility into application status | ❌ | Real-time chat + status dashboard |
-| Must apply with multiple lenders | ❌ | Single session, 5+ lender offers |
-| Fraud checks happen too late | ❌ | 6-signal scoring upfront |
+| Challenge | Solution |
+|-----------|----------|
+| Manual lender matching | Agency portal with eligibility rules |
+| Borrowers don't know real rates | Transparent pricing policy engine |
+| Lost documents and endless re-uploads | Centralized document storage in R2 |
+| No audit trail for compliance | Immutable ledger + approval workflow |
+| Slow disbursement and repayment tracking | Real-time status updates via Durable Objects |
+| Lenders leak borrower information | Field-level disclosure policies enforced server-side |
 
-**Result**: Customers get approved, rejected, or receive restructured offers **in one session** with full transparency.
-
----
-
-## ⚙️ How It Works
-
-```
-Customer: "I need GHS 50,000"
-    ↓
-Intent Agent: Classifies request → loan
-    ↓
-Sales Agent: Gathers amount (50k), tenure (36 months), purpose (business)
-    ↓
-Lender Marketplace: Fetches 5+ offers in parallel
-    ↓
-Customer: Picks Access Bank (18% rate)
-    ↓
-Document Agent: OCR + forensic analysis of ID, salary slip
-    ↓
-KYC + Fraud (parallel): Name matching, income validation, tampering detection
-    ↓
-Underwriting: DTI check, credit score, fraud scoring
-    ↓
-Decision: Approved ✅ → Generate sanction PDF
-    ↓
-E-signature: Customer signs digitally
-    ↓
-Disbursement: Funds to account in 24-48 hours 🎉
-```
-
-**Total time: ~4 minutes** (vs 3–7 days)
-
-Each stage is a **deterministic state transition** guarded server-side. The language model never decides an approval, a price, or an access rule.
+**Result**: A loan moves from "submitted" to "active" in **days, not weeks**, with full visibility and control.
 
 ---
 
-## 💡 Key Features
+## 📦 Tech Stack
 
-### 🧠 Conversational AI
-- **Dual personas**: sales specialist + financial advisor
-- Structured JSON extraction with schema validation on the Worker
-- Confirmations are echoed from persisted state — never re-generated by the model
+| Layer | Service | Why? |
+|-------|---------|------|
+| **Frontend** | React 19 + TypeScript + Vite | Modern, fast, responsive |
+| **Deployment** | Cloudflare Pages | Global edge, zero-config git integration |
+| **Backend API** | Cloudflare Workers | Serverless TypeScript, instant scaling |
+| **Database** | Cloudflare D1 (SQLite) | Relational, ACID, no ops |
+| **Object Storage** | Cloudflare R2 | Borrower docs, PDFs, audit exports |
+| **Real-time** | Durable Objects | WebSocket state, per-session chat |
+| **Cache** | Cloudflare KV | Rate cards, idempotency, repayment schedules |
+| **Async Work** | Cloudflare Queues + Cron | OCR fan-out, notifications, overdue sweeps |
+| **AI Inference** | Workers AI + AI Gateway | Document processing, messaging |
+| **Auth** | Worker JWT (jose) | Stateless, no session server |
+| **Styling** | Tailwind CSS | Utility-first, responsive components |
 
-### 📄 Document Processing
-- Vision OCR for ID, salary slips and bank statements
-- Visual tamper signals (blurring, pixel inconsistency, font mixing)
-- National ID, SSNIT, Passport, Driver's Licence support
-- Originals stored in R2 with tenant-scoped keys; served through short-lived signed URLs
-
-### ✅ KYC & Compliance
-- Name matching (document vs. customer profile)
-- Document type validation per loan tier
-- Parallel KYC + fraud execution
-- Consent snapshots hashed with SHA-256 (`termsSnapshotHash`) under Act 843
-
-### 🔒 Fraud Screening
-- **6-signal deterministic scoring** (no LLM overhead):
-  - Name mismatch
-  - Income inflation
-  - Document tampering
-  - Suspicious patterns
-  - Age inconsistencies
-  - Document timing flags
-
-### 📊 Underwriting (Rule-Based)
-- DTI/FOIR limits
-- Credit score thresholds
-- Employer whitelist
-- LTV checks for secured loans
-- Soft-reject with restructured offers
-
-### 🏦 Multi-Lender Marketplace
-- Parallel offer fetching from 5+ lenders
-- Eligibility scoring per lender
-- Best rate pre-selected, all options visible
-
-### 📜 Document Generation
-- Sanction/rejection letters generated in-Worker with `pdf-lib`
-- Maker-checker disbursement authorisation
-- Immutable audit trail for every generated artefact
-
-### 💰 EMI & Ledger Engine
-- Repayment schedules stored in integer **pesewas**
-- Double-entry journal with compensating reversals (no destructive edits)
-- Maker-checker disbursement and repayment posting
-
-### 📊 Admin & Portal Dashboards
-- Portfolio analytics (approvals, rejections, AUM)
-- Lender performance metrics
-- Agency review queue, lender portal, cashier ledger portal
-- Recharts-based KPIs
+**Zero Python. No separate backend. No databases to manage.**
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-                        ┌──────────────────────────────────────┐
-                        │        Cloudflare Pages              │
-                        │   React 19 + Vite + Tailwind SPA     │
-                        │   app.gidfine.com                    │
-                        └───────────────┬──────────────────────┘
-                                        │  HTTPS (REST) + WSS
-                        ┌───────────────▼──────────────────────┐
-                        │        Cloudflare Worker             │
-                        │   api.gidfine.com                    │
-                        │   routing · auth · validation · CORS │
-                        └───┬──────────┬──────────┬────────────┘
-                            │          │          │
-              ┌─────────────▼──┐  ┌────▼─────┐  ┌─▼──────────────┐
-              │  D1 (SQLite)   │  │    R2    │  │ Durable Object │
-              │  applications  │  │ KYC docs │  │ LoanSession    │
-              │  proposals     │  │ PDFs     │  │ (chat + WS)    │
-              │  ledger        │  └──────────┘  └────────────────┘
-              │  audit_events  │
-              └────────────────┘
-                            │
-        ┌───────────────────┼────────────────────┐
-        │                   │                    │
-   ┌────▼─────┐      ┌──────▼──────┐      ┌──────▼─────────┐
-   │    KV    │      │   Queues    │      │  Workers AI +  │
-   │  cache   │      │ OCR · email │      │  AI Gateway    │
-   │  rates   │      │ reminders   │      │  (Gemini/Groq) │
-   └──────────┘      └─────────────┘      └────────────────┘
-```
+┌────────────────────────────────────────┐
+│      Cloudflare Pages (Frontend)       │
+│  React 19 + TypeScript + Vite + TailwindCSS
+│  (dist/ served globally from edge)     │
+└──────────────┬─────────────────────────┘
+               │ REST + WebSocket
+┌──────────────┴─────────────────────────┐
+│   Cloudflare Workers (TypeScript API)  │
+│  - Authentication (JWT)                │
+│  - Authorization (RBAC, disclosure)    │
+│  - Loan lifecycle (origination, servicing)
+│  - Financial calculations              │
+│  - Audit logging                       │
+└──────────────┬─────────────────────────┘
+               │
+       ┌───────┴────────┬──────────┬──────────┐
+       │                │          │          │
+   ┌───▼────┐      ┌───▼───┐  ┌──▼─────┐ ┌──▼────┐
+   │  D1    │      │  R2   │  │   KV   │ │Queues │
+   │SQLite  │      │ Docs  │  │ Cache  │ │+ Cron │
+   │Database│      │ PDFs  │  │        │ │       │
+   └────────┘      └───────┘  └────────┘ └───────┘
 
-**Request path:** the browser never talks to a database directly. Every read and write passes through the Worker, which resolves the caller's identity from a signed JWT, enforces tenant scope, applies field-level redaction, and only then touches a binding.
-
----
-
-## 📦 Tech Stack
-
-| Layer | Technology | Why |
-|-------|-----------|-----|
-| **Frontend** | React 19 + Vite 5 + TypeScript 5.9 | Fast builds, typed boundaries, static output for Pages |
-| **UI** | Tailwind CSS 3.4, shadcn/base-ui, framer-motion, Recharts | Consistent design system and dashboards |
-| **State** | Zustand | Small, predictable client store |
-| **Edge API** | Cloudflare Workers (TypeScript) | Global latency, zero cold-start servers to manage |
-| **Database** | Cloudflare D1 | SQLite semantics, migrations, cheap reads |
-| **Object storage** | Cloudflare R2 | KYC documents and generated PDFs, no egress fees |
-| **Real-time** | Durable Objects | Single-writer chat sessions with WebSocket hibernation |
-| **Cache** | Cloudflare KV + Cache API | Rate cards, model responses, idempotency lookups |
-| **Async** | Cloudflare Queues + Cron Triggers | OCR fan-out, notifications, overdue sweeps |
-| **AI** | Workers AI + AI Gateway | In-platform inference with provider fallback and observability |
-| **PDF** | `pdf-lib` | Pure JS, runs inside the Worker |
-| **Testing** | `node:test` + `--experimental-strip-types` | No extra runner dependency |
-
----
-
-## 📁 Repository Layout
-
-```
-loan-engine/
-├── frontend/                      # React 19 + Vite SPA → Cloudflare Pages
-│   ├── src/
-│   │   ├── components/            # Landing, workspace, admin, lender, cashier
-│   │   ├── pages/                 # /docs route
-│   │   ├── services/              # Convex-era adapter (removed at cutover)
-│   │   ├── store/                 # Zustand stores
-│   │   ├── lib/config.ts          # single source of truth for VITE_API_BASE
-│   │   └── api/                   # legacy REST + WebSocket clients
-│   ├── tests/                     # node:test suites
-│   ├── public/_redirects          # Pages SPA fallback
-│   └── package.json
-│
-├── workers/
-│   └── api/                       # Cloudflare Worker API ✅ live
-│       ├── src/
-│       │   ├── index.ts           # fetch handler, CORS, error envelope
-│       │   ├── router.ts          # method + path router with params
-│       │   ├── env.ts             # AppEnv (generated Env + secrets)
-│       │   ├── routes/            # health, auth, applications
-│       │   ├── domain/            # state machine + consent hashing
-│       │   └── lib/               # http, auth, money, ids, audit, validation
-│       ├── migrations/            # D1 migrations (forward-only)
-│       ├── tests/                 # node:test suites
-│       ├── wrangler.jsonc
-│       └── worker-configuration.d.ts   # generated by `wrangler types`
-│
-├── migration/                     # audit & migration records
-├── archive/
-│   └── python-backend/            # retired FastAPI + LangGraph implementation
-│
-├── Gidfine_Dev_Guide.md           # PRD + engineering standards
-└── README.md
+     Durable Objects (real-time chat state)
+     Workers AI (inference)
+     Email (SendGrid, Mailgun)
 ```
 
 ---
@@ -255,491 +107,299 @@ loan-engine/
 ## 🎬 Getting Started
 
 ### Prerequisites
+- **Node.js** 18+ (for local development)
+- **Wrangler** CLI installed (`npm install -g wrangler`)
+- **Cloudflare account** with a paid plan (for Workers + D1)
+- **GitHub account** for Pages deployment
 
-| Tool | Version | Notes |
-| --- | --- | --- |
-| Node.js | 22.x | Matches the Pages/Workers build image |
-| npm | 10+ | Lockfiles are committed for both packages |
-| Wrangler | 4.x | `npx wrangler` is fine — no global install required |
-| Cloudflare account | — | Workers Paid plan is required for Queues and Durable Objects |
-
-### API Worker
+### Installation
 
 ```bash
-cd workers/api
-npm ci
-cp .dev.vars.example .dev.vars       # local secrets (git-ignored)
-npx wrangler d1 migrations apply DB --local
-npx wrangler dev                     # http://localhost:8787
-curl http://localhost:8787/health
+# 1. Clone repository
+git clone https://github.com/hitracesolutions/loan-engine.git
+cd loan-engine
+
+# 2. Install dependencies
+npm install
+
+# 3. Set up environment
+cp wrangler.example.toml wrangler.toml
+# Edit wrangler.toml with your Cloudflare account ID and bindings
+
+# 4. Authenticate with Cloudflare
+wrangler login
+
+# 5. Create D1 database
+wrangler d1 create gidfine-db
+
+# 6. Apply schema
+wrangler d1 execute gidfine-db --file schema.sql
 ```
 
-### Frontend
+### Running Locally
 
 ```bash
-cd frontend
-npm ci
-cp .env.example .env.local     # VITE_API_BASE=http://localhost:8787
-npm run dev                    # http://localhost:5173
+# Terminal 1 — Frontend (Vite dev server)
+npm run dev:frontend
+# App: http://localhost:5173
+
+# Terminal 2 — Worker (local)
+npm run dev:worker
+# API: http://localhost:8787
 ```
 
-Other frontend scripts:
+### Deployment to Cloudflare
 
 ```bash
-npm run build      # tsc -b && vite build → dist/
-npm run preview    # serve the production build
-npm run lint       # eslint
-```
+# Deploy frontend to Pages
+wrangler pages deploy frontend/dist
 
-`VITE_API_BASE` resolution (see `src/lib/config.ts`):
+# Deploy Worker API
+wrangler deploy
 
-1. the variable, when set;
-2. otherwise **development** targets `http://localhost:8787` (the local Worker);
-3. otherwise **production** falls back to same-origin and logs a warning.
-
-There is no hard-coded production hostname, so a missing build variable can never route traffic to a retired backend.
-
-### Tests
-
-```bash
-# Worker: state machine, money, password hashing
-cd workers/api && npm test
-
-# Frontend: state machine, service adapter, ledger, e2e security
-cd frontend && node --experimental-strip-types --test "tests/**/*.test.ts"
+# Or: use GitHub Actions for automated CI/CD
 ```
 
 ---
 
-## ⚙️ Configuration
+## ⚙️ Project Structure
 
-### Frontend build variables
-
-| Variable | Example | Purpose |
-|----------|---------|---------|
-| `VITE_API_BASE` | `https://api.gidfine.com` | Base URL for REST + WebSocket |
-
-These are **public** — anything prefixed `VITE_` is embedded in the bundle. Never put a secret here.
-
-If `VITE_API_BASE` is unset, development targets `http://localhost:8787` and production falls back to same-origin with a console warning. `src/lib/config.ts` is the only place this is resolved.
-
-### Worker bindings (`workers/api/wrangler.jsonc`)
-
-The committed config is the source of truth; `npx wrangler types` regenerates `worker-configuration.d.ts` from it. As shipped it declares one D1 binding and the environment variables below:
-
-```jsonc
-{
-  "name": "gidfine-api",
-  "main": "src/index.ts",
-  "compatibility_date": "2026-10-27",
-  "compatibility_flags": ["nodejs_compat"],
-  "observability": { "enabled": true, "head_sampling_rate": 1 },
-
-  "vars": {
-    "APP_NAME": "Gidfine",
-    "APP_ENV": "development",
-    "ALLOWED_ORIGINS": "http://localhost:5173",
-    "ACCESS_TOKEN_TTL_SECONDS": "900"
-  },
-
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "gidfine-db",
-      "database_id": "<d1-id from wrangler d1 create>",
-      "migrations_dir": "migrations"
-    }
-  ],
-
-  "env": {
-    "staging":    { "vars": { "APP_ENV": "staging",    "ALLOWED_ORIGINS": "https://staging.gidfine.pages.dev" } },
-    "production": { "vars": { "APP_ENV": "production", "ALLOWED_ORIGINS": "https://app.gidfine.com" } }
-  }
-}
 ```
-
-R2 (`DOCUMENTS`), KV (`CACHE`), Durable Objects (`SESSIONS`) and Queues (`JOBS`) are added to this file as the corresponding features land — each new binding requires re-running `wrangler types`.
-
-<details>
-<summary>Full target config (once every product is wired)</summary>
-
-```jsonc
-{
-  "name": "gidfine-api",
-  "main": "src/index.ts",
-  "compatibility_date": "2026-10-27",
-  "compatibility_flags": ["nodejs_compat"],
-  "observability": { "enabled": true },
-
-  "vars": {
-    "APP_ENV": "production",
-    "APP_NAME": "Gidfine",
-    "ALLOWED_ORIGINS": "https://app.gidfine.com",
-    "ACCESS_TOKEN_TTL_SECONDS": "900",
-    "MIN_CREDIT_SCORE": "700",
-    "MAX_DTI_RATIO": "0.50"
-  },
-
-  "d1_databases": [
-    { "binding": "DB", "database_name": "gidfine-db", "database_id": "<d1-id>" }
-  ],
-  "r2_buckets": [
-    { "binding": "DOCUMENTS", "bucket_name": "gidfine-documents" }
-  ],
-  "kv_namespaces": [
-    { "binding": "CACHE", "id": "<kv-id>" }
-  ],
-  "durable_objects": {
-    "bindings": [{ "name": "SESSIONS", "class_name": "LoanSession" }]
-  },
-  "migrations": [
-    { "tag": "v1", "new_sqlite_classes": ["LoanSession"] }
-  ],
-  "queues": {
-    "producers": [{ "binding": "JOBS", "queue": "gidfine-jobs" }],
-    "consumers": [{ "queue": "gidfine-jobs", "max_batch_size": 10 }]
-  },
-  "ai": { "binding": "AI" },
-  "triggers": { "crons": ["0 6 * * *"] }
-}
+loan-engine/
+├── frontend/                      # React + Vite SPA
+│   ├── src/
+│   │   ├── components/            # Agency, Lender, Borrower portals
+│   │   ├── pages/                 # Application, Dashboard, Profile
+│   │   ├── api/                   # REST client
+│   │   ├── types/                 # TypeScript interfaces
+│   │   ├── stores/                # Pinia/Zustand state
+│   │   └── index.tsx              # Entry point
+│   ├── public/                    # Static assets
+│   └── package.json
+│
+├── workers/                       # Cloudflare Workers (TypeScript)
+│   ├── api/
+│   │   ├── src/
+│   │   │   ├── handlers/          # REST endpoints
+│   │   │   │   ├── auth.ts        # Login, register, JWT refresh
+│   │   │   │   ├── borrowers.ts   # Applications, documents
+│   │   │   │   ├── lenders.ts     # Proposals, acceptance
+│   │   │   │   ├── agency.ts      # Review, matching, approval
+│   │   │   │   ├── loans.ts       # Active loans, repayment
+│   │   │   │   └── audit.ts       # Ledger, logs, exports
+│   │   │   ├── middleware/        # Auth, CORS, error handling
+│   │   │   ├── db/                # D1 queries (typed)
+│   │   │   ├── rules/             # Pricing, eligibility, disclosure
+│   │   │   ├── notifications/     # Event queue, email templates
+│   │   │   └── index.ts           # Worker entry
+│   │   ├── schema.sql             # D1 schema
+│   │   └── wrangler.toml          # Worker config
+│   │
+│   └── durable-objects/           # Real-time session state
+│       ├── ChatSession.ts         # Per-session WebSocket handler
+│       └── RateLimiter.ts         # Token bucket per borrower
+│
+├── scripts/                       # Dev & ops
+│   ├── seed-db.ts                 # Demo data loader
+│   ├── migrate-schema.ts          # D1 migrations
+│   └── backup-r2.ts               # Export borrower docs
+│
+├── docs/                          # Documentation
+│   ├── Gidfine_Dev_Guide.md      # Full PRD + architecture
+│   ├── API.md                     # Endpoint reference
+│   ├── DB_SCHEMA.md               # Data model
+│   └── DEPLOYMENT.md              # Cloudflare + GitHub Actions setup
+│
+├── wrangler.toml                  # Worker + D1 + R2 bindings
+├── wrangler.example.toml          # Template (copy to wrangler.toml)
+├── vite.config.ts                 # Frontend build config
+└── package.json                   # Dependencies
 ```
-
-</details>
-
-### Secrets (never in `wrangler.jsonc`)
-
-`JWT_SIGNING_KEY` is required today. The rest are provisioned with the features that consume them.
-
-| Secret | Purpose | Status |
-|--------|---------|--------|
-| `JWT_SIGNING_KEY` | HS256 signing key for access tokens | ✅ required |
-| `GEMINI_API_KEY` | Vision OCR for KYC documents | ⬜ with R2/OCR |
-| `GROQ_API_KEY` | Fast fallback inference |
-| `OPENROUTER_API_KEY` | Final inference fallback | ⬜ with AI Gateway |
-| `AI_GATEWAY_TOKEN` | Authenticated AI Gateway requests | ⬜ with AI Gateway |
-| `RESEND_API_KEY` | Transactional email | ⬜ with Queues |
-| `TWILIO_AUTH_TOKEN` | SMS notifications | ⬜ with Queues |
-| `LENDER_SIGNING_SECRET` | Signing outbound lender API calls | ⬜ with real lenders |
-
-```bash
-# Generate a key, then store it per environment:
-node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
-npx wrangler secret put JWT_SIGNING_KEY --env production
-```
-
-Locally these live in `workers/api/.dev.vars` (git-ignored; start from `.dev.vars.example`).
-
-### Business thresholds
-
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `MIN_CREDIT_SCORE` | `700` | Underwriting cut-off |
-| `MAX_DTI_RATIO` | `0.50` | Maximum debt-to-income |
-| `MAX_EXPOSURE_MULTIPLIER` | `2.0` | Portfolio exposure cap |
-| `MAX_NEGOTIATION_ROUNDS` | `3` | Persuasion loop ceiling |
-
-These are declared when the underwriting domain module lands; the schema already stores amounts in pesewas and rates in basis points.
 
 ---
 
-## 🔌 API Surface
+## 💾 Database Schema (D1)
 
-Base URL is `VITE_API_BASE`. Every response uses one envelope:
+Core tables:
+- `agencies` — Tenant (if multi-tenant) or single agency
+- `users` — Staff (agency/lender) and borrowers
+- `roles`, `permissions` — RBAC rules
+- `applications` — Loan requests (DRAFT → CLOSED)
+- `application_documents` — Uploaded files (R2 references)
+- `lender_profiles` — Rates, limits, products
+- `lender_proposals` — Agency-curated proposals to lenders
+- `loans` — Active loans with approved terms
+- `disbursements` — Funding records
+- `repayment_schedules`, `repayment_installments` — Payment plans
+- `payment_transactions` — Recorded payments
+- `ledger_entries` — Immutable financial log
+- `notification_events` — In-app, email, SMS queue
+- `audit_events` — All user actions (immutable)
+- `disclosure_policies` — Field visibility by role
+- `interest_policies` — Versioned pricing rules
 
-```jsonc
-// success
-{ "ok": true, "data": { /* … */ }, "requestId": "01M5Z2B7…" }
-// failure
-{ "ok": false, "error": { "code": "INVALID_AMOUNT", "message": "…" }, "requestId": "01M5Z2B7…" }
-```
-
-| Method | Path | Auth | Behaviour |
-| --- | --- | --- | --- |
-| `GET` | `/health` | — | Liveness + D1 probe (`200` / `503`) |
-| `POST` | `/auth/register` | — | Creates a `borrower` in the resolved agency; returns a token |
-| `POST` | `/auth/login` | — | Email + password; identical response for unknown user and bad password |
-| `GET` | `/auth/me` | Bearer | Returns the authenticated principal |
-| `POST` | `/applications` | Bearer (`borrower`) | Submits a request; honours `Idempotency-Key` |
-| `GET` | `/applications` | Bearer | Borrower sees their own; agency staff see the tenant queue |
-
-Request bodies use `application/json`. Money is integer pesewas, tenure is integer months:
-
-```bash
-TOKEN=$(curl -s -X POST https://api.gidfine.com/auth/register \
-  -H 'content-type: application/json' \
-  -d '{"email":"a@b.com","password":"correct-horse-battery","fullName":"A B"}' \
-  | jq -r .data.token)
-
-curl -s -X POST https://api.gidfine.com/applications \
-  -H "authorization: Bearer $TOKEN" \
-  -H 'content-type: application/json' \
-  -H "idempotency-key: $(uuidgen)" \
-  -d '{"requestedAmountPesewas":5000000,"tenureMonths":36,"purpose":"business expansion"}'
-```
-
-Documented error codes: `UNAUTHENTICATED`, `FORBIDDEN`, `NOT_FOUND`, `INVALID_AMOUNT`, `INVALID_INTEGER`, `MISSING_FIELD`, `INVALID_FIELD`, `INVALID_EMAIL`, `WEAK_PASSWORD`, `EMAIL_TAKEN`, `IDEMPOTENCY_KEY_REUSED`, `AMOUNT_TOO_LARGE`, plus the state-machine codes (`ILLEGAL_TRANSITION`, `UNAUTHORIZED_ROLE`, `CONSENT_REQUIRED`, `TENANT_ISOLATION_VIOLATION`, …) surfaced as `409`.
+All monetary values in **integer minor units (pesewas)**. All rates in **integer basis points**.
 
 ---
 
-## 🚢 Deployment
+## 🔐 Security & Compliance
 
-Everything below is a one-time setup followed by repeatable deploys.
-
-### 1. Provision Cloudflare resources
-
-```bash
-# D1
-npx wrangler d1 create gidfine-db
-npx wrangler d1 create gidfine-db-staging
-
-# R2
-npx wrangler r2 bucket create gidfine-documents
-npx wrangler r2 bucket create gidfine-documents-staging
-
-# KV
-npx wrangler kv namespace create CACHE
-npx wrangler kv namespace create CACHE --env staging
-
-# Queues
-npx wrangler queues create gidfine-jobs
-npx wrangler queues create gidfine-jobs-staging
-```
-
-Copy the returned IDs into the matching `wrangler.jsonc` environment blocks (`production` and `staging`).
-
-### 2. Apply D1 migrations
-
-```bash
-cd workers/api
-npx wrangler d1 migrations apply DB --local      # local dev
-npx wrangler d1 migrations apply DB --remote     # staging (default env)
-npx wrangler d1 migrations apply DB --remote --env production
-```
-
-Migration rules:
-
-- Migrations are **forward-only** and land in version control.
-- Monetary columns are `INTEGER` **pesewas**; rates are `INTEGER` **basis points**.
-- Never edit or delete a posted journal row — post a compensating reversal instead.
-- Every table that stores agency-owned data carries `agency_id` and an index on it.
-
-### 3. Set secrets per environment
-
-```bash
-npx wrangler secret put JWT_SIGNING_KEY --env staging
-npx wrangler secret put JWT_SIGNING_KEY --env production
-# repeat for each secret in the table above
-```
-
-### 4. Deploy the API Worker
-
-```bash
-cd workers/api
-npx wrangler deploy --env staging       # api-staging.gidfine.com
-npx wrangler deploy --env production    # api.gidfine.com
-```
-
-Attach the custom domain under **Workers & Pages → gidfine-api → Settings → Domains & Routes**.
-
-### 5. Deploy the frontend to Cloudflare Pages
-
-| Setting | Value |
-| --- | --- |
-| Framework preset | Vite |
-| Root directory | `frontend` |
-| Build command | `npm ci && npm run build` |
-| Build output directory | `dist` |
-| Node version | `22` |
-| Environment variable | `VITE_API_BASE=https://api.gidfine.com` |
-| Production branch | `main` |
-
-SPA deep links (for example `/docs`) need a fallback rule. Add `frontend/public/_redirects`:
-
-```
-/*  /index.html  200
-```
-
-Preview deployments are created automatically for every non-production branch. Point preview builds at the staging Worker by setting `VITE_API_BASE` in the **Preview** environment.
-
-### 6. CI (GitHub Actions)
-
-```yaml
-name: deploy
-on:
-  push:
-    branches: [main, development]
-
-jobs:
-  verify:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 22, cache: npm, cache-dependency-path: frontend/package-lock.json }
-      - run: npm ci
-        working-directory: frontend
-      - run: npm run lint
-        working-directory: frontend
-      - run: npm run build
-        working-directory: frontend
-      - run: node --experimental-strip-types --test "tests/**/*.test.ts"
-        working-directory: frontend
-
-  verify-api:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 22, cache: npm, cache-dependency-path: workers/api/package-lock.json }
-      - run: npm ci
-        working-directory: workers/api
-      - run: npx tsc --noEmit
-        working-directory: workers/api
-      - run: npm test
-        working-directory: workers/api
-
-  deploy-api:
-    needs: [verify, verify-api]
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: workers/api
-          command: deploy --env production
-```
-
-Pages deploys itself from the connected Git repository; the workflow above gates the Worker.
-
-### 7. Post-deploy checks
-
-```bash
-curl -s https://api.gidfine.com/health
-npx wrangler tail gidfine-api --env production
-```
-
-Rollback: **Workers & Pages → Deployments → Rollback**, for both the Worker and the Pages project.
+- **Role-Based Access Control** enforced at every endpoint
+- **Field-level disclosure policies** — borrower data hidden from lenders unless agency allows
+- **Audit logging** — all approvals, rate changes, repayments, access
+- **Immutable ledger** — financial transactions cannot be deleted, only reversed with audit trail
+- **PBKDF2-HMAC-SHA-256** password hashing (Web Crypto)
+- **JWT (jose)** — stateless auth, short-lived tokens
+- **HTTPS only** — all Cloudflare traffic encrypted
+- **D1 transactions** — ACID guarantees for financial ops
+- **Data minimisation** — borrower documents in R2, not logs
 
 ---
 
-## 🔐 Security & Compliance Notes
+## 📋 API Overview
 
-- **Identity** is resolved server-side from a signed JWT (`jose`, HS256). Passwords are hashed with PBKDF2-HMAC-SHA-256 (210,000 iterations, per-user salt) via Web Crypto — never stored or logged in plain text.
-- **Tenant isolation**: every query filters on `agency_id` derived from the token, not from the request body.
-- **Field-level redaction** is enforced in the Worker before serialisation. Lenders never receive borrower PII or agency margins; borrowers never see lender base rates before approval.
-- **Documents** live in R2 behind short-lived signed URLs scoped to the requesting tenant.
-- **Idempotency keys** guard money movements and webhook handlers; a replayed key returns the original response instead of creating a second record.
-- **Append-only audit trail** (`audit_events`) for submissions, proposals, decisions, approvals, consent and postings.
-- **CORS** uses an exact allow-list from `ALLOWED_ORIGINS`; an unlisted origin receives no `access-control-allow-origin` header.
-- **Error responses** never echo submitted values, and internal failures are logged with a request id but returned as a generic 500.
-- **Act 843 (Ghana Data Protection)**: consent snapshots are hashed and immutable; retention and subject-rights workflows are defined in the [Dev Guide](Gidfine_Dev_Guide.md).
-- **Rate limiting** (planned) applies to auth, OTP and document-upload routes via Cloudflare's rate-limiting binding.
+### Authentication
+```
+POST   /auth/register         Register (borrower, staff)
+POST   /auth/login            Login → JWT token
+POST   /auth/refresh           Refresh expired token
+POST   /auth/logout            Revoke session
+```
+
+### Borrower Portal
+```
+POST   /applications           Submit new loan request
+GET    /applications/{id}      Check status
+POST   /applications/{id}/docs Upload documents
+GET    /loans                  View active loans
+POST   /loans/{id}/pay         Record payment (agency posts)
+GET    /repayments/{id}        Payment history
+```
+
+### Lender Portal
+```
+GET    /proposals              Assigned loan proposals
+POST   /proposals/{id}/accept  Accept proposal
+POST   /proposals/{id}/decline Decline
+POST   /proposals/{id}/counter Counteroffer
+GET    /loans                  Portfolio view (limited fields)
+```
+
+### Agency Portal
+```
+GET    /queue                  Application inbox
+POST   /queue/{id}/assign      Assign lender
+POST   /loans/{id}/approve     Final agency approval
+POST   /loans/{id}/disburse    Confirm funding
+GET    /reports                Portfolio analytics, exports
+GET    /audit                  Immutable ledger
+```
+
+Full spec in [API.md](./docs/API.md)
 
 ---
 
-## 🧪 Testing
+## 🎓 Design Principles
 
-| Suite | Command | Coverage |
-| --- | --- | --- |
-| Worker unit | `cd workers/api && npm test` | state machine guards, consent hashing, money, PBKDF2 |
-| Worker types | `cd workers/api && npx tsc --noEmit` | `src` + `tests` against generated bindings |
-| Frontend unit | `cd frontend && node --experimental-strip-types --test "tests/**/*.test.ts"` | state machine, money, service adapter, ledger, e2e security |
-| Frontend types + build | `cd frontend && npm run build` | `tsc -b` project references |
-| Lint | `cd frontend && npm run lint` | ESLint (typescript-eslint) |
+### ✅ Transparent Pricing
+- Lender rate + agency margin = borrower rate
+- All policies versioned and frozen once accepted
+- Borrower sees exact payment schedule before consent
 
-Current status: **86 tests passing** (34 Worker + 52 frontend), Worker typecheck clean, production build clean.
+### ✅ Strict Data Privacy
+- Lender never sees borrower phone/address unless agency allows
+- Borrower doesn't see lender rates or costs by default
+- All disclosure rules server-enforced, not client-side
 
-The state-machine suite is the safety net for the loan lifecycle: it asserts that lender acceptance can never bypass agency approval or borrower consent, that disbursement requires a consent snapshot, and that cross-tenant transitions are rejected before any other check.
+### ✅ Auditable Approvals
+- No loan activates without: lender acceptance → agency approval → borrower consent
+- Every decision logged with timestamp, user, reason
+- Reversals create compensating ledger entries
 
-> **Known backlog:** `npm run lint` reports pre-existing `@typescript-eslint/no-explicit-any` errors across legacy components (the `api/` and `convex/` era files). Files touched by the Cloudflare migration lint clean; the wider cleanup lands with the Convex removal.
+### ✅ Immutable Ledger
+- Financial events never deleted
+- Interest, fees, repayments tracked by instalments
+- Reporting runs against the ledger, not recalculated
 
----
-
-## 📊 Migration Status
-
-Current repository state against the [target architecture](#-architecture):
-
-| Area | State |
-| --- | --- |
-| React 19 + Vite SPA | ✅ Live in `frontend/` |
-| Frontend production build | ✅ `npm run build` passes; lockfile repaired |
-| SPA deep-link routing | ✅ `frontend/public/_redirects` added |
-| Cloudflare Worker API (`workers/api`) | ✅ Health, auth (register/login/me), applications (submit/list) |
-| D1 schema & migrations | ✅ `0001_core.sql` (agencies, users, applications, idempotency, audit) |
-| Loan state machine (TS domain module) | ✅ Ported with guards + tests |
-| Password hashing & JWT | ✅ PBKDF2-HMAC-SHA-256 + HS256 via `jose` |
-| Idempotent mutations | ✅ `Idempotency-Key` replay on `POST /applications` |
-| Single API origin config | ✅ `src/lib/config.ts`, no hard-coded host |
-| R2 document storage | ⬜ Planned |
-| Durable Object chat sessions | ⬜ Planned |
-| Proposals / approvals / consent endpoints | ⬜ Planned |
-| Ledger & disbursement endpoints | ⬜ Planned |
-| Python/FastAPI backend | 🗄️ Archived in `archive/python-backend/` |
-| Legacy Convex backend (`frontend/convex/`) | 🗄️ Still wired; removed at Worker cutover |
-| Vercel project config | ✅ Deleted |
-| Legacy REST clients (`src/lib/api.ts`, `src/api/client.ts`, `src/api/websocket.ts`) | 🟡 Now resolve through `src/lib/config.ts`; folded into `src/services/` at cutover |
+### ✅ Serverless-First
+- No ops overhead — Cloudflare handles scaling, backups, uptime
+- Type-safe TypeScript throughout (frontend + Worker)
+- Single deployment (`wrangler deploy` + Pages git push)
 
 ---
 
 ## 🛣️ Roadmap
 
-- [x] Create `workers/api` with the router and health endpoint
-- [x] Port the loan state machine and guards to TypeScript domain modules
-- [x] Author the first D1 migration (applications, consents, audit, idempotency)
-- [x] Replace hard-coded Render host with a single `VITE_API_BASE` resolution
-- [ ] Add proposals, approvals and consent routes
-- [ ] Add ledger, disbursement and repayment routes on D1
-- [ ] Replace the Convex client adapter with the Worker HTTP client
-- [ ] Move chat sessions to a Durable Object with WebSocket hibernation
-- [ ] Wire R2 signed URLs for KYC uploads and sanction PDFs
-- [ ] Queue-backed OCR and notification pipelines
-- [ ] Rate limiting on auth and upload routes
-- [ ] Real lender integrations (replacing mock lender feeds)
-- [ ] Cloudflare Access (or an OIDC IdP) for staff portals and MFA on approvals
+- [x] Borrower application + document upload
+- [x] Agency review queue + lender matching
+- [x] Lender proposals + acceptance workflow
+- [x] Pricing policy engine + quote versioning
+- [x] Approval workflow + borrower consent
+- [x] Disbursement confirmation
+- [x] Repayment ledger + receipts
+- [x] Immutable audit log
+- [ ] Email notifications (SendGrid integration)
+- [ ] SMS notifications (Twilio integration)
+- [ ] PDF sanction/rejection letters
+- [ ] Advanced analytics dashboard
+- [ ] Multi-tenant (SaaS mode)
+- [ ] Mobile app (React Native)
+- [ ] Payment gateway integration (Paystack, mPesa)
+- [ ] Credit scoring API
 
 ---
 
 ## 🤝 Contributing
 
-### Design tenets
+The codebase is organized by domain: `frontend/`, `workers/api/`, `workers/durable-objects/`.
 
-- **No LLM in routing or decisioning** — deterministic TypeScript only.
-- **Every state change writes an audit event.**
-- **Sessions are resumable** — pause/resume any time.
-- **Redaction belongs on the server.** The client is never trusted to hide fields.
-- **Money is integer pesewas.** Floating point is not permitted in financial paths.
-
-### Adding a new agent or domain module
-
-1. Add the domain logic under `workers/api/src/domain/`.
-2. Register the transition in the state machine (`lib/stateMachine`) with an explicit guard.
-3. Expose it through a route in `workers/api/src/routes/` with auth, validation and redaction.
-4. Add API types to `frontend/src/services/`.
-5. Cover the guard with a `node:test` case.
-
-### Before opening a PR
-
+### Quick Start for Contributors
 ```bash
-cd frontend
-npm run lint && npm run build
-node --experimental-strip-types --test tests/*.test.ts
+# Install
+npm install
+
+# Lint
+npm run lint
+
+# Type-check
+npm run typecheck
+
+# Test
+npm run test
+
+# Dev mode
+npm run dev:frontend &
+npm run dev:worker
 ```
+
+### Code Standards
+- **TypeScript strict mode** — no `any` types
+- **Component-driven** — isolated, testable components
+- **API contracts** — OpenAPI/Swagger for all endpoints
+- **Database transactions** — atomic operations for ledger
+- **Error handling** — user-friendly, not sensitive details
+
+---
+
+## 📚 Documentation
+
+- **[Gidfine_Dev_Guide.md](./Gidfine_Dev_Guide.md)** — Complete PRD, data model, and business decisions
+- **[docs/API.md](./docs/API.md)** — REST endpoint reference with examples
+- **[docs/DB_SCHEMA.md](./docs/DB_SCHEMA.md)** — D1 schema, relationships, queries
+- **[docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)** — Cloudflare setup, GitHub Actions, backup strategies
 
 ---
 
 ## 📄 License
 
-MIT — see the repository owner for licensing details.
+MIT License — See [LICENSE](LICENSE) for details.
 
 ---
 
 <div align="center">
 
-**[📖 Dev Guide](Gidfine_Dev_Guide.md) | [🗂️ Migration Records](migration/README.md) | [🐛 Report Issues](https://github.com/hitracesolutions/loan-engine/issues)**
+**[📖 Full Docs](#-documentation) | [🐛 Report Issues](https://github.com/hitracesolutions/loan-engine/issues) | [💬 Discussions](https://github.com/hitracesolutions/loan-engine/discussions)**
 
-Built with ❤️ for Ghana's lending ecosystem
+Built with ❤️ for Ghana's lending ecosystem · **Fully serverless on Cloudflare**
 
 </div>
