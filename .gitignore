@@ -148,3 +148,8 @@ OPTIONAL_*.md
 temp_*.md
 todo.md
 notes.md
+# Cloudflare Workers (workers/api)
+.wrangler/
+.dev.vars
+.dev.vars.*
+!.dev.vars.example

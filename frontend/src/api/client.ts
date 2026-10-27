@@ -1,10 +1,6 @@
-const BASE_URL = import.meta.env?.VITE_API_URL || 'https://nbfc-inc.onrender.com';
+import { API_BASE } from '../lib/config';
 
-// Debug environment variables
-console.log('BASE_URL:', BASE_URL);
-console.log('VITE_API_URL:', import.meta.env?.VITE_API_URL);
-console.log('NODE_ENV:', import.meta.env?.NODE_ENV);
-console.log('MODE:', import.meta.env?.MODE);
+const BASE_URL = API_BASE;
 
 const checkResponse = async (res: Response, url: string) => {
   if (!res.ok) {
@@ -12,7 +8,7 @@ const checkResponse = async (res: Response, url: string) => {
     try {
       const body = await res.json();
       errorDetail = JSON.stringify(body);
-    } catch (e) {
+    } catch {
       errorDetail = await res.text();
     }
     const errorMsg = `API Error [${res.status}] at ${url}: ${errorDetail}`;
@@ -147,7 +143,7 @@ export const apiClient = {
     return checkResponse(res, `/session/${sessionId}/end`);
   },
   
-  async chat(sessionId: string, message: string, history: any[] = []) {
+  async chat(sessionId: string, message: string, history: unknown[] = []) {
     const res = await fetch(`${BASE_URL}/session/${sessionId}/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

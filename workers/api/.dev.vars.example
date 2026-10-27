@@ -1,0 +1,6 @@
+# Local-only Worker secrets. Copy to .dev.vars — never commit that file.
+# Production/staging values are set with: npx wrangler secret put <NAME> --env <env>
+
+# HS256 signing key for access tokens. Generate with:
+#   node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
+JWT_SIGNING_KEY=replace-with-a-48-byte-base64url-random-string
