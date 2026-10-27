@@ -8,7 +8,7 @@ import { ShieldCheck } from 'lucide-react';
 import { api } from './lib/api';
 
 function App() {
-  const { currentState, user, setUser, setSessionId } = useLoanStore();
+  const { currentState, setUser, setSessionId } = useLoanStore();
   const [showProfileCompletion, setShowProfileCompletion] = useState(false);
 
   useEffect(() => {

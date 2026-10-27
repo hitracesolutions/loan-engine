@@ -1,4 +1,4 @@
-import { API_BASE } from './config';
+import { API_BASE } from '../lib/config';
 
 const BASE_URL = API_BASE;
 
@@ -8,7 +8,7 @@ const checkResponse = async (res: Response, url: string) => {
     try {
       const body = await res.json();
       errorDetail = JSON.stringify(body);
-    } catch (e) {
+    } catch {
       errorDetail = await res.text();
     }
     const errorMsg = `API Error [${res.status}] at ${url}: ${errorDetail}`;
@@ -143,7 +143,7 @@ export const apiClient = {
     return checkResponse(res, `/session/${sessionId}/end`);
   },
   
-  async chat(sessionId: string, message: string, history: any[] = []) {
+  async chat(sessionId: string, message: string, history: unknown[] = []) {
     const res = await fetch(`${BASE_URL}/session/${sessionId}/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
