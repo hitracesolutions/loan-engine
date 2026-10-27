@@ -1,11 +1,11 @@
 import { apiSocketBase } from '../lib/config';
 
-type WSCallback = (data: any) => void;
+type WSCallback = (data: unknown) => void;
 
 class WebSocketClient {
   private socket: WebSocket | null = null;
   private callbacks: Set<WSCallback> = new Set();
-  private reconnectTimer: any = null;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
   connect(sessionId: string) {
     if (this.socket || !sessionId) return;
@@ -23,7 +23,7 @@ class WebSocketClient {
       try {
         const data = JSON.parse(event.data);
         this.callbacks.forEach(cb => cb(data));
-      } catch (e) {
+      } catch {
         console.warn('⚠️ [WS] Failed to parse message:', event.data);
       }
     };
