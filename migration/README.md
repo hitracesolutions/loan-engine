@@ -22,12 +22,12 @@ This directory holds the formal migration, design and audit records for the Gidf
 
 | # | Document | Subject | Status |
 | --- | --- | --- | --- |
-| 1 | [CLOUDFLARE_MIGRATION_PLAN.md](CLOUDFLARE_MIGRATION_PLAN.md) | End-to-end migration from the Python/FastAPI + Convex implementation to Cloudflare; phases, cutover and rollback | 📐 |
-| 2 | [GIDFINE_PHASE3A_REACT_INTEGRATION_REPORT.md](GIDFINE_PHASE3A_REACT_INTEGRATION_REPORT.md) | React SPA ↔ Worker API integration, typed service boundary, borrower/agency UIs | 🟡 |
-| 3 | [GIDFINE_PHASE3B_LENDER_PORTAL_REPORT.md](GIDFINE_PHASE3B_LENDER_PORTAL_REPORT.md) | Lender portal, proposal workflow, server-side PII and margin redaction | 🟡 |
-| 4 | [GIDFINE_PHASE3C_SECURITY_AUDIT_REPORT.md](GIDFINE_PHASE3C_SECURITY_AUDIT_REPORT.md) | End-to-end security audit: tenancy, redaction, state tampering, auth, rate limits | 📐 |
-| 5 | [GIDFINE_PHASE4_READINESS_REVIEW_REPORT.md](GIDFINE_PHASE4_READINESS_REVIEW_REPORT.md) | D1 financial ledger, double-entry journal, maker-checker disbursement | 📐 |
-| 6 | [GIDFINE_MVP_COMPLETION_REPORT.md](GIDFINE_MVP_COMPLETION_REPORT.md) | MVP scope, acceptance criteria and remaining work before go-live | 🟡 |
+| 1 | [CLOUDFLARE_MIGRATION_PLAN.md](CLOUDFLARE_MIGRATION_PLAN.md) | End-to-end migration from the Python/FastAPI + Convex implementation to Cloudflare; phases, cutover and rollback | 🟡 Phases 0–1 complete |
+| 2 | [GIDFINE_PHASE3A_REACT_INTEGRATION_REPORT.md](GIDFINE_PHASE3A_REACT_INTEGRATION_REPORT.md) | React SPA ↔ Worker API integration, typed service boundary, borrower/agency UIs | 🟡 Transport config done; service layer pending |
+| 3 | [GIDFINE_PHASE3B_LENDER_PORTAL_REPORT.md](GIDFINE_PHASE3B_LENDER_PORTAL_REPORT.md) | Lender portal, proposal workflow, server-side PII and margin redaction | 🟡 Portal UI implemented; server routes pending |
+| 4 | [GIDFINE_PHASE3C_SECURITY_AUDIT_REPORT.md](GIDFINE_PHASE3C_SECURITY_AUDIT_REPORT.md) | End-to-end security audit: tenancy, redaction, state tampering, auth, rate limits | 🟡 High findings closed; full audit pending |
+| 5 | [GIDFINE_PHASE4_READINESS_REVIEW_REPORT.md](GIDFINE_PHASE4_READINESS_REVIEW_REPORT.md) | D1 financial ledger, double-entry journal, maker-checker disbursement | 📐 Design complete |
+| 6 | [GIDFINE_MVP_COMPLETION_REPORT.md](GIDFINE_MVP_COMPLETION_REPORT.md) | MVP scope, acceptance criteria and remaining work before go-live | 🟡 Auth + applications slice live |
 
 ---
 
@@ -81,3 +81,4 @@ The PDFs in this directory are the original FastAPI/LangGraph and interim Convex
 | Date | Change |
 | --- | --- |
 | 2026-10-27 | Rebased every record onto the Cloudflare platform; archived the Python backend to `archive/python-backend/`; renamed the Vue migration plan to `CLOUDFLARE_MIGRATION_PLAN.md`; replaced absolute `file:///…` links with repository-relative links. |
+| 2026-10-27 | Implemented migration Phase 1: `workers/api` (health, auth, applications), D1 migration `0001_core.sql`, ported state machine with 34 tests, single `VITE_API_BASE` resolution, Pages `_redirects`, Vercel config removed, frontend lockfile repaired (52 tests green). |

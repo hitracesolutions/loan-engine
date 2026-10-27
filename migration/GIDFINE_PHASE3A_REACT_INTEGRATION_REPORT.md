@@ -4,7 +4,7 @@
 **Specification:** `Gidfine_Dev_Guide.md` v1.2
 **Architecture stack:** React 19 + Vite (Cloudflare Pages) → Cloudflare Workers → D1
 **Date:** 27 October 2026
-**Status:** 🟡 UI implemented; API integration pending the Worker cutover
+**Status:** 🟡 Transport config and identity handling done; typed service layer pending
 
 > This record replaces the Convex-era Phase 3A report of the same name. The PDF of the same name in this directory is superseded evidence.
 
@@ -115,6 +115,17 @@ Both are public build-time values. No secret may use the `VITE_` prefix.
 
 ---
 
+## 3.5 What is already wired
+
+| Piece | Location | State |
+| --- | --- | --- |
+| Single API origin | `frontend/src/lib/config.ts` | ✅ `VITE_API_BASE` → dev `localhost:8787` → prod same-origin (warn) |
+| Typed env declarations | `frontend/src/vite-env.d.ts` | ✅ `ImportMetaEnv.VITE_API_BASE` |
+| WebSocket origin derived from the API base | `frontend/src/api/websocket.ts` | ✅ |
+| Legacy REST client bound to the same origin | `frontend/src/api/client.ts` | ✅ (duplicate client still to be folded in) |
+| Unverified OAuth identity fallback | `frontend/src/App.tsx` | ✅ removed — only a server-resolved session populates the user |
+| SPA deep-link fallback | `frontend/public/_redirects` | ✅ |
+
 ## 4. Invariants
 
 | # | Invariant | Enforced where |
@@ -149,8 +160,11 @@ Additional integration checks once the Worker is deployed:
 
 ## 6. Remaining work
 
+- [x] Replace the hard-coded Render host with a single `VITE_API_BASE` resolution.
+- [x] Remove the unverified OAuth fallback.
+- [x] Add `frontend/public/_redirects`.
 - [ ] Implement `services/http.ts` and migrate components off `src/lib/api.ts` and `src/api/client.ts`.
-- [ ] Remove the Convex provider (`src/lib/convex.tsx`) once the Worker is live.
+- [ ] Remove the Convex provider (`src/lib/convex.tsx`) once the remaining Worker routes exist.
 - [ ] Add optimistic-update rollback on failed mutations.
 - [ ] Add loading, empty, error and permission-denied states to every list view.
-- [ ] Replace the mock calculator toggle with the live workflow once `POST /applications` exists.
+- [ ] Replace the mock calculator toggle with the live workflow as proposal/approval routes land.
