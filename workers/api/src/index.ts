@@ -1,158 +1,84 @@
 /**
- * Gidfine API — Cloudflare Worker Entry Point
- * Handles all REST & WebSocket requests
+ * Gidfine API Worker entrypoint.
+ *
+ * The API is backed by the current D1 schema in migrations/0001_core.sql.
+ * Keep route registration here so local Wrangler, tests, and deployed Workers
+ * all execute the same handlers.
  */
 
-import type { CloudflareEnv } from "./types";
-import { serverError } from "./utils/response";
-import { login, register } from "./handlers/auth";
-import { initializeAdminUser } from "./utils/auth";
-import {
-  getProfile,
-  updateProfile,
-  listApplications,
-  createApplication,
-  submitApplication,
-} from "./handlers/borrower";
-import { getLoan, getSchedule, getTransactions, listBorrowerLoans } from "./handlers/loan";
-import { submitPayment, getOutstanding } from "./handlers/payment";
+import type { AppEnv } from './env.ts';
+import { ensureAdminUser } from './lib/auth.ts';
+import { corsHeaders, errorResponse } from './lib/http.ts';
+import { createApplication, listApplications } from './routes/applications.ts';
+import { login, me, register } from './routes/auth.ts';
+import { health } from './routes/health.ts';
+import { Router } from './router.ts';
 
-// ============================================
-// ROUTER
-// ============================================
+const router = new Router()
+  .get('/health', health)
+  .post('/auth/login', login)
+  .post('/auth/register', register)
+  .get('/auth/me', me)
+  .post('/applications', createApplication)
+  .get('/applications', listApplications)
+  // Preserve the path used by the current frontend while it migrates to the
+  // shorter resource-oriented API paths.
+  .post('/borrower/applications', createApplication)
+  .get('/borrower/applications', listApplications);
 
-async function handleRequest(request: Request, env: CloudflareEnv): Promise<Response> {
-  const url = new URL(request.url);
-  const path = url.pathname;
-  const method = request.method;
+let adminInitialization: Promise<void> | undefined;
+
+function initializeAdmin(env: AppEnv): Promise<void> {
+  adminInitialization ??= ensureAdminUser(env).catch((error) => {
+    console.error('[AUTH] Admin initialization failed:', error);
+  });
+  return adminInitialization;
+}
+
+function withRequestHeaders(
+  response: Response,
+  requestId: string,
+  origin: string | null,
+  allowedOrigins: string,
+): Response {
+  const headers = new Headers(response.headers);
+  const cors = corsHeaders(origin, allowedOrigins);
+  cors.forEach((value, key) => headers.set(key, value));
+  headers.set('x-request-id', requestId);
+
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
+async function handleRequest(request: Request, env: AppEnv): Promise<Response> {
+  const requestId = crypto.randomUUID();
+  const origin = request.headers.get('origin');
+
+  if (request.method === 'OPTIONS') {
+    return withRequestHeaders(
+      new Response(null, { status: 204 }),
+      requestId,
+      origin,
+      env.ALLOWED_ORIGINS,
+    );
+  }
 
   try {
-    // Health check
-    if (path === "/health" && method === "GET") {
-      return new Response(JSON.stringify({ status: "ok" }), {
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-
-    // ============================================
-    // AUTH ROUTES
-    // ============================================
-
-    if (path === "/auth/register" && method === "POST") {
-      return register(request, env);
-    }
-
-    if (path === "/auth/login" && method === "POST") {
-      return login(request, env);
-    }
-
-    // ============================================
-    // BORROWER ROUTES
-    // ============================================
-
-    if (path === "/borrower/profile" && method === "GET") {
-      return getProfile(request, env);
-    }
-
-    if (path === "/borrower/profile" && method === "PUT") {
-      return updateProfile(request, env);
-    }
-
-    if (path === "/borrower/applications" && method === "GET") {
-      return listApplications(request, env);
-    }
-
-    if (path === "/borrower/applications" && method === "POST") {
-      return createApplication(request, env);
-    }
-
-    if (path.match(/^\/borrower\/applications\/[^/]+\/submit$/) && method === "POST") {
-      const appId = path.split("/")[3] || "";
-      return submitApplication(request, env, appId);
-    }
-
-    if (path === "/borrower/loans" && method === "GET") {
-      return listBorrowerLoans(request, env);
-    }
-
-    // ============================================
-    // LOAN ROUTES
-    // ============================================
-
-    if (path.match(/^\/loans\/[^/]+$/) && method === "GET") {
-      const loanId = path.split("/")[2] || "";
-      return getLoan(request, env, loanId);
-    }
-
-    if (path.match(/^\/loans\/[^/]+\/schedule$/) && method === "GET") {
-      const loanId = path.split("/")[2] || "";
-      return getSchedule(request, env, loanId);
-    }
-
-    if (path.match(/^\/loans\/[^/]+\/transactions$/) && method === "GET") {
-      const loanId = path.split("/")[2] || "";
-      return getTransactions(request, env, loanId);
-    }
-
-    if (path.match(/^\/loans\/[^/]+\/outstanding$/) && method === "GET") {
-      const loanId = path.split("/")[2] || "";
-      return getOutstanding(request, env, loanId);
-    }
-
-    // ============================================
-    // PAYMENT ROUTES
-    // ============================================
-
-    if (path.match(/^\/loans\/[^/]+\/payments$/) && method === "POST") {
-      const loanId = path.split("/")[2] || "";
-      return submitPayment(request, env, loanId);
-    }
-
-    // 404
-    return new Response(JSON.stringify({ error: "Not found", code: "NOT_FOUND" }), {
-      status: 404,
-      headers: { "Content-Type": "application/json" },
-    });
+    const url = new URL(request.url);
+    const { handler, params } = router.match(request.method, url.pathname);
+    const response = await handler({ request, env, url, params, requestId });
+    return withRequestHeaders(response, requestId, origin, env.ALLOWED_ORIGINS);
   } catch (error) {
-    console.error("[API] Unexpected error:", error);
-    return serverError();
+    return withRequestHeaders(errorResponse(error, requestId), requestId, origin, env.ALLOWED_ORIGINS);
   }
 }
 
-// ============================================
-// EXPORTS
-// ============================================
-
-let adminInitialized = false;
-
 export default {
-  async fetch(request: Request, env: CloudflareEnv) {
-    // Initialize admin user once on first request
-    if (!adminInitialized) {
-      adminInitialized = true;
-      await initializeAdminUser(env).catch((err) => {
-        console.error("[STARTUP] Admin initialization error:", err);
-      });
-    }
-
+  async fetch(request: Request, env: AppEnv) {
+    await initializeAdmin(env);
     return handleRequest(request, env);
-  },
-
-  async queue(batch: any) {
-    for (const message of batch.messages || []) {
-      try {
-        console.log("[QUEUE] Processing:", message.body);
-        // TODO: Handle different event types
-        message.ack();
-      } catch (error) {
-        console.error("[QUEUE] Processing failed:", error);
-        message.retry();
-      }
-    }
-  },
-
-  async scheduled(event: any) {
-    console.log("[SCHEDULED] Cron triggered:", (event as any).cron);
-    // TODO: Implement scheduled tasks (loan overdue checks, reminders, etc.)
   },
 };
