@@ -6,6 +6,7 @@
 import type { CloudflareEnv } from "./types";
 import { serverError } from "./utils/response";
 import { login, register } from "./handlers/auth";
+import { initializeAdminUser } from "./utils/auth";
 import {
   getProfile,
   updateProfile,
@@ -122,8 +123,18 @@ async function handleRequest(request: Request, env: CloudflareEnv): Promise<Resp
 // EXPORTS
 // ============================================
 
+let adminInitialized = false;
+
 export default {
   async fetch(request: Request, env: CloudflareEnv) {
+    // Initialize admin user once on first request
+    if (!adminInitialized) {
+      adminInitialized = true;
+      await initializeAdminUser(env).catch((err) => {
+        console.error("[STARTUP] Admin initialization error:", err);
+      });
+    }
+
     return handleRequest(request, env);
   },
 

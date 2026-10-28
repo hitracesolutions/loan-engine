@@ -97,3 +97,45 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
   const passwordHash = await hashPassword(password);
   return passwordHash === hash;
 }
+
+/**
+ * Initialize first admin user if not exists
+ * Called on worker startup to ensure admin access
+ */
+export async function initializeAdminUser(env: CloudflareEnv): Promise<void> {
+  // Check if admin credentials are provided
+  const adminEmail = (env as any).ADMIN_EMAIL;
+  const adminPassword = (env as any).ADMIN_PASSWORD;
+
+  if (!adminEmail || !adminPassword) {
+    console.warn("[ADMIN] No admin credentials in environment. Set ADMIN_EMAIL and ADMIN_PASSWORD.");
+    return;
+  }
+
+  try {
+    // Check if admin already exists
+    const stmt = env.DB.prepare("SELECT id FROM staff_users WHERE email = ? AND role = 'PLATFORM_ADMIN'");
+    const existing = (await stmt.bind(adminEmail).first()) as any;
+
+    if (existing) {
+      console.log("[ADMIN] Admin user already exists");
+      return;
+    }
+
+    // Create admin user
+    const adminId = `user_${Date.now().toString(36)}${Math.random().toString(36).substring(2)}`;
+    const passwordHash = await hashPassword(adminPassword);
+
+    const insertStmt = env.DB.prepare(`
+      INSERT INTO staff_users (id, email, password_hash, full_name, role, status, mfa_enabled)
+      VALUES (?, ?, ?, 'Platform Admin', 'PLATFORM_ADMIN', 'ACTIVE', FALSE)
+    `);
+
+    await insertStmt.bind(adminId, adminEmail, passwordHash).run();
+
+    console.log(`[ADMIN] Created admin user: ${adminEmail}`);
+    console.log(`[ADMIN] ⚠️  IMPORTANT: Change password immediately after first login!`);
+  } catch (error) {
+    console.error("[ADMIN] Failed to initialize admin user:", error);
+  }
+}
