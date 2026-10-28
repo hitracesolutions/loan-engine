@@ -14,7 +14,7 @@ The frontend can use same-origin API requests. Remove `VITE_API_BASE` from the P
 
 ## Pages bindings
 
-`frontend/wrangler.toml` configures the current D1, R2, and KV resources. Pages production secrets must be configured in the Cloudflare dashboard:
+`frontend/wrangler.toml` configures the current D1 and KV resources. R2 is not required by the active API routes and is intentionally not bound. Pages production secrets must be configured in the Cloudflare dashboard:
 
 - `JWT_SIGNING_KEY`
 - `ADMIN_EMAIL`

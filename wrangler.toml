@@ -11,12 +11,6 @@ database_name = "gidfine-db"
 database_id = "a0962b01-8cd5-407a-9d74-3d5f8c3e3e85"
 
 # ============================================
-# Object Storage Binding (R2)
-# ============================================
-[[r2_buckets]]
-binding = "R2"
-bucket_name = "gidfine-documents"
-
 # ============================================
 # Cache Binding (KV)
 # ============================================
