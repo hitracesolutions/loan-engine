@@ -77,13 +77,13 @@ export async function login(
 
     // Try borrower first
     let stmt = env.DB.prepare("SELECT id, password_hash, email FROM borrowers WHERE email = ?");
-    let user = await stmt.bind(email).first<any>();
+    let user = (await stmt.bind(email).first()) as any;
     let role = "BORROWER";
 
     // Try staff if not found
     if (!user) {
       stmt = env.DB.prepare("SELECT id, password_hash, email, role FROM staff_users WHERE email = ?");
-      user = await stmt.bind(email).first<any>();
+      user = (await stmt.bind(email).first()) as any;
       role = user?.role || "STAFF";
     }
 

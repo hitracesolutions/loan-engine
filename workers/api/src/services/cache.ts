@@ -104,33 +104,13 @@ export async function cacheDelete(
 }
 
 /**
- * Clear cache by pattern (list all, filter, delete)
- * WARNING: This is slow for large caches
+ * Clear specific cache key
  */
-export async function cacheClearByPattern(
+export async function cacheClear(
   env: CloudflareEnv,
-  pattern: string
-): Promise<number> {
-  try {
-    const regex = new RegExp(pattern);
-    let deleted = 0;
-
-    // Note: KV list has limits, this is for small caches only
-    const list = await env.CACHE.list({ limit: 1000 });
-
-    for (const key of list.keys) {
-      if (regex.test(key.name)) {
-        await env.CACHE.delete(key.name);
-        deleted++;
-      }
-    }
-
-    console.log(`[CACHE] Cleared ${deleted} keys matching: ${pattern}`);
-    return deleted;
-  } catch (error) {
-    console.error(`[CACHE] Error clearing cache:`, error);
-    return 0;
-  }
+  key: string
+): Promise<void> {
+  await cacheDelete(env, key);
 }
 
 // ============================================

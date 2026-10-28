@@ -4,7 +4,7 @@
  */
 
 import type { CloudflareEnv } from "../types";
-import { cacheIncrement, cacheGet, cacheSet, CACHE_KEYS, CACHE_TTL } from "../services/cache";
+import { cacheGet, cacheSet, CACHE_TTL } from "../services/cache";
 
 // ============================================
 // RATE LIMIT CONFIG
@@ -101,7 +101,7 @@ export async function checkRateLimit(
     return {
       allowed: true,
       remaining: config.limit,
-      resetAt: Date.now() + config.RATE_LIMITS[action].window * 1000,
+      resetAt: Date.now() + config.window * 1000,
     };
   }
 }
@@ -179,9 +179,10 @@ export async function enforceRateLimit(
   action: keyof typeof RATE_LIMITS
 ): Promise<{ allowed: boolean; headers: Record<string, string> }> {
   const result = await checkRateLimit(env, borrowerId, action);
+  const config = RATE_LIMITS[action];
 
   const headers = {
-    "X-RateLimit-Limit": String(RATE_LIMITS[action].limit),
+    "X-RateLimit-Limit": String(config.limit),
     "X-RateLimit-Remaining": String(result.remaining),
     "X-RateLimit-Reset": String(Math.floor(result.resetAt / 1000)),
   };

@@ -41,7 +41,14 @@ export async function verifyToken(
   try {
     const secret = new TextEncoder().encode(env.JWT_SECRET);
     const verified = await jwtVerify(token, secret);
-    return verified.payload as JWTPayload;
+    const payload = verified.payload as any;
+    return {
+      sub: payload.sub,
+      role: payload.role,
+      email: payload.email,
+      iat: payload.iat,
+      exp: payload.exp,
+    };
   } catch (error) {
     console.error("[AUTH] Token verification failed:", error);
     return null;
