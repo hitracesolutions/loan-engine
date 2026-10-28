@@ -17,9 +17,11 @@ export interface AuthResponse {
   token: string;
   user: {
     id: string;
+    fullName?: string;
+    agencyId?: string;
+    role?: string;
     email: string;
-    first_name?: string;
-    last_name?: string;
+    phone?: string | null;
   };
   expires_in: number;
 }
@@ -74,15 +76,29 @@ class GidfineAPI {
       options.body = JSON.stringify(data);
     }
 
-    const response = await fetch(url, options);
+    let response: Response;
+    try {
+      response = await fetch(url, options);
+    } catch {
+      throw new Error('Unable to reach the login service. Please try again in a moment.');
+    }
 
     // Handle non-OK responses
     if (!response.ok) {
-      const errorData = (await response.json()) as ErrorResponse;
-      throw new Error(errorData.error || 'API request failed');
+      const contentType = response.headers.get('content-type') ?? '';
+      if (contentType.includes('application/json')) {
+        const errorData = (await response.json()) as Partial<ErrorResponse>;
+        throw new Error(errorData.error || 'API request failed');
+      }
+      throw new Error('The login service returned an invalid response. Please try again later.');
     }
 
-    return response.json();
+    const contentType = response.headers.get('content-type') ?? '';
+    if (!contentType.includes('application/json')) {
+      throw new Error('The login service is not configured for this site yet.');
+    }
+
+    return response.json() as Promise<T>;
   }
 
   // ============================================
@@ -106,12 +122,19 @@ class GidfineAPI {
     return response;
   }
 
-  async register(email: string, password: string, firstName?: string, lastName?: string): Promise<AuthResponse> {
+  async register(
+    email: string,
+    password: string,
+    fullName: string,
+    phone?: string,
+    agencySlug?: string,
+  ): Promise<AuthResponse> {
     const response = await this.request<AuthResponse>('POST', '/auth/register', {
       email,
       password,
-      first_name: firstName,
-      last_name: lastName,
+      fullName,
+      phone,
+      agencySlug,
     });
 
     // Store token for future requests
