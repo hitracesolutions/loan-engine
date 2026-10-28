@@ -8,6 +8,7 @@
 import { SignJWT, jwtVerify, type JWTPayload } from 'jose';
 import { unauthorized } from './http.ts';
 import type { UserRole } from '../domain/stateMachine.ts';
+import type { AppEnv } from '../env.ts';
 
 const PBKDF2_ITERATIONS = 210_000;
 const SALT_BYTES = 16;
@@ -80,6 +81,34 @@ export async function verifyPassword(password: string, stored: string): Promise<
   const expected = fromBase64(hashRaw);
   const actual = await deriveKey(password, fromBase64(saltRaw), iterations);
   return timingSafeEqual(expected, actual);
+}
+
+/** Creates the configured local/platform admin in the current users table once. */
+export async function ensureAdminUser(env: AppEnv): Promise<void> {
+  const email = env.ADMIN_EMAIL?.trim().toLowerCase();
+  const password = env.ADMIN_PASSWORD;
+  if (!email || !password) return;
+
+  const agency = await env.DB
+    .prepare('SELECT id FROM agencies WHERE slug = ?')
+    .bind('gidfine')
+    .first<{ id: string }>();
+  if (!agency) return;
+
+  const existing = await env.DB
+    .prepare('SELECT id FROM users WHERE agency_id = ? AND lower(email) = ?')
+    .bind(agency.id, email)
+    .first<{ id: string }>();
+  if (existing) return;
+
+  const now = Date.now();
+  await env.DB.prepare(
+    `INSERT INTO users
+       (id, agency_id, role, email, phone, full_name, password_hash, is_active, created_at, updated_at)
+     VALUES (?, ?, 'agency_admin', ?, NULL, 'Platform Admin', ?, 1, ?, ?)`,
+  )
+    .bind(`admin_${now.toString(36)}`, agency.id, email, await hashPassword(password), now, now)
+    .run();
 }
 
 export interface AccessTokenClaims extends JWTPayload {
