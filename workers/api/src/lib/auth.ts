@@ -9,7 +9,8 @@ import { unauthorized } from './http.ts';
 import type { UserRole } from '../domain/stateMachine.ts';
 import type { AppEnv } from '../env.ts';
 
-const PBKDF2_ITERATIONS = 210_000;
+// Cloudflare Workers Web Crypto rejects PBKDF2 iteration counts above 100,000.
+const PBKDF2_ITERATIONS = 100_000;
 const SALT_BYTES = 16;
 const KEY_BITS = 256;
 const HASH_SCHEME = 'pbkdf2-sha256';
@@ -77,9 +78,13 @@ export async function verifyPassword(password: string, stored: string): Promise<
   const iterations = Number(iterationsRaw);
   if (!Number.isSafeInteger(iterations) || iterations <= 0) return false;
 
-  const expected = fromBase64(hashRaw);
-  const actual = await deriveKey(password, fromBase64(saltRaw), iterations);
-  return timingSafeEqual(expected, actual);
+  try {
+    const expected = fromBase64(hashRaw);
+    const actual = await deriveKey(password, fromBase64(saltRaw), iterations);
+    return timingSafeEqual(expected, actual);
+  } catch {
+    return false;
+  }
 }
 
 /** Creates the configured local/platform admin in the current users table once. */

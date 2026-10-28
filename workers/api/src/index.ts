@@ -26,13 +26,24 @@ const router = new Router()
   .post('/borrower/applications', createApplication)
   .get('/borrower/applications', listApplications);
 
-let adminInitialization: Promise<void> | undefined;
+let adminInitialization:
+  | { configuration: string; promise: Promise<void> }
+  | undefined;
 
 function initializeAdmin(env: AppEnv): Promise<void> {
-  adminInitialization ??= ensureAdminUser(env).catch((error) => {
-    console.error('[AUTH] Admin initialization failed:', error);
-  });
-  return adminInitialization;
+  // Pages secrets can be attached after an isolate has already handled a
+  // request. Retry when the configured admin identity changes from missing to
+  // available instead of permanently caching the initial no-op.
+  const configuration = `${env.ADMIN_EMAIL?.trim().toLowerCase() ?? ''}|${env.ADMIN_PASSWORD ? 'configured' : 'missing'}`;
+  if (!adminInitialization || adminInitialization.configuration !== configuration) {
+    adminInitialization = {
+      configuration,
+      promise: ensureAdminUser(env).catch((error) => {
+        console.error('[AUTH] Admin initialization failed:', error);
+      }),
+    };
+  }
+  return adminInitialization.promise;
 }
 
 function withRequestHeaders(
