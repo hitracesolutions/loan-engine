@@ -28,6 +28,11 @@ workers/api/.build/
 .env.production.local
 .env.development.local
 .env.test.local
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+!workers/api/.dev.vars.example
+!frontend/.dev.vars.example
 .secret
 .secrets
 secrets.json
