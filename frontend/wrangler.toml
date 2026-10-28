@@ -23,8 +23,5 @@ bucket_name = "gidfine-documents"
 binding = "CACHE"
 id = "5886b255cb484f4ca24b5a566aafc80d"
 
-[secrets]
-required = ["JWT_SIGNING_KEY", "ADMIN_EMAIL", "ADMIN_PASSWORD"]
-
 # JWT_SIGNING_KEY, ADMIN_EMAIL, and ADMIN_PASSWORD belong in Pages secrets
 # or frontend/.dev.vars for local Pages Functions development.
