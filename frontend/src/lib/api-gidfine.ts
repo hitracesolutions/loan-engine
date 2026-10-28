@@ -154,7 +154,7 @@ class GidfineAPI {
   // ============================================
 
   async listApplications(): Promise<any[]> {
-    const response = await this.request('GET', '/borrower/applications');
+    const response = (await this.request('GET', '/borrower/applications')) as any;
     return response.results || response;
   }
 
@@ -175,7 +175,7 @@ class GidfineAPI {
   // ============================================
 
   async listLoans(): Promise<any[]> {
-    const response = await this.request('GET', '/borrower/loans');
+    const response = (await this.request('GET', '/borrower/loans')) as any;
     return response.results || response;
   }
 
@@ -184,12 +184,12 @@ class GidfineAPI {
   }
 
   async getRepaymentSchedule(loanId: string): Promise<any[]> {
-    const response = await this.request('GET', `/loans/${loanId}/schedule`);
+    const response = (await this.request('GET', `/loans/${loanId}/schedule`)) as any;
     return response.results || response;
   }
 
   async getPaymentTransactions(loanId: string): Promise<any[]> {
-    const response = await this.request('GET', `/loans/${loanId}/transactions`);
+    const response = (await this.request('GET', `/loans/${loanId}/transactions`)) as any;
     return response.results || response;
   }
 
