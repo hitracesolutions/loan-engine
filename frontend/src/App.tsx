@@ -4,7 +4,6 @@ import DashboardLayout from './components/workspace/layout/DashboardLayout';
 import ProfileCompletionModal from './components/auth/ProfileCompletionModal';
 import Docs from './pages/Docs';
 import { useLoanStore } from './store/useLoanStore';
-import { ShieldCheck } from 'lucide-react';
 import { api } from './lib/api';
 
 function App() {
@@ -52,8 +51,8 @@ function App() {
       <div className="min-h-screen bg-[#0A0A0A] text-white font-sans">
         <header className="border-b border-white/10 bg-[#0A0A0A]/80 backdrop-blur-xl flex items-center px-6 lg:px-10 h-16">
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.location.href = '/'}>
-            <ShieldCheck className="w-6 h-6 text-emerald-400" />
-            <span className="font-display font-bold text-xl">Gidfine<span className="text-white/40">.gh</span></span>
+            <img src="/favicon.svg" alt="Gidfine" className="h-7 w-7 rounded-lg" />
+            <span className="font-display font-bold text-xl">Gidfine<span className="text-cyan-200/60">.gh</span></span>
           </div>
         </header>
         <main className="py-24 px-6">

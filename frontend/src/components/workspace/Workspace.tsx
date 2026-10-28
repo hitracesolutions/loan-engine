@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLoanStore } from '../../store/useLoanStore';
-import { ShieldCheck, Bot, User, Send, Loader2 } from 'lucide-react';
+import { Bot, User, Send, Loader2 } from 'lucide-react';
 import ProfileWidget from './widgets/ProfileWidget';
 import OnboardingWidget from './widgets/OnboardingWidget';
 import KycWidget from './widgets/KycWidget';
@@ -140,11 +140,11 @@ export default function Workspace() {
         {/* Header */}
         <header className="h-20 border-b border-white/[0.05] bg-[#0A0A0A]/80 backdrop-blur-xl flex items-center justify-between px-8 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
-              <ShieldCheck className="w-5 h-5 text-white" />
+            <div className="h-10 w-10 overflow-hidden rounded-xl border border-white/10 bg-white/5">
+              <img src="/favicon.svg" alt="Gidfine" className="h-full w-full" />
             </div>
             <div>
-               <span className="font-display font-medium text-lg tracking-tight block leading-tight">FinServe<span className="text-white/40">.AI</span></span>
+               <span className="font-display font-medium text-lg tracking-tight block leading-tight">Gidfine<span className="text-cyan-200/60">.gh</span></span>
                <span className="text-xs text-white/40 font-medium tracking-widest uppercase">System Intelligence</span>
             </div>
           </div>
