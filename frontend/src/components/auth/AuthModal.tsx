@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { api } from '../../lib/api';
+import { gidfineAPI } from '../../lib/api-gidfine';
 import { API_BASE } from '../../lib/config';
 import { useLoanStore } from '../../store/useLoanStore';
 import { X, Lock, Phone, User, Mail, MapPin, Briefcase, ShieldCheck, ArrowRight } from 'lucide-react';
@@ -40,14 +40,18 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     setError(null);
     setLoading(true);
 
-    const res = await api.loginWithPassword(loginPhone, loginPassword);
-    setLoading(false);
+    try {
+      const res = await gidfineAPI.login(loginPhone, loginPassword);
+      setLoading(false);
 
-    if (res.success && res.data) {
-      const cust = res.data.customer_data || {};
-      if (res.data.session_id) {
-        setSessionId(res.data.session_id);
-      }
+      if (res && res.token) {
+        // Store user info
+        setUser({
+          id: res.user.id,
+          email: res.user.email,
+          name: `${res.user.first_name || ''} ${res.user.last_name || ''}`.trim(),
+        });
+        onClose();
       setUser({
         name: cust.name || 'Sarang Rao',
         email: cust.email || 'sarang@nbfc-finserve.com',
