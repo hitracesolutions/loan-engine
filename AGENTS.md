@@ -453,6 +453,31 @@ type = "javascript"  # ❌ Invalid in v4.42
 - JWT authentication on all endpoints
 - Audit logging for all changes
 
+## Workflow and skills library
+
+Also read the shared workflow library at
+`C:\Users\gomat\OneDrive\Documents\Workflow and skills\README.md` at the start
+of every session, and follow matching workflows and skills from it. The
+project-specific entry point for this repo is
+`skills/support-training-hub/SKILL.md`, which points at
+`workflows/support-training-hub.md`. The library's `AGENT-INSTRUCTIONS.md`
+holds the master rules.
+
+**Run the `library-contribution` check twice:**
+
+1. **At the end of every task**, before handing control back.
+2. **Immediately after invoking any skill from the library during the
+   session** — the skill may have been incomplete, this project's stack may
+   extend what it covered, or a step may have proven wrong. Checking after
+   each skill use keeps the library current instead of letting drift
+   accumulate.
+
+Running the check is required. Writing content is only required if the check
+surfaced something worth saving — a stack-specific trap, a corrected step, a
+newly discovered convention. Update the matching workflow (and its changelog)
+when a used skill was inaccurate.
+
+
 ---
 
 ## Lessons Learned
