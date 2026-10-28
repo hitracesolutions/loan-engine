@@ -80,5 +80,6 @@ The PDFs in this directory are the original FastAPI/LangGraph and interim Convex
 
 | Date | Change |
 | --- | --- |
-| 2026-10-27 | Rebased every record onto the Cloudflare platform; archived the Python backend to `archive/python-backend/`; renamed the Vue migration plan to `CLOUDFLARE_MIGRATION_PLAN.md`; replaced absolute `file:///…` links with repository-relative links. |
+| 2026-10-27 | Rebased every record onto the Cloudflare platform; moved the Python backend out of the active runtime; renamed the Vue migration plan to `CLOUDFLARE_MIGRATION_PLAN.md`; replaced absolute `file:///…` links with repository-relative links. |
+| 2026-10-28 | Removed the retired Python backend from the working tree after documenting its responsibilities in [`PYTHON_BACKEND_DECOMMISSION.md`](../PYTHON_BACKEND_DECOMMISSION.md). |
 | 2026-10-27 | Implemented migration Phase 1: `workers/api` (health, auth, applications), D1 migration `0001_core.sql`, ported state machine with 34 tests, single `VITE_API_BASE` resolution, Pages `_redirects`, Vercel config removed, frontend lockfile repaired (52 tests green). |

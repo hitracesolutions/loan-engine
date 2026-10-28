@@ -8,7 +8,8 @@ export interface ApiResponse<T = any> {
 }
 
 /**
- * Core API Client for MongoDB & FastAPI backend integration
+ * Legacy API client kept for compatibility with older frontend flows.
+ * New authentication and Worker routes use api-gidfine.ts.
  */
 export const api = {
   // ── 1. Authentication & MongoDB Users ─────────────────────────────

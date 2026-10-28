@@ -138,7 +138,7 @@ export default {
     return handleRequest(request, env);
   },
 
-  async queue(batch: any, env: CloudflareEnv) {
+  async queue(batch: any) {
     for (const message of batch.messages || []) {
       try {
         console.log("[QUEUE] Processing:", message.body);
@@ -151,7 +151,7 @@ export default {
     }
   },
 
-  async scheduled(event: any, env: CloudflareEnv) {
+  async scheduled(event: any) {
     console.log("[SCHEDULED] Cron triggered:", (event as any).cron);
     // TODO: Implement scheduled tasks (loan overdue checks, reminders, etc.)
   },

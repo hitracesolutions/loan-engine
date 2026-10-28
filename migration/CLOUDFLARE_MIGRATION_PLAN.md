@@ -10,7 +10,7 @@
 
 ## 1. Why migrate
 
-The repository currently carries **three** overlapping backends: a retired Python/FastAPI + LangGraph service, an interim Convex backend, and legacy REST clients in the SPA. None of them is a durable production story:
+The migration record covers the former overlapping backends: a retired Python/FastAPI + LangGraph service, an interim Convex backend, and legacy REST clients in the SPA. The Python service has since been removed from the working tree; see [`PYTHON_BACKEND_DECOMMISSION.md`](../PYTHON_BACKEND_DECOMMISSION.md).
 
 | Problem | Consequence |
 | --- | --- |
@@ -40,7 +40,7 @@ The target is **one** runtime, **one** data plane, **one** state machine — all
 | --- | --- | --- | --- |
 | Web app | React 19 + Vite in `frontend/` | Same, deployed to **Cloudflare Pages** | ⬜ Pages project pending |
 | Hosting config | `frontend/vercel.json` | Pages project + `frontend/public/_redirects` | ✅ Vercel removed, `_redirects` added |
-| HTTP API | FastAPI (`archive/python-backend/`) + Convex | `workers/api` (Worker, `api.gidfine.com`) | 🟡 health, auth, applications |
+| HTTP API | Retired FastAPI service + Convex | `workers/api` (Worker) | 🟡 health, auth, applications |
 | Real-time chat | FastAPI WebSocket + Convex reactivity | Durable Object `LoanSession` (WebSocket hibernation) | ⬜ |
 | Database | MongoDB Atlas + Convex DB | **D1** (`gidfine-db`) | 🟡 core tables migrated |
 | Documents | GridFS | **R2** (`gidfine-documents`) with signed URLs | ⬜ |
@@ -57,14 +57,14 @@ The target is **one** runtime, **one** data plane, **one** state machine — all
 
 | Source | Target |
 | --- | --- |
-| `archive/python-backend/agents/master_router.py` | `workers/api/src/domain/stateMachine.ts` + route dispatch |
-| `archive/python-backend/agents/intent_agent.py` | `workers/api/src/domain/intent.ts` |
-| `archive/python-backend/agents/sales_agent.py` | `workers/api/src/routes/chat.ts` + `durable/loanSession.ts` |
-| `archive/python-backend/agents/document_agent.py` | `workers/api/src/jobs/ocr.ts` + R2 |
-| `archive/python-backend/agents/kyc_agent.py`, `fraud_agent.py` | `workers/api/src/domain/kyc.ts`, `domain/fraud.ts` |
-| `archive/python-backend/agents/underwriting.py`, `utils/financial_rules.py` | `workers/api/src/domain/underwriting.ts`, `domain/pricing.ts` |
-| `archive/python-backend/utils/pdf_generator.py` | `workers/api/src/lib/pdf.ts` |
-| `archive/python-backend/agents/emi_engine.py`, `repayment_agent.py` | `workers/api/src/domain/allocation.ts` + ledger tables |
+| Former `master_router.py` | `workers/api/src/domain/stateMachine.ts` + route dispatch |
+| Former `intent_agent.py` | `workers/api/src/domain/intent.ts` |
+| Former `sales_agent.py` | `workers/api/src/routes/chat.ts` + `durable/loanSession.ts` |
+| Former `document_agent.py` | `workers/api/src/jobs/ocr.ts` + R2 |
+| Former `kyc_agent.py`, `fraud_agent.py` | `workers/api/src/domain/kyc.ts`, `domain/fraud.ts` |
+| Former `underwriting.py`, `financial_rules.py` | `workers/api/src/domain/underwriting.ts`, `domain/pricing.ts` |
+| Former `pdf_generator.py` | `workers/api/src/lib/pdf.ts` |
+| Former `emi_engine.py`, `repayment_agent.py` | `workers/api/src/domain/allocation.ts` + ledger tables |
 | `frontend/convex/schema.ts` | `workers/api/migrations/*.sql` |
 | `frontend/convex/loans.ts` | `workers/api/src/routes/applications.ts`, `proposals.ts`, `approvals.ts`, `lender.ts` |
 | `frontend/convex/ledger.ts` | `workers/api/src/routes/ledger.ts` + `domain/allocation.ts` |
@@ -78,7 +78,7 @@ The target is **one** runtime, **one** data plane, **one** state machine — all
 ### Phase 0 — Freeze and inventory ✅
 
 - [x] Branch protection on `main`; migration work on a feature branch.
-- [x] Python backend moved to `archive/python-backend/` (read-only).
+- [x] Python backend removed from the working tree after decommission documentation was written.
 - [x] Docs rebased onto Cloudflare (this directory + README + Dev Guide).
 - **Exit criterion:** no build, test or deploy path references Python.
 
