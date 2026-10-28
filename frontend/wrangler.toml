@@ -9,6 +9,12 @@ APP_ENV = "development"
 ALLOWED_ORIGINS = "http://localhost:5173,https://loan-engine.pages.dev"
 ACCESS_TOKEN_TTL_SECONDS = "900"
 
+[env.production.vars]
+APP_NAME = "Gidfine"
+APP_ENV = "production"
+ALLOWED_ORIGINS = "https://loan-engine.pages.dev"
+ACCESS_TOKEN_TTL_SECONDS = "900"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "gidfine-db"
