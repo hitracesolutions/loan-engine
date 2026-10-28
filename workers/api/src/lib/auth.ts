@@ -1,11 +1,10 @@
 /**
  * Identity primitives: PBKDF2 password hashing and HS256 access tokens.
  *
- * Both run on Web Crypto (via jose for JWT) so there is no Node-only dependency
- * beyond the platform's `crypto` global.
+ * Both run on Web Crypto so the same code can be bundled by a Worker or by
+ * Pages Functions without a Node-only JWT dependency.
  */
 
-import { SignJWT, jwtVerify, type JWTPayload } from 'jose';
 import { unauthorized } from './http.ts';
 import type { UserRole } from '../domain/stateMachine.ts';
 import type { AppEnv } from '../env.ts';
@@ -111,10 +110,12 @@ export async function ensureAdminUser(env: AppEnv): Promise<void> {
     .run();
 }
 
-export interface AccessTokenClaims extends JWTPayload {
+export interface AccessTokenClaims {
   sub: string;
   agencyId: string;
   role: UserRole;
+  iat: number;
+  exp: number;
 }
 
 function signingKey(secret: string): Uint8Array {
@@ -124,30 +125,97 @@ function signingKey(secret: string): Uint8Array {
   return new TextEncoder().encode(secret);
 }
 
+interface JwtHeader {
+  alg: string;
+  typ: string;
+}
+
+function base64UrlEncode(value: string | Uint8Array): string {
+  const bytes = typeof value === 'string' ? new TextEncoder().encode(value) : value;
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+function base64UrlDecode(value: string): Uint8Array {
+  const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4);
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+function parseJwtJson<T>(segment: string): T {
+  return JSON.parse(new TextDecoder().decode(base64UrlDecode(segment))) as T;
+}
+
+async function signHmac(input: string, secret: string): Promise<Uint8Array> {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    signingKey(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(input));
+  return new Uint8Array(signature);
+}
+
 export async function signAccessToken(
   claims: { userId: string; agencyId: string; role: UserRole },
   secret: string,
   ttlSeconds: number,
 ): Promise<string> {
-  return new SignJWT({ agencyId: claims.agencyId, role: claims.role })
-    .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
-    .setSubject(claims.userId)
-    .setIssuedAt()
-    .setExpirationTime(Math.floor(Date.now() / 1000) + ttlSeconds)
-    .sign(signingKey(secret));
+  const issuedAt = Math.floor(Date.now() / 1000);
+  const header = base64UrlEncode(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  const payload = base64UrlEncode(
+    JSON.stringify({
+      sub: claims.userId,
+      agencyId: claims.agencyId,
+      role: claims.role,
+      iat: issuedAt,
+      exp: issuedAt + ttlSeconds,
+    }),
+  );
+  const signingInput = `${header}.${payload}`;
+  return `${signingInput}.${base64UrlEncode(await signHmac(signingInput, secret))}`;
 }
 
 /** Verifies a bearer token and returns its claims, or throws 401. */
 export async function verifyAccessToken(token: string, secret: string): Promise<AccessTokenClaims> {
   try {
-    const { payload } = await jwtVerify(token, signingKey(secret), { algorithms: ['HS256'] });
+    const [encodedHeader, encodedPayload, encodedSignature] = token.split('.');
+    if (!encodedHeader || !encodedPayload || !encodedSignature) {
+      throw new Error('Malformed token');
+    }
+
+    const header = parseJwtJson<JwtHeader>(encodedHeader);
+    if (header.alg !== 'HS256' || header.typ !== 'JWT') {
+      throw new Error('Unsupported token header');
+    }
+
+    const signingInput = `${encodedHeader}.${encodedPayload}`;
+    const expectedSignature = await signHmac(signingInput, secret);
+    if (!timingSafeEqual(base64UrlDecode(encodedSignature), expectedSignature)) {
+      throw new Error('Invalid token signature');
+    }
+
+    const payload = parseJwtJson<Partial<AccessTokenClaims>>(encodedPayload);
+    const now = Math.floor(Date.now() / 1000);
     if (
       typeof payload.sub !== 'string' ||
       typeof payload.agencyId !== 'string' ||
-      typeof payload.role !== 'string'
+      typeof payload.role !== 'string' ||
+      typeof payload.iat !== 'number' ||
+      typeof payload.exp !== 'number' ||
+      !Number.isFinite(payload.iat) ||
+      !Number.isFinite(payload.exp) ||
+      payload.exp <= now
     ) {
-      throw unauthorized('Token is missing required claims');
+      throw new Error('Token is missing required claims or has expired');
     }
+
     return payload as AccessTokenClaims;
   } catch (error) {
     if (error instanceof Error && error.name === 'HttpError') throw error;
