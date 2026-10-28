@@ -32,7 +32,7 @@
     "production": {
       "vars": {
         "APP_ENV": "production",
-        "ALLOWED_ORIGINS": "https://app.gidfine.com"
+        "ALLOWED_ORIGINS": "https://loan-engine.pages.dev,https://app.gidfine.com"
       }
     }
   }
