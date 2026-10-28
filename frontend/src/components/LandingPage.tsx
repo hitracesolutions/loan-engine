@@ -1,18 +1,26 @@
-import { useState } from 'react';
+import { useState, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { ArrowRight, ShieldCheck, Zap, Lock, ChevronRight, TrendingUp, Globe2, Clock, CheckCircle2 } from 'lucide-react';
 import AuthModal from './auth/AuthModal';
-import { useLoanStore } from '../store/useLoanStore';
 
-const Button = ({ children, className = "", variant = "default", size = "default", ...props }: any) => {
+type ButtonVariant = 'default' | 'outline' | 'ghost';
+type ButtonSize = 'default' | 'sm' | 'lg';
+
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  children: ReactNode;
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+}
+
+const Button = ({ children, className = "", variant = "default", size = "default", ...props }: ButtonProps) => {
   const baseStyle = "inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50";
 
-  const variants: any = {
+  const variants: Record<ButtonVariant, string> = {
     default: "bg-white text-black shadow-lg shadow-white/10 hover:shadow-white/20 hover:scale-[1.02]",
     outline: "border border-white/10 bg-transparent text-white hover:bg-white/5",
     ghost: "text-white/70 hover:text-white hover:bg-white/5"
   };
 
-  const sizes: any = {
+  const sizes: Record<ButtonSize, string> = {
     default: "h-11 px-6",
     sm: "h-9 px-4 text-xs",
     lg: "h-14 px-8 text-base",
@@ -27,7 +35,6 @@ const Button = ({ children, className = "", variant = "default", size = "default
 
 const LandingPage = () => {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
-  const { setView } = useLoanStore();
 
   const handleOpenAuth = () => {
     setIsAuthOpen(true);

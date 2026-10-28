@@ -70,11 +70,8 @@ script_name = "gidfine-api"
 # ============================================
 # Triggers (Cron Jobs)
 # ============================================
-[[triggers.crons]]
-crons = ["0 0 * * *"]  # Daily at midnight
-
-[[triggers.crons]]
-crons = ["0 */6 * * *"]  # Every 6 hours (overdue reminders)
+[triggers]
+crons = ["0 0 * * *", "0 */6 * * *"]  # Daily at midnight and every 6 hours
 
 # ============================================
 # Limits
