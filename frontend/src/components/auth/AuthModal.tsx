@@ -51,24 +51,21 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           email: res.user.email,
           name: `${res.user.first_name || ''} ${res.user.last_name || ''}`.trim(),
         });
+
+        // Check if there's a post-auth view to navigate to
+        const targetView = localStorage.getItem('postAuthView');
+        if (targetView) {
+          useLoanStore.setState({ currentView: targetView as any });
+          localStorage.removeItem('postAuthView');
+        }
+
         onClose();
-      setUser({
-        name: cust.name || 'Sarang Rao',
-        email: cust.email || 'sarang@nbfc-finserve.com',
-        picture: cust.picture || '',
-        phone: cust.phone || loginPhone,
-        salary: cust.salary || 150000,
-        city: cust.city || 'Mumbai',
-        creditScore: cust.credit_score || 800,
-      });
-      const targetView = localStorage.getItem('postAuthView');
-      if (targetView) {
-        useLoanStore.setState({ currentView: targetView as any });
-        localStorage.removeItem('postAuthView');
+      } else {
+        setError(res.error || 'Invalid credentials');
       }
-      onClose();
-    } else {
-      setError(res.error || 'Invalid credentials');
+    } catch (error: any) {
+      setLoading(false);
+      setError(error.message || 'Login failed');
     }
   };
 
