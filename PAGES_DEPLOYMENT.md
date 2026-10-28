@@ -38,7 +38,7 @@ VITE_APP_NAME = Gidfine
 For the current Pages Functions deployment, leave `VITE_API_BASE` and the
 legacy `VITE_API_URL` unset in production. The frontend calls the API on the
 Pages origin. Configure these Pages Functions bindings and secrets in the
-Cloudflare dashboard: D1 `DB`, R2 `R2`, KV `CACHE`, and secrets
+Cloudflare dashboard: D1 `DB`, KV `CACHE`, and secrets
 `JWT_SIGNING_KEY`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD`.
 
 **Step 4: Save and Deploy**
