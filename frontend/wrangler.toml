@@ -1,0 +1,30 @@
+name = "loan-engine"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-10-27"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+APP_NAME = "Gidfine"
+APP_ENV = "development"
+ALLOWED_ORIGINS = "http://localhost:5173,https://loan-engine.pages.dev"
+ACCESS_TOKEN_TTL_SECONDS = "900"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "gidfine-db"
+database_id = "fe4a9ac1-436a-42b3-b76b-ef79f7787420"
+migrations_dir = "../workers/api/migrations"
+
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "gidfine-documents"
+
+[[kv_namespaces]]
+binding = "CACHE"
+id = "5886b255cb484f4ca24b5a566aafc80d"
+
+[secrets]
+required = ["JWT_SIGNING_KEY", "ADMIN_EMAIL", "ADMIN_PASSWORD"]
+
+# JWT_SIGNING_KEY, ADMIN_EMAIL, and ADMIN_PASSWORD belong in Pages secrets
+# or frontend/.dev.vars for local Pages Functions development.
