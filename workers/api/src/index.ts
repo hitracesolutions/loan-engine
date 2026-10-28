@@ -1,58 +1,56 @@
-import type { AppEnv } from './env.ts';
-import { Router, type RouteContext } from './router.ts';
-import { StateTransitionError } from './domain/stateMachine.ts';
-import {
-  HttpError,
-  corsHeaders,
-  errorResponse,
-} from './lib/http.ts';
-import { ulid } from './lib/ids.ts';
-import { health } from './routes/health.ts';
-import { login, me, register } from './routes/auth.ts';
-import { createApplication, listApplications } from './routes/applications.ts';
+/**
+ * Gidfine API — Cloudflare Worker Entry Point
+ * Handles all REST & WebSocket requests
+ */
 
-const router = new Router()
-  .get('/health', health)
-  .post('/auth/register', register)
-  .post('/auth/login', login)
-  .get('/auth/me', me)
-  .post('/applications', createApplication)
-  .get('/applications', listApplications);
+// ============================================
+// ROUTES (Placeholder)
+// ============================================
 
-function toHttpError(error: unknown): unknown {
-  // Map domain guard failures onto 409 so clients can branch on the code.
-  if (error instanceof StateTransitionError) {
-    return new HttpError(409, error.code, error.message);
-  }
-  return error;
-}
-
+// Health check
 export default {
-  async fetch(request: Request, env: AppEnv): Promise<Response> {
-    const requestId = ulid();
+  fetch: async (request: Request, env: any, ctx: ExecutionContext) => {
     const url = new URL(request.url);
-    const origin = request.headers.get('origin');
-    const cors = corsHeaders(origin, env.ALLOWED_ORIGINS);
-
-    if (request.method === 'OPTIONS') {
-      return new Response(null, { status: 204, headers: cors });
+    
+    if (url.pathname === "/health" && request.method === "GET") {
+      return new Response(JSON.stringify({ status: "ok" }), {
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
-    try {
-      const { handler, params } = router.match(request.method, url.pathname);
-      const ctx: RouteContext = { request, env, url, params, requestId };
-      const response = await handler(ctx);
+    // TODO: Implement routes
+    // - POST /auth/register
+    // - POST /auth/login
+    // - GET /borrower/applications
+    // - POST /borrower/applications
+    // - POST /borrower/applications/:id/documents
+    // - GET /lender/proposals
+    // - POST /lender/proposals/:id/accept
+    // - GET /agency/queue
+    // - POST /agency/loans/:id/approve
+    // - GET /loans/:id
+    // - POST /loans/:id/payments
 
-      cors.forEach((value, key) => response.headers.set(key, value));
-      response.headers.set('x-request-id', requestId);
-      response.headers.set('x-content-type-options', 'nosniff');
-      response.headers.set('referrer-policy', 'no-referrer');
-      return response;
-    } catch (error) {
-      const response = errorResponse(toHttpError(error), requestId);
-      cors.forEach((value, key) => response.headers.set(key, value));
-      response.headers.set('x-request-id', requestId);
-      return response;
+    return new Response(JSON.stringify({ error: "Not implemented" }), {
+      status: 404,
+      headers: { "Content-Type": "application/json" },
+    });
+  },
+
+  async queue(batch: MessageBatch, env: any) {
+    for (const message of batch.messages) {
+      try {
+        console.log("Processing queue message:", message.body);
+        message.ack();
+      } catch (error) {
+        console.error("Queue processing failed:", error);
+        message.retry();
+      }
     }
   },
-} satisfies ExportedHandler<AppEnv>;
+
+  async scheduled(event: ScheduledEvent, env: any, ctx: ExecutionContext) {
+    console.log("Cron job triggered:", event.cron);
+    // TODO: Implement scheduled tasks
+  },
+};
