@@ -46,11 +46,11 @@ const LandingPage = () => {
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.05] bg-[#0A0A0A]/80 backdrop-blur-xl">
         <div className="container mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
-              <ShieldCheck className="w-5 h-5 text-white" />
+            <div className="h-10 w-10 overflow-hidden rounded-xl border border-white/10 bg-white/5">
+              <img src="/favicon.svg" alt="Gidfine" className="h-full w-full" />
             </div>
             <span className="font-display font-medium text-xl tracking-tight">
-              Gidfine<span className="text-white/40">.gh</span>
+              Gidfine<span className="text-cyan-200/60">.gh</span>
             </span>
           </div>
           <div className="hidden md:flex items-center gap-8">

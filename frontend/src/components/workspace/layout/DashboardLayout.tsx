@@ -1,4 +1,4 @@
-import { ShieldCheck, LayoutDashboard, FileText, CreditCard, Bot, LogOut, Book } from 'lucide-react';
+import { LayoutDashboard, FileText, CreditCard, Bot, LogOut, Book } from 'lucide-react';
 import { useLoanStore } from '../../../store/useLoanStore';
 import AgentOverlay from '../../shared/AgentOverlay';
 import AnalyticsDashboard from '../pages/AnalyticsDashboard';
@@ -41,10 +41,10 @@ export default function DashboardLayout() {
           <div className="flex items-center gap-8 w-full max-w-7xl mx-auto">
             {/* Logo */}
             <div className="flex items-center gap-3 shrink-0 cursor-pointer" onClick={() => setView('DASHBOARD')}>
-              <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
-                <ShieldCheck className="w-4 h-4 text-white" />
+              <div className="h-8 w-8 overflow-hidden rounded-lg border border-white/10 bg-white/5">
+                <img src="/favicon.svg" alt="Gidfine" className="h-full w-full" />
               </div>
-              <span className="font-display font-medium tracking-tight">FinServe<span className="text-white/40">.AI</span></span>
+              <span className="font-display font-medium tracking-tight">Gidfine<span className="text-cyan-200/60">.gh</span></span>
             </div>
 
             {/* Nav Links */}
