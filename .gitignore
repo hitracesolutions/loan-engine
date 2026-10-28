@@ -1,155 +1,117 @@
-# ═══════════════════════════════════════════════════════════════════════════════
-# ENVIRONMENT VARIABLES
-# ═══════════════════════════════════════════════════════════════════════════════
+# ============================================
+# Node.js & npm
+# ============================================
+node_modules/
+package-lock.json
+npm-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+dist/
+build/
+
+# ============================================
+# Cloudflare & Wrangler
+# ============================================
+.wrangler/
+.wrangler-output/
+wrangler-secret.txt
+workers/api/dist/
+workers/api/.build/
+*.wasm
+
+# ============================================
+# Environment & Secrets (CRITICAL!)
+# ============================================
 .env
 .env.local
 .env.*.local
-.env.*.example
+.env.production.local
+.env.development.local
+.env.test.local
+.secret
+.secrets
+secrets.json
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# VIRTUAL ENVIRONMENTS
-# ═══════════════════════════════════════════════════════════════════════════════
-venv/
-env/
-.venv/
-ENV/
-env.bak/
-venv.bak/
+# Wrangler auth config
+.wrangler/config/default.toml
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# PYTHON CACHE & BYTECODE
-# ═══════════════════════════════════════════════════════════════════════════════
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-*.egg
-*.egg-info/
-dist/
-build/
-develop-eggs/
-.installed.cfg
-*.egg-info
-.pytest_cache/
-.coverage
-htmlcov/
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# TYPE CHECKING & LINTING
-# ═══════════════════════════════════════════════════════════════════════════════
-.mypy_cache/
-.dmypy.json
-dmypy.json
-.pyre/
-.pylint.d/
-.ruff_cache/
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# TESTING & TEST FILES
-# ═══════════════════════════════════════════════════════════════════════════════
-.pytest_cache/
-.tox/
-.hypothesis/
-test_*.py
-*_test.py
-tests/__pycache__/
-evals/__pycache__/
-*.coverage
-.coverage.*
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# TEMPORARY & RUNTIME FILES
-# ═══════════════════════════════════════════════════════════════════════════════
-temp_*.jpg
-temp_*.png
-tmp*.jpg
-tmp*.png
-tmp*.pdf
-audit_*.pdf
-audit_*.jpg
-audit_*.png
-*.tmp
-*.bak
-*.swp
-*.swo
-*~
-.~*
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# DATA & UPLOADS (RUNTIME GENERATED)
-# ═══════════════════════════════════════════════════════════════════════════════
-data/uploads/*
-data/sanctions/*
-data/nbfc.db
-mock_db.json
-*.db
-*.sqlite
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# IDE & EDITOR SPECIFIC
-# ═══════════════════════════════════════════════════════════════════════════════
+# ============================================
+# IDE & Editor
+# ============================================
 .vscode/
 .idea/
 *.swp
 *.swo
-*.sublime-workspace
-.vs/
-*.code-workspace
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# OS GENERATED FILES
-# ═══════════════════════════════════════════════════════════════════════════════
+*~
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
-.directory
-*.lnk
+*.sublime-workspace
+*.sublime-project
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# NODE & FRONTEND
-# ═══════════════════════════════════════════════════════════════════════════════
-node_modules/
-npm-debug.log
-yarn-error.log
-dist/
-build/
+# ============================================
+# Development & Testing
+# ============================================
+coverage/
+.nyc_output/
+*.lcov
+.jest-cache/
+test-results.json
+*.tmp
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# DOCUMENTATION & BUILD ARTIFACTS
-# ═══════════════════════════════════════════════════════════════════════════════
-.langgraph_api/
-.agent/
-.gemini/
-.gsd/
-adapters/
-docs/
-scripts/
-model_capabilities.yaml
-GSD-STYLE.md
-PROJECT_RULES.md
-CHANGELOG.md
-LICENSEStep
-FRONTEND_SPEC.md
+# ============================================
+# Logs
+# ============================================
+logs/
+*.log
+lerna-debug.log*
+debug.log*
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# GENERATED DOCUMENTATION & TEMP NOTES
-# ═══════════════════════════════════════════════════════════════════════════════
-# Avoid pushing personal scratch notes, but ALLOW architectural/setup markdown files
-AGENT_*.md
-OPTIONAL_*.md
-*_SUMMARY.md
-*_ANALYSIS.md
-*_FIXES.md
-temp_*.md
-todo.md
-notes.md
-# Cloudflare Workers (workers/api)
-.wrangler/
-.dev.vars
-.dev.vars.*
-!.dev.vars.example
+# ============================================
+# Database & Local Files
+# ============================================
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+data/uploads/
+data/backup/
+local-db/
+
+# ============================================
+# Build & Compile Output
+# ============================================
+.tsc/
+.turbo/
+*.tsbuildinfo
+.babel-cache/
+
+# ============================================
+# Frontend (Vite)
+# ============================================
+frontend/dist/
+frontend/.env.local
+frontend/.env.*.local
+
+# ============================================
+# OS Files
+# ============================================
+.AppleDouble
+.LSOverride
+ehthumbs.db
+desktop.ini
+
+# ============================================
+# Backup Files
+# ============================================
+*.backup
+*.bak
+*.old
+*.orig
+
+# ============================================
+# DO NOT IGNORE (keep these committed)
+# ============================================
+# !.env.example
+# !.gitkeep
+# !workers/api/schema.sql
+# !CLOUDFLARE_SETUP_CHECKLIST.md
