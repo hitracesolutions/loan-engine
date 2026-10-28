@@ -15,10 +15,24 @@ APP_ENV = "production"
 ALLOWED_ORIGINS = "https://loan-engine.pages.dev"
 ACCESS_TOKEN_TTL_SECONDS = "900"
 
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "gidfine-db"
+database_id = "a0962b01-8cd5-407a-9d74-3d5f8c3e3e85"
+migrations_dir = "../workers/api/migrations"
+
+[[env.production.r2_buckets]]
+binding = "R2"
+bucket_name = "gidfine-documents"
+
+[[env.production.kv_namespaces]]
+binding = "CACHE"
+id = "5886b255cb484f4ca24b5a566aafc80d"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "gidfine-db"
-database_id = "fe4a9ac1-436a-42b3-b76b-ef79f7787420"
+database_id = "a0962b01-8cd5-407a-9d74-3d5f8c3e3e85"
 migrations_dir = "../workers/api/migrations"
 
 [[r2_buckets]]

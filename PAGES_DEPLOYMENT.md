@@ -144,7 +144,6 @@ VITE_APP_NAME=Gidfine
 ### Staging (Pre-production)
 Set in Cloudflare Dashboard → Pages → gidfine-web → Settings → Environment:
 ```
-VITE_API_BASE = https://gidfine-api-staging.YOUR_SUBDOMAIN.workers.dev
 VITE_ENVIRONMENT = staging
 VITE_APP_NAME = Gidfine (Staging)
 ```
@@ -152,10 +151,10 @@ VITE_APP_NAME = Gidfine (Staging)
 ### Production
 Set in Cloudflare Dashboard → Pages → gidfine-web → Settings → Environment:
 ```
-VITE_API_BASE = https://gidfine-api.YOUR_SUBDOMAIN.workers.dev
 VITE_ENVIRONMENT = production
 VITE_APP_NAME = Gidfine
 ```
+Keep `VITE_API_BASE` and `VITE_API_URL` unset in production so requests use the Pages origin.
 
 ---
 

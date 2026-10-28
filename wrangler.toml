@@ -8,7 +8,7 @@ compatibility_date = "2024-11-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "gidfine-db"
-database_id = "fe4a9ac1-436a-42b3-b76b-ef79f7787420"
+database_id = "a0962b01-8cd5-407a-9d74-3d5f8c3e3e85"
 
 # ============================================
 # Object Storage Binding (R2)
