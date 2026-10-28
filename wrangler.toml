@@ -1,0 +1,95 @@
+name = "gidfine-api"
+type = "service"
+main = "workers/api/src/index.ts"
+compatibility_date = "2024-11-01"
+
+# ============================================
+# Database Binding (D1)
+# ============================================
+[[d1_databases]]
+binding = "DB"
+database_name = "gidfine-db"
+database_id = "YOUR_DATABASE_ID"  # Replace after creation
+
+# ============================================
+# Object Storage Binding (R2)
+# ============================================
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "gidfine-documents"
+account_id = "YOUR_ACCOUNT_ID"  # Your Cloudflare account ID
+
+# ============================================
+# Cache Binding (KV)
+# ============================================
+[[kv_namespaces]]
+binding = "CACHE"
+id = "YOUR_KV_NAMESPACE_ID"  # Replace after creation
+
+# ============================================
+# Queue Binding
+# ============================================
+[[queues.consumers]]
+queue = "gidfine-notifications"
+max_batch_size = 10
+max_batch_timeout = 30
+max_retries = 3
+dead_letter_queue = "gidfine-notifications-dlq"
+
+# ============================================
+# Durable Objects
+# ============================================
+[[durable_objects.bindings]]
+name = "CHAT_SESSION"
+class_name = "ChatSession"
+script_name = "gidfine-api"
+
+# ============================================
+# Environment Variables
+# ============================================
+[env.development]
+  name = "gidfine-api-dev"
+  route = "api-dev.gidfine.local/*"
+  vars = { ENVIRONMENT = "development" }
+
+[env.staging]
+  name = "gidfine-api-staging"
+  route = "api-staging.gidfine.com/*"
+  vars = { ENVIRONMENT = "staging" }
+
+[env.production]
+  name = "gidfine-api"
+  route = "api.gidfine.com/*"
+  vars = { ENVIRONMENT = "production" }
+
+# ============================================
+# Secrets (Use `wrangler secret put` to set)
+# ============================================
+# JWT_SECRET
+# SENDGRID_API_KEY (optional)
+# TWILIO_API_KEY (optional)
+
+# ============================================
+# Build Configuration
+# ============================================
+[build]
+  command = "npm run build"
+  watch_paths = ["src/**/*.ts"]
+
+[build.upload]
+  format = "service-worker"
+
+# ============================================
+# Triggers (Cron Jobs)
+# ============================================
+[[triggers.crons]]
+crons = ["0 0 * * *"]  # Daily at midnight
+
+[[triggers.crons]]
+crons = ["0 */6 * * *"]  # Every 6 hours (overdue reminders)
+
+# ============================================
+# Limits
+# ============================================
+[limits]
+  cpu_milliseconds = 50000  # 50s max execution time
