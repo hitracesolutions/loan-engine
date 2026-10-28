@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import LandingPageGH from './components/LandingPageGH';
+import LandingPage from './components/LandingPage';
 import DashboardLayout from './components/workspace/layout/DashboardLayout';
 import ProfileCompletionModal from './components/auth/ProfileCompletionModal';
 import Docs from './pages/Docs';
@@ -64,7 +64,7 @@ function App() {
   }
 
   if (currentState === 'UNAUTHENTICATED') {
-    return <LandingPageGH />;
+    return <LandingPage />;
   }
 
   return (
