@@ -1,11 +1,11 @@
 # Gidfine Loan Agency Management Platform
 
-**Product Requirements Document (PRD) & Development Guide | Draft v1.2**
+**Product Requirements Document (PRD) & Development Guide | Draft v1.3**
 
 **Prepared for:** Gidfine / HiTrace Solutions delivery team  
-**Date:** 13 October 2026 · **Revision:** 27 October 2026 (Cloudflare platform baseline)  
+**Date:** 13 October 2026 · **Revision:** 29 October 2026 (Pages Functions baseline)
 **Status:** Working draft — business decisions in Section 15 must be approved before implementation.  
-**Platform:** Cloudflare (Pages + Workers + D1 + R2 + Durable Objects). React + Vite frontend. No Python runtime.
+**Current platform baseline:** Cloudflare Pages + Pages Functions, React + Vite, D1 and KV. The Pages Functions reuse the TypeScript router in `workers/api/src`; there is no Python runtime. R2, Queues/Cron and Durable Objects are deferred capabilities, not current production dependencies.
 
 ## 1. Executive summary
 
@@ -175,9 +175,15 @@ All agency-owned records must carry `tenant_id` if implemented as SaaS. Enforce 
 - Apply incident response, retention, consent, data minimisation and subject-rights processes consistent with Ghana’s Data Protection Act, 2012 (Act 843).
 - Before launch, obtain Ghana-qualified advice on licensing, lending/credit intermediation, required borrower disclosures, pricing transparency, collections and the permitted role of the agency.
 
-## 13. Suggested technical architecture (subject to repository audit)
+## 13. Technical architecture — current baseline and target
 
-Frontend: React 19 + TypeScript, built with Vite and hosted on Cloudflare Pages. Backend: Cloudflare Workers (TypeScript). Database: Cloudflare D1. Object storage: Cloudflare R2. Queue/cache: Cloudflare Queues, Cron Triggers and KV. Real-time: Durable Objects. Authentication: Worker-issued JWT (PBKDF2 password hashing via Web Crypto) or Cloudflare Access for staff portals. Authorisation: role and permission checks with an explicit server-side field-disclosure layer. Deployment: Wrangler and Pages Git integration. Automated tests: Worker integration/security tests, React component tests and end-to-end tests. This is a recommendation, not permission to replace a viable existing application.
+The deployed application uses React 19 + TypeScript + Vite on the Cloudflare Pages project `loan-engine`. Pages Functions provide the same-origin HTTP API and call the shared Worker router at `workers/api/src/index.ts`. The standalone Worker configuration remains useful for isolated API development, but the frontend does not depend on a separate API hostname in production.
+
+Active infrastructure is Cloudflare D1 for relational records and Cloudflare KV for cache/idempotency support. Authentication uses Worker Web Crypto: PBKDF2-HMAC-SHA-256 password hashes and an application-issued HS256 JWT. Secrets are stored in Pages/Workers secret storage; they are never committed to the repository.
+
+R2 is intentionally not required by the current routes. It becomes a delivery dependency only when the owners approve private document uploads, generated contracts or receipts. Durable Objects are also not implemented; they should be introduced only if a confirmed requirement needs per-entity coordination or live sessions. Queues/Cron, Workers AI and AI Gateway are future options, not launch prerequisites.
+
+The target product still requires server-enforced roles, field-level disclosure, versioned pricing, guarded state transitions, append-only financial history, idempotent financial writes, audit evidence and automated security tests. The implementation order is defined in [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md).
 
 A shared-database multi-tenant model is appropriate only if Gidfine is intended to serve multiple independent agency businesses; if Gidfine alone is the agency, an agency-scoped single-tenant implementation may be simpler. Confirm commercial tenancy before schema design.
 
@@ -197,48 +203,45 @@ Representative acceptance criteria: (1) a lender cannot retrieve borrower phone 
 
 ## 15. Decisions required from Gidfine before build
 
-10. Is this application for Gidfine as one agency, or a SaaS used by multiple independent loan agencies?
-11. Does Gidfine legally arrange loans only, or disburse/collect funds itself? Who is the contractual creditor and payee?
-12. Are lender rates monthly or annual; flat, reducing-balance, effective annual or other?
-13. Is the agency margin a percentage-point spread, fee, share of interest or a combination? Who receives which cashflows?
-14. Are terms offered as exact instalment amounts, or can they vary with actual disbursement date and payment timing?
-15. What durations, payment frequencies, grace rules, penalties and early repayment terms are allowed?
-16. What borrower identity/credit information must lenders legally receive despite privacy preferences?
-17. Must Gidfine collect, verify or store KYC documents? Who can access them?
-18. Will lenders accept/decline only or also counteroffer; may Gidfine send one application to several lenders?
-19. Who can approve a loan, change a rate, record a repayment and reverse a payment? Is dual authorisation required?
-20. Will payments be manually recorded in MVP or integrated with mobile money, bank transfer or payment processor?
-21. Which events use in-app, email, SMS or WhatsApp? Who pays notification costs?
-22. What documents must be generated: disclosure, loan contract, amortisation schedule, receipt or statement?
-23. What regulatory review and licensing approvals are needed for the intended Ghanaian operating model?
+1. Is this application for Gidfine as one agency, or a SaaS used by multiple independent loan agencies?
+2. Does Gidfine legally arrange loans only, or disburse/collect funds itself? Who is the contractual creditor and payee?
+3. Are lender rates monthly or annual; flat, reducing-balance, effective annual or other?
+4. Is the agency margin a percentage-point spread, fee, share of interest or a combination? Who receives which cashflows?
+5. Are terms offered as exact instalment amounts, or can they vary with actual disbursement date and payment timing?
+6. What durations, payment frequencies, grace rules, penalties and early repayment terms are allowed?
+7. What borrower identity/credit information must lenders legally receive despite privacy preferences?
+8. Must Gidfine collect, verify or store KYC documents? Who can access them?
+9. Will lenders accept/decline only or also counteroffer; may Gidfine send one application to several lenders?
+10. Who can approve a loan, change a rate, record a repayment and reverse a payment? Is dual authorisation required?
+11. Will payments be manually recorded in MVP or integrated with mobile money, bank transfer or payment processor?
+12. Which events use in-app, email, SMS or WhatsApp? Who pays notification costs?
+13. What documents must be generated: disclosure, loan contract, amortisation schedule, receipt or statement?
+14. What regulatory review and licensing approvals are needed for the intended Ghanaian operating model?
 
 ## 16. Change control
 
-All assumptions in this v1.0 guide remain proposed until approved. Product decisions must be recorded with owner/date. Maintain change log, feature backlog, architectural decision records (ADRs), API contracts and sample financial computation fixtures. Do not implement a new subsystem to bypass defects in the existing application; investigate and fix the underlying issue.
+All assumptions in this v1.3 guide remain proposed until approved. Product decisions must be recorded with owner/date. Maintain change log, feature backlog, architectural decision records (ADRs), API contracts and sample financial computation fixtures. Do not implement a new subsystem to bypass defects in the existing application; investigate and fix the underlying issue.
 
 ---
 
-### Technology Stack — Cloudflare (React + Vite + Workers)
+### Technology Stack — Cloudflare (React + Vite + Pages Functions)
 
-The Gidfine Loan Agency Management Platform is built and operated on **Cloudflare**. The single-page application is written in **React + TypeScript with Vite**; all server-side business logic runs in **Cloudflare Workers** written in **TypeScript**. There is no Python runtime in the product.
+The Gidfine Loan Agency Management Platform is built and operated on **Cloudflare**. The single-page application is written in **React + TypeScript with Vite**. Production HTTP business logic runs in **Cloudflare Pages Functions**, which reuse the TypeScript Worker router in `workers/api/src`. There is no Python runtime in the product.
 
 **Core Technology Stack:**
 
 - **Frontend:** React 19 + TypeScript, built with Vite, hosted on **Cloudflare Pages**
 - **Styling:** Tailwind CSS with reusable, accessible components
-- **Edge API:** **Cloudflare Workers** (TypeScript) — one Worker (`gidfine-api`) serving REST and WebSocket upgrade requests
+- **Edge API:** **Cloudflare Pages Functions** invoking the shared router from `workers/api/src`; the standalone `gidfine-api` Worker is retained for isolated development/testing
 - **Database:** **Cloudflare D1** (SQLite), accessed only through Worker bindings
-- **Object storage:** **Cloudflare R2** for borrower documents and generated PDFs
-- **Real-time:** **Durable Objects** for per-session chat state and streaming
-- **Cache:** **Cloudflare KV** and the Cache API for rate cards, model responses and idempotency lookups
-- **Async work:** **Cloudflare Queues** and **Cron Triggers** for OCR fan-out, notifications and overdue sweeps
-- **AI:** **Workers AI** for in-platform inference, fronted by **AI Gateway** for external providers, caching, retries and observability
-- **Authentication:** JWT issued by the Worker (`jose`), PBKDF2-HMAC-SHA-256 password hashing via Web Crypto; optional Cloudflare Access for staff portals
-- **Deployment:** Wrangler (`workers/api`), Cloudflare Pages Git integration (`frontend`), GitHub Actions for CI
+- **Cache/idempotency:** **Cloudflare KV**; use D1 for authoritative state
+- **Authentication:** The active Pages Functions path uses application-issued HS256 JWT and PBKDF2-HMAC-SHA-256 password hashing through Web Crypto
+- **Deployment:** Cloudflare Pages project `loan-engine`, Wrangler, and GitHub integration
+- **Deferred capabilities:** R2 for private files, Queues/Cron for asynchronous work, Durable Objects for confirmed real-time coordination, and Workers AI/AI Gateway for approved AI workflows
 
 **Development Requirements:**
 
-All loan applications, lender matching, approvals, interest calculations, repayment processing, notifications and audit logging must be implemented as secure Worker endpoints backed by D1 and R2. The React client is never authoritative.
+All loan applications, lender matching, approvals, interest calculations, repayment processing, notifications and audit logging must be implemented as secure server-side endpoints backed by D1. The React client is never authoritative. R2 is required only for the document features that the owners approve.
 
 The development team must:
 
@@ -250,7 +253,7 @@ The development team must:
 6. Reuse existing React components and business rules rather than rewriting them.
 7. Follow React, Vite, Workers and D1 best practices for security, scalability, maintainability and performance.
 
-**Architecture Decision:** React + TypeScript + Cloudflare (Pages, Workers, D1, R2, Durable Objects, KV, Queues, Workers AI) replaces the previously proposed Vue, Laravel, PostgreSQL and Redis stack, and supersedes the interim Convex implementation. All functional requirements, security controls and business workflows defined in this document remain applicable.
+**Architecture Decision:** React + TypeScript + Cloudflare Pages/Pages Functions, D1 and KV are the current baseline. This replaces the previously proposed Vue, Laravel, PostgreSQL, Python/FastAPI and Convex runtimes. R2, Durable Objects, Queues/Cron and AI services remain gated by approved requirements. All functional requirements, security controls and business workflows defined in this document remain applicable.
 
 ### 13.1 Cloudflare Schema and Worker Conventions
 
@@ -368,8 +371,8 @@ workers/api/
 
 - Put every server call behind the typed service layer in `frontend/src/services/`; components must not call `fetch` directly.
 - Derive API and response types once in the service layer and reuse them across components.
-- Use the API base from `VITE_API_BASE`; never hard-code hostnames or localhost origins in components.
-- Open WebSocket connections only to the session Durable Object route, and always handle reconnect, backoff and auth expiry.
+- Use the API client and same-origin production routing; development may use `VITE_API_BASE` or `VITE_API_URL` for the local Worker.
+- Do not add WebSocket or Durable Object code until a real-time requirement is approved and its deployment boundary is documented.
 - Never expose backend secrets, administrative endpoints or unrestricted data access in frontend code.
 - Handle loading, empty, error and permission-denied states consistently.
 - Treat server redaction as authoritative: do not implement client-side "unhiding" of fields the API withheld.
@@ -387,8 +390,8 @@ Before introducing any new schema, route, component or subsystem, the developmen
 - Write automated tests for authorization, loan calculations, approvals, financial transactions and tenant isolation.
 - Preserve existing functionality unless a change has been explicitly approved.
 - Document important architectural decisions and business-rule changes.
-- The retired Python implementation was removed from the working tree. Its former responsibilities and migration context are recorded in [`PYTHON_BACKEND_DECOMMISSION.md`](./PYTHON_BACKEND_DECOMMISSION.md); it is not a fallback runtime.
+- The retired Python implementation and its historical migration notes are removed from the active repository. Do not reintroduce a second backend runtime; extend the shared TypeScript router and Pages Functions boundary.
 
 **Critical Requirement:** the Cloudflare Worker is the authoritative backend for all Gidfine business operations. Financial calculations, approval workflows, access-control decisions and audit records must be validated and enforced server-side. React must never be the source of truth for financial or security-critical business logic.
 
-*Internal working specification • Version 1.2 • 27 October 2026*
+*Internal working specification • Version 1.3 • 29 October 2026*

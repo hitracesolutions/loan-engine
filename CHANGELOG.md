@@ -1,5 +1,15 @@
 # Gidfine Changelog
 
+## 2026-10-29 — Documentation and platform baseline
+
+- Updated the development guide to reflect the current Cloudflare Pages +
+  Pages Functions, D1 and KV deployment.
+- Added `IMPLEMENTATION_PLAN.md` with owner decisions, delivery phases,
+  migrations and acceptance gates.
+- Consolidated local/deployment instructions around the `loan-engine` Pages
+  project and same-origin API routes.
+- Removed retired Python notes and superseded migration/setup archives.
+
 ## Version 1.0.0 (Current Development)
 
 ### Architecture Migration
