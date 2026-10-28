@@ -387,7 +387,7 @@ Before introducing any new schema, route, component or subsystem, the developmen
 - Write automated tests for authorization, loan calculations, approvals, financial transactions and tenant isolation.
 - Preserve existing functionality unless a change has been explicitly approved.
 - Document important architectural decisions and business-rule changes.
-- Keep the retired Python implementation untouched in `archive/python-backend/`; it is reference material, not a fallback.
+- The retired Python implementation was removed from the working tree. Its former responsibilities and migration context are recorded in [`PYTHON_BACKEND_DECOMMISSION.md`](./PYTHON_BACKEND_DECOMMISSION.md); it is not a fallback runtime.
 
 **Critical Requirement:** the Cloudflare Worker is the authoritative backend for all Gidfine business operations. Financial calculations, approval workflows, access-control decisions and audit records must be validated and enforced server-side. React must never be the source of truth for financial or security-critical business logic.
 
