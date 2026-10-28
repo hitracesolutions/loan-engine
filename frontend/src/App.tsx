@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import LandingPage from './components/LandingPage';
+import LandingPageGH from './components/LandingPageGH';
 import DashboardLayout from './components/workspace/layout/DashboardLayout';
 import ProfileCompletionModal from './components/auth/ProfileCompletionModal';
 import Docs from './pages/Docs';
@@ -31,10 +31,10 @@ function App() {
         email: cust.email || '',
         picture: cust.picture || '',
         phone: cust.phone || '',
-        salary: cust.salary || 75000,
-        city: cust.city || 'Mumbai',
+        salary: cust.salary || 5000,  // GHS per month
+        city: cust.city || 'Accra',   // Ghana
         creditScore: cust.credit_score || 750,
-        preApprovedLimit: cust.pre_approved_limit || 500000,
+        preApprovedLimit: cust.pre_approved_limit || 50000,  // GHS
       };
       setUser(userObj);
 
@@ -53,7 +53,7 @@ function App() {
         <header className="border-b border-white/10 bg-[#0A0A0A]/80 backdrop-blur-xl flex items-center px-6 lg:px-10 h-16">
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.location.href = '/'}>
             <ShieldCheck className="w-6 h-6 text-emerald-400" />
-            <span className="font-display font-bold text-xl">FinServe<span className="text-white/40">.AI</span></span>
+            <span className="font-display font-bold text-xl">Gidfine<span className="text-white/40">.gh</span></span>
           </div>
         </header>
         <main className="py-24 px-6">
@@ -64,7 +64,7 @@ function App() {
   }
 
   if (currentState === 'UNAUTHENTICATED') {
-    return <LandingPage />;
+    return <LandingPageGH />;
   }
 
   return (
