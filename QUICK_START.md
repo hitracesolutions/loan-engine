@@ -1,141 +1,95 @@
-# Gidfine Quick Start Guide
+# Gidfine Quick Start
 
-## 🚀 Start Local Development (2 minutes)
+## Local development
 
-### Terminal 1: Start Worker API
-```bash
+Install dependencies once:
+
+```powershell
+cd frontend
+npm install
+```
+
+For local Pages Functions, copy `frontend/.dev.vars.example` to
+`frontend/.dev.vars` and set local values for `JWT_SIGNING_KEY`, `ADMIN_EMAIL`
+and `ADMIN_PASSWORD`.
+
+Start the frontend and Pages Functions in separate terminals:
+
+```powershell
+# Terminal 1
+cd frontend
+npm.cmd run dev
+
+# Terminal 2, after the frontend build exists
+cd frontend
+npm.cmd run build
+npx wrangler pages dev dist
+```
+
+The Vite UI is normally available at `http://localhost:5173`. The Pages
+Functions API is available on the Wrangler Pages dev port and uses same-origin
+requests, for example:
+
+```text
+POST http://localhost:<pages-port>/auth/login
+GET  http://localhost:<pages-port>/health
+```
+
+The standalone Worker under `workers/api/` can still be run for isolated API
+testing:
+
+```powershell
 cd workers/api
-npm install    # First time only
-npm run dev
+npm install
+npm.cmd run dev
 ```
 
-**Expected Output:**
-```
-⛅️ wrangler 4.x.x
-⎔ Starting local server...
-[wrangler:info] Ready on http://127.0.0.1:8787
-```
+## Production deployment
 
-### Terminal 2: Test Admin Login
-```bash
-curl -X POST http://localhost:8787/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "admin@gidfine.com",
-    "password": "Smooth@3251"
-  }'
+The production project is Cloudflare Pages `loan-engine` with repository root
+`frontend`, build command `npm run build`, and output directory `dist`.
+
+```powershell
+cd frontend
+npm.cmd run build
+npx wrangler pages deploy dist --project-name loan-engine --branch main --commit-dirty=true
 ```
 
-**Response (save the token!):**
-```json
-{
-  "token": "eyJhbGc...",
-  "user": { "id": "user_...", "email": "admin@gidfine.com" },
-  "expires_in": 604800
-}
+Production Pages bindings and secrets are documented in
+[`PAGES_DEPLOYMENT.md`](./PAGES_DEPLOYMENT.md). Do not set `VITE_API_BASE` or
+`VITE_API_URL` in production; the frontend uses the Pages Functions origin.
+
+## Current API slice
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| GET | `/health` | Health and D1 connectivity check |
+| POST | `/auth/register` | Register a borrower account |
+| POST | `/auth/login` | Authenticate and receive a JWT |
+| GET | `/auth/me` | Read the authenticated user |
+| POST | `/applications` | Create an application |
+| GET | `/applications` | List the authenticated borrower’s applications |
+
+The `/borrower/applications` aliases remain for compatibility with the current
+frontend while the API client is consolidated.
+
+## Verification
+
+```powershell
+cd workers/api
+npm.cmd run typecheck
+npm.cmd test -- --runInBand
+
+cd ../../frontend
+npm.cmd run build
 ```
 
-### Terminal 3: Test API Endpoint
-```bash
-TOKEN="eyJhbGc..."  # From login response
+## Documentation map
 
-curl -X GET http://localhost:8787/borrower/profile \
-  -H "Authorization: Bearer $TOKEN"
-```
+- Product requirements and current stack: [`Gidfine_Dev_Guide.md`](./Gidfine_Dev_Guide.md)
+- Owner decisions and delivery phases: [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md)
+- Pages deployment and bindings: [`PAGES_DEPLOYMENT.md`](./PAGES_DEPLOYMENT.md)
+- Pages Functions migration notes: [`PAGES_FUNCTIONS_MIGRATION.md`](./PAGES_FUNCTIONS_MIGRATION.md)
+- Change history: [`CHANGELOG.md`](./CHANGELOG.md)
 
-✅ **All systems operational!**
-
----
-
-## 📋 Admin Credentials
-
-**Development (Local):**
-```
-Email:    admin@gidfine.com
-Password: Smooth@3251
-```
-
-These are set in:
-- `workers/api/.dev.vars` (for Worker)
-- `.env.local` (for Frontend)
-
----
-
-## 🔗 Available APIs
-
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/health` | GET | Health check |
-| `/auth/register` | POST | Register new borrower |
-| `/auth/login` | POST | Login & get JWT |
-| `/borrower/profile` | GET | Get profile |
-| `/borrower/profile` | PUT | Update profile |
-| `/borrower/applications` | GET | List applications |
-| `/borrower/applications` | POST | Create application |
-| `/borrower/loans` | GET | List loans |
-| `/loans/:id` | GET | Get loan details |
-| `/loans/:id/schedule` | GET | Repayment schedule |
-| `/loans/:id/outstanding` | GET | Outstanding balance |
-| `/loans/:id/payments` | POST | Submit payment |
-
----
-
-## 📚 Full Documentation
-
-- **Local Setup:** See `LOCAL_DEV_SETUP.md`
-- **Admin Setup:** See `ADMIN_SETUP.md`
-- **Architecture:** See `AGENTS.md`
-- **Changes:** See `CHANGELOG.md`
-
----
-
-## ⚠️ Important Notes
-
-1. Admin user is **auto-created on first request**
-2. Credentials from `.dev.vars` are used automatically
-3. **All environment files are `.gitignore`d** (never commit credentials)
-4. Database is local SQLite during development
-5. Cache (KV) is also local
-
----
-
-## 🆘 Troubleshooting
-
-**Dev server won't start?**
-```bash
-pkill -f wrangler
-rm -rf .wrangler
-npm run dev
-```
-
-**Admin login fails?**
-```bash
-# Check admin user exists
-wrangler d1 execute gidfine-db --local "
-  SELECT email, role FROM staff_users WHERE role = 'PLATFORM_ADMIN'
-"
-```
-
-**Database not found?**
-```bash
-# View databases
-wrangler d1 list
-
-# Create if missing
-wrangler d1 create gidfine-db
-wrangler d1 execute gidfine-db < schema.sql
-```
-
----
-
-## 📞 Next Steps
-
-1. Test all API endpoints (use curl or Postman)
-2. Start building frontend (React + Cloudflare Pages)
-3. Implement lender/agency features
-4. Add unit tests
-5. Deploy to staging when ready
-
----
-
-**Ready? Start Terminal 1 above! 🎯**
+Never commit `.env.local`, `.dev.vars`, tokens or passwords.

@@ -507,6 +507,21 @@ when a used skill was inaccurate.
 
 ## Conclusion
 
-The Gidfine platform architecture is production-ready for single-tenant MVP deployment. The combination of Cloudflare Workers + D1 + KV + R2 provides a cost-effective, scalable, and secure foundation. All core API endpoints are implemented with type safety and caching. The next phase is to implement lender/agency features and build the frontend, then gradually add features (notifications, verification, compliance).
+The current production baseline is Cloudflare Pages + Pages Functions, D1 and KV. The existing auth/application slice is deployed and verified; lender, pricing, approvals, servicing, documents and notifications remain planned work. See `Gidfine_Dev_Guide.md` and `IMPLEMENTATION_PLAN.md` for the current product scope and owner gates.
 
-**Timeline to production:** 2-3 weeks with a small team.
+## Work log
+
+### 2026-10-29 — Stack and documentation consolidation
+
+- Updated the development guide to describe the actual Pages Functions + shared
+  Worker-router architecture, active D1/KV resources, Web Crypto authentication
+  and deferred R2/Queues/Cron/Durable Objects capabilities.
+- Added `IMPLEMENTATION_PLAN.md` with owner decisions, phased delivery,
+  migration sequencing and acceptance gates for the guide’s requirements.
+- Replaced the stale quick-start and Pages deployment instructions with the
+  current `loan-engine` same-origin deployment path.
+- Removed retired Python/backend migration notes and superseded migration
+  reports; the implementation plan now carries the active roadmap.
+- Left the financial domain expansion, document storage decision, payment
+  integration, notification channels and regulatory approval undone pending
+  owner decisions.

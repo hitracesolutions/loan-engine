@@ -42,9 +42,9 @@ Loan intermediation in Ghana is fragmented and opaque:
 |-----------|----------|
 | Manual lender matching | Agency portal with eligibility rules |
 | Borrowers don't know real rates | Transparent pricing policy engine |
-| Lost documents and endless re-uploads | Centralized document storage in R2 |
+| Lost documents and endless re-uploads | Private document storage is planned behind an owner-approved R2 decision |
 | No audit trail for compliance | Immutable ledger + approval workflow |
-| Slow disbursement and repayment tracking | Real-time status updates via Durable Objects |
+| Slow disbursement and repayment tracking | D1-backed servicing and notification workflows planned in phases |
 | Lenders leak borrower information | Field-level disclosure policies enforced server-side |
 
 **Result**: A loan moves from "submitted" to "active" in **days, not weeks**, with full visibility and control.
@@ -57,17 +57,17 @@ Loan intermediation in Ghana is fragmented and opaque:
 |-------|---------|------|
 | **Frontend** | React 19 + TypeScript + Vite | Modern, fast, responsive |
 | **Deployment** | Cloudflare Pages | Global edge, zero-config git integration |
-| **Backend API** | Cloudflare Workers | Serverless TypeScript, instant scaling |
+| **Backend API** | Cloudflare Pages Functions + shared Worker router | Same-origin serverless TypeScript API |
 | **Database** | Cloudflare D1 (SQLite) | Relational, ACID, no ops |
-| **Object Storage** | Cloudflare R2 | Borrower docs, PDFs, audit exports |
-| **Real-time** | Durable Objects | WebSocket state, per-session chat |
+| **Object Storage** | Deferred Cloudflare R2 | Add only when private documents/generated files are approved |
+| **Real-time** | Not enabled | Durable Objects are deferred until a real-time requirement exists |
 | **Cache** | Cloudflare KV | Rate cards, idempotency, repayment schedules |
-| **Async Work** | Cloudflare Queues + Cron | OCR fan-out, notifications, overdue sweeps |
-| **AI Inference** | Workers AI + AI Gateway | Document processing, messaging |
-| **Auth** | Worker JWT (jose) | Stateless, no session server |
+| **Async Work** | Deferred Queues/Cron | Add for approved notifications and scheduled servicing jobs |
+| **AI Inference** | Deferred Workers AI/AI Gateway | Not part of the MVP acceptance scope |
+| **Auth** | Web Crypto PBKDF2 + application HS256 JWT | Active path uses the Web Crypto implementation |
 | **Styling** | Tailwind CSS | Utility-first, responsive components |
 
-**Zero Python. No separate backend. No databases to manage.**
+**No Python runtime. No separate production API hostname. D1 is the system of record and is managed through versioned migrations.**
 
 ---
 
@@ -79,9 +79,9 @@ Loan intermediation in Ghana is fragmented and opaque:
 │  React 19 + TypeScript + Vite + TailwindCSS
 │  (dist/ served globally from edge)     │
 └──────────────┬─────────────────────────┘
-               │ REST + WebSocket
+               │ Same-origin HTTP API
 ┌──────────────┴─────────────────────────┐
-│   Cloudflare Workers (TypeScript API)  │
+│ Pages Functions + shared TypeScript API │
 │  - Authentication (JWT)                │
 │  - Authorization (RBAC, disclosure)    │
 │  - Loan lifecycle (origination, servicing)
@@ -92,14 +92,12 @@ Loan intermediation in Ghana is fragmented and opaque:
        ┌───────┴────────┬──────────┬──────────┐
        │                │          │          │
    ┌───▼────┐      ┌───▼───┐  ┌──▼─────┐ ┌──▼────┐
-   │  D1    │      │  R2   │  │   KV   │ │Queues │
-   │SQLite  │      │ Docs  │  │ Cache  │ │+ Cron │
-   │Database│      │ PDFs  │  │        │ │       │
+       │  D1    │      │  R2   │  │   KV   │ │Future │
+       │SQLite  │      │Deferred│ │ Cache  │ │ jobs  │
+       │Database│      │       │  │        │ │       │
    └────────┘      └───────┘  └────────┘ └───────┘
 
-     Durable Objects (real-time chat state)
-     Workers AI (inference)
-     Email (SendGrid, Mailgun)
+     Durable Objects, Workers AI and external notifications are deferred
 ```
 
 ---
@@ -249,7 +247,7 @@ All monetary values in **integer minor units (pesewas)**. All rates in **integer
 - **Audit logging** — all approvals, rate changes, repayments, access
 - **Immutable ledger** — financial transactions cannot be deleted, only reversed with audit trail
 - **PBKDF2-HMAC-SHA-256** password hashing (Web Crypto)
-- **JWT (jose)** — stateless auth, short-lived tokens
+- **JWT (Web Crypto)** — application-issued HS256 tokens with short-lived access
 - **HTTPS only** — all Cloudflare traffic encrypted
 - **D1 transactions** — ACID guarantees for financial ops
 - **Data minimisation** — borrower documents in R2, not logs
@@ -295,7 +293,8 @@ GET    /reports                Portfolio analytics, exports
 GET    /audit                  Immutable ledger
 ```
 
-Full spec in [API.md](./docs/API.md)
+Current product specification: [Gidfine_Dev_Guide.md](./Gidfine_Dev_Guide.md)
+Delivery sequence and owner decisions: [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md)
 
 ---
 
@@ -330,14 +329,14 @@ Full spec in [API.md](./docs/API.md)
 
 ## 🛣️ Roadmap
 
-- [x] Borrower application + document upload
-- [x] Agency review queue + lender matching
-- [x] Lender proposals + acceptance workflow
-- [x] Pricing policy engine + quote versioning
-- [x] Approval workflow + borrower consent
-- [x] Disbursement confirmation
-- [x] Repayment ledger + receipts
-- [x] Immutable audit log
+- [x] Borrower registration, authentication and basic application slice
+- [ ] Agency review queue + lender matching
+- [ ] Lender proposals + acceptance workflow
+- [ ] Pricing policy engine + quote versioning
+- [ ] Approval workflow + borrower consent
+- [ ] Disbursement confirmation
+- [ ] Repayment ledger + receipts
+- [ ] Immutable financial audit log
 - [ ] Email notifications (SendGrid integration)
 - [ ] SMS notifications (Twilio integration)
 - [ ] PDF sanction/rejection letters
@@ -351,7 +350,8 @@ Full spec in [API.md](./docs/API.md)
 
 ## 🤝 Contributing
 
-The codebase is organized by domain: `frontend/`, `workers/api/`, `workers/durable-objects/`.
+The codebase is organized around `frontend/`, `frontend/functions/` and the
+shared TypeScript API under `workers/api/`.
 
 ### Quick Start for Contributors
 ```bash
@@ -384,9 +384,10 @@ npm run dev:worker
 ## 📚 Documentation
 
 - **[Gidfine_Dev_Guide.md](./Gidfine_Dev_Guide.md)** — Complete PRD, data model, and business decisions
-- **[docs/API.md](./docs/API.md)** — REST endpoint reference with examples
-- **[docs/DB_SCHEMA.md](./docs/DB_SCHEMA.md)** — D1 schema, relationships, queries
-- **[docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)** — Cloudflare setup, GitHub Actions, backup strategies
+- **[IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md)** — owner decisions, delivery phases and acceptance gates
+- **[QUICK_START.md](./QUICK_START.md)** — local development and verification
+- **[PAGES_DEPLOYMENT.md](./PAGES_DEPLOYMENT.md)** — current Pages bindings, secrets and deployment
+- **[PAGES_FUNCTIONS_MIGRATION.md](./PAGES_FUNCTIONS_MIGRATION.md)** — same-origin API boundary
 
 ---
 

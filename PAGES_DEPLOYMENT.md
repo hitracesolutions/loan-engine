@@ -1,304 +1,130 @@
-# Cloudflare Pages Deployment Guide
+# Cloudflare Pages Deployment
 
-## Overview
-Gidfine consists of two separate deployments:
-1. **API:** Cloudflare Workers (`workers/api/`) → temporary `workers.dev` hostname
-2. **Frontend:** Cloudflare Pages (`frontend/`) → `gidfine.com`
+## Production project
 
-This guide covers deploying the **Frontend** to Pages.
+- **Project:** `loan-engine`
+- **Repository:** `hitracesolutions/loan-engine`
+- **Root directory:** `frontend`
+- **Build command:** `npm run build`
+- **Build output:** `dist`
+- **Production branch:** `main`
+- **Current public URL:** `https://loan-engine.pages.dev`
 
----
+Pages serves the React/Vite bundle and runs the API through Pages Functions in
+`frontend/functions`. The Functions reuse the router in `workers/api/src`, so
+production API calls are same-origin (`/auth/login`, `/applications`, etc.).
+There is no required `api.gidfine.com` hostname.
 
-## Quick Deployment Steps
+## Dashboard settings
 
-### Option 1: Cloudflare Dashboard (Recommended)
+In Cloudflare Dashboard → Workers & Pages → `loan-engine`:
 
-**Step 1: Connect GitHub Repository**
-1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com/)
-2. Pages → Create a project → Connect to Git
-3. Select repository: `hitracesolutions/loan-engine`
-4. Click Connect
+1. Keep the build settings above.
+2. Enable automatic deployments from `main` if Git deployments are desired.
+3. Configure the following production bindings:
+   - D1 binding `DB` → `gidfine-db`
+   - KV binding `CACHE` → the project’s `gidfine_kv` namespace
+4. Configure these production secrets:
+   - `JWT_SIGNING_KEY`
+   - `ADMIN_EMAIL`
+   - `ADMIN_PASSWORD`
+5. Do not set `VITE_API_BASE` or `VITE_API_URL` for production builds. The
+   frontend intentionally falls back to the Pages origin.
 
-**Step 2: Configure Build Settings**
-1. **Project name:** `gidfine-web`
-2. **Production branch:** `main` (or `development`)
-3. **Framework preset:** `Vite` (auto-detected)
-4. **Build command:** `npm run build`
-5. **Build output directory:** `dist`
-6. **Root directory:** `frontend`
+R2 is not bound because the current API does not upload or serve documents.
+Provision it only when the owner-approved document requirements in
+[`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md) are ready.
 
-**Important:** Set root directory to `frontend/` so Pages knows where to build from.
+## Wrangler configuration
 
-**Step 3: Set Environment Variables**
-```
-VITE_ENVIRONMENT = production
-VITE_APP_NAME = Gidfine
-```
+The Pages configuration is [frontend/wrangler.toml](./frontend/wrangler.toml).
+It contains the Pages build directory, D1/KV bindings, non-secret variables and
+the shared migration directory. Secrets must be set through Cloudflare, never
+committed to TOML or `.env` files.
 
-For the current Pages Functions deployment, leave `VITE_API_BASE` and the
-legacy `VITE_API_URL` unset in production. The frontend calls the API on the
-Pages origin. Configure these Pages Functions bindings and secrets in the
-Cloudflare dashboard: D1 `DB`, KV `CACHE`, and secrets
-`JWT_SIGNING_KEY`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD`.
+## Local Pages Functions
 
-**Step 4: Save and Deploy**
-- Click "Save and Deploy"
-- First deployment starts automatically
-- Monitor in Pages → gidfine-web → Deployments
-
----
-
-### Option 2: Wrangler CLI
-
-**Step 1: Create Pages Configuration**
-
-In `frontend/wrangler.toml`:
-```toml
-name = "gidfine-web"
-type = "javascript"
-account_id = "9e1069f546a77c9ab4fe19d24ccf0a62"  # Your account ID
-pages_build_output_dir = "dist"
-
-[env.production]
-routes = [
-  { pattern = "gidfine.com", zone_name = "gidfine.com" }
-]
-vars = { VITE_ENVIRONMENT = "production", VITE_APP_NAME = "Gidfine" }
-
-[env.staging]
-routes = [
-  { pattern = "staging.gidfine.com", zone_name = "gidfine.com" }
-]
-vars = { VITE_ENVIRONMENT = "staging", VITE_APP_NAME = "Gidfine" }
-```
-
-**Step 2: Deploy**
-```bash
+```powershell
 cd frontend
 npm install
-wrangler pages deploy dist --project-name gidfine-web
+Copy-Item .dev.vars.example .dev.vars
+npm.cmd run build
+npx wrangler pages dev dist
 ```
 
----
+Set local values in `frontend/.dev.vars`:
 
-## Project Structure
-
-```
-loan-engine/
-├── workers/api/          ← API (separate deployment)
-│   ├── wrangler.toml    ← Workers config
-│   └── src/
-│
-├── frontend/            ← Frontend (this section)
-│   ├── wrangler.toml   ← Pages config (create this)
-│   ├── package.json
-│   ├── vite.config.ts
-│   ├── src/
-│   ├── dist/           ← Built by `npm run build`
-│   └── tsconfig.app.json
-│
-└── wrangler.toml        ← Root (for Workers only)
-```
-
----
-
-## Build & Deployment Process
-
-### Local Development
-```bash
-cd frontend
-npm install
-npm run dev
-# Available at http://localhost:5173
-```
-
-### Production Build
-```bash
-cd frontend
-npm install
-npm run build
-# Creates dist/ folder with optimized assets
-```
-
-### Deploy to Pages
-**Via Dashboard:**
-- Automatic on push to `main` or `development` branch
-
-**Via CLI:**
-```bash
-wrangler pages deploy dist --project-name gidfine-web
-```
-
----
-
-## Environment Variables
-
-### Development (Local)
-See `.env.local` at project root:
 ```env
-VITE_API_BASE=http://localhost:8787
-VITE_ENVIRONMENT=development
-VITE_APP_NAME=Gidfine
+JWT_SIGNING_KEY=local-only-random-value
+ADMIN_EMAIL=admin@dev.gidfine.local
+ADMIN_PASSWORD=use-a-local-password
 ```
 
-### Staging (Pre-production)
-Set in Cloudflare Dashboard → Pages → gidfine-web → Settings → Environment:
-```
-VITE_ENVIRONMENT = staging
-VITE_APP_NAME = Gidfine (Staging)
-```
+Use the Pages dev URL for same-origin API requests. The standalone Worker in
+`workers/api/` remains available for isolated route testing, but it is not the
+frontend’s production API boundary.
 
-### Production
-Set in Cloudflare Dashboard → Pages → gidfine-web → Settings → Environment:
-```
-VITE_ENVIRONMENT = production
-VITE_APP_NAME = Gidfine
-```
-Keep `VITE_API_BASE` and `VITE_API_URL` unset in production so requests use the Pages origin.
+## CLI deployment
 
----
-
-## Custom Domains
-
-### Set Production Domain
-1. Pages → gidfine-web → Custom domains
-2. Add domain: `gidfine.com`
-3. Follow DNS configuration steps
-
-### Set Staging Domain
-1. Pages → gidfine-web → Custom domains
-2. Add domain: `staging.gidfine.com`
-3. Follow DNS configuration steps
-
----
-
-## Routing & Redirects
-
-Create `frontend/_redirects` for SPA routing:
-```
-/api/*  https://gidfine-api.YOUR_SUBDOMAIN.workers.dev/:splat  200
-/*      /index.html                       200
+```powershell
+cd frontend
+npm.cmd run build
+npx wrangler pages deploy dist --project-name loan-engine --branch main --commit-dirty=true
 ```
 
-This:
-- Routes `/api/*` to the Workers API
-- Routes all other paths to `index.html` (SPA)
+For normal Git-based deployments, push the reviewed branch and let Pages build
+from the configured root directory. Deploying a dirty local build is useful for
+an explicit smoke test, but the resulting deployment must still be reproduced
+from a committed branch before release.
 
----
+## Database migrations
+
+Migrations live in `workers/api/migrations/` and are applied forward-only:
+
+```powershell
+cd frontend
+npx wrangler d1 migrations apply gidfine-db --remote --config wrangler.toml
+```
+
+Review the target account and database before applying a migration. Never use a
+destructive schema replacement against production. Record any required backup,
+data backfill or rollback procedure in the implementation plan and release
+notes.
+
+## Smoke tests
+
+```powershell
+Invoke-WebRequest https://loan-engine.pages.dev/health -UseBasicParsing
+
+$body = @{ email = $env:GIDFINE_ADMIN_EMAIL; password = $env:GIDFINE_ADMIN_PASSWORD } |
+  ConvertTo-Json
+Invoke-WebRequest https://loan-engine.pages.dev/auth/login `
+  -Method Post -ContentType 'application/json' -Body $body -UseBasicParsing
+```
+
+Do not place real credentials in shell history or documentation. Verify the
+response status, token presence and `/auth/me` behavior without printing the
+token.
 
 ## Troubleshooting
 
-### Build Fails: "Cannot find module"
-**Solution:**
-```bash
-cd frontend
-npm install
-npm run build
-```
+### Login fails after deployment
 
-### Pages Can't Find Files
-**Error:** `Failed: no such file or directory`
+- Confirm the Pages production secrets are present, including
+  `JWT_SIGNING_KEY`, `ADMIN_EMAIL` and `ADMIN_PASSWORD`.
+- Confirm D1 binding `DB` points to `gidfine-db`.
+- Inspect Pages Functions logs for the request ID returned in `x-request-id`.
+- Confirm the browser is calling `/auth/login`, not an old API hostname or a
+  stale asset bundle.
 
-**Solution:**
-1. Check Cloudflare Dashboard → Pages → gidfine-web → Settings
-2. Verify **Build command:** `npm run build`
-3. Verify **Build output directory:** `dist`
-4. Verify **Root directory:** `frontend`
+### A branch is not visible
 
-### API Calls Fail (CORS)
-**Error:** `Access-Control-Allow-Origin` missing
+Cloudflare Pages previews are controlled by the project’s branch deployment
+settings. The production branch is `main`; preview branches must be enabled in
+the Pages dashboard and must satisfy the configured build watch paths.
 
-**Solution:**
-1. Add custom domain to Workers API
-2. Configure CORS headers in `workers/api/src/index.ts`
+### Custom domain
 
-Example:
-```typescript
-const response = new Response(JSON.stringify(data), {
-  headers: {
-    "Content-Type": "application/json",
-    "Access-Control-Allow-Origin": "https://gidfine.com",
-  }
-});
-```
-
-### Environment Variables Not Loaded
-**Solution:**
-1. Check `vite.config.ts` includes correct env prefix
-2. Verify variables start with `VITE_`
-3. Clear Cloudflare cache: Pages → Deployments → Re-deploy
-
----
-
-## Monitoring & Analytics
-
-### View Deployment Status
-```
-Pages → gidfine-web → Deployments
-```
-
-### View Logs
-```
-Pages → gidfine-web → Deployments → [deployment] → View Details
-```
-
-### Monitor Performance
-```
-Pages → gidfine-web → Analytics
-```
-
----
-
-## CI/CD Integration
-
-### GitHub Actions Auto-Deploy
-Cloudflare Pages automatically deploys on:
-- Push to `main` (production)
-- Push to `development` (staging)
-
-To disable auto-deploy:
-1. Pages → gidfine-web → Settings
-2. Disable "Automatic Git deployments"
-
----
-
-## Rollback
-
-### Rollback to Previous Deployment
-1. Pages → gidfine-web → Deployments
-2. Find previous working deployment
-3. Click the three dots → Rollback
-4. Confirm
-
----
-
-## Next Steps
-
-1. **Configure Dashboard:**
-   - Set GitHub connection
-   - Configure build settings
-   - Add environment variables
-
-2. **Set Custom Domains:**
-   - `gidfine.com` → Production
-   - `staging.gidfine.com` → Staging
-
-3. **Test Deployment:**
-   - Push to GitHub
-   - Verify Pages builds successfully
-   - Test API integration
-
-4. **Monitor:**
-   - Watch deployments for errors
-   - Check analytics
-   - Monitor performance.
-
----
-
-## Support
-
-**Issues?**
-1. Check Cloudflare Pages docs: https://developers.cloudflare.com/pages/
-2. Review deployment logs in Dashboard
-3. See QUICK_START.md for API testing
-4. See AGENTS.md for architecture overview
+Add a domain only after it has been purchased and its DNS is controlled by the
+Cloudflare account. Until then, use `loan-engine.pages.dev` and do not hard-code
+an unowned API or website hostname.
