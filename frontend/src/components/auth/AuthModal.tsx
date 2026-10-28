@@ -45,11 +45,11 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
       setLoading(false);
 
       if (res && res.token) {
-        // Store user info
+        // Store user info in format expected by UserProfile
         setUser({
-          id: res.user.id,
+          name: `${res.user.first_name || ''} ${res.user.last_name || ''}`.trim() || res.user.email,
           email: res.user.email,
-          name: `${res.user.first_name || ''} ${res.user.last_name || ''}`.trim(),
+          picture: '',
         });
 
         // Check if there's a post-auth view to navigate to
@@ -61,7 +61,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
         onClose();
       } else {
-        setError(res.error || 'Invalid credentials');
+        setError('Invalid credentials');
       }
     } catch (error: any) {
       setLoading(false);
@@ -74,42 +74,28 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     setError(null);
     setLoading(true);
 
-    const res = await api.registerCustomer({
-      name: regName,
-      email: regEmail,
-      phone: regPhone,
-      password: regPassword,
-      city: regCity,
-      salary: Number(regSalary),
-      dob: regDob,
-      profession: regProfession,
-    });
-    setLoading(false);
+    try {
+      const res = await gidfineAPI.register(regEmail, regPassword, regName, '');
+      setLoading(false);
 
-    if (res.success && res.data) {
-      const cust = res.data.customer_data || {};
-      if (res.data.session_id) {
-        setSessionId(res.data.session_id);
+      if (res && res.token) {
+        // Store user info
+        setUser({
+          name: regName,
+          email: regEmail,
+          picture: '',
+        });
+
+        onClose();
+      } else {
+        setError('Registration failed');
       }
-      setUser({
-        name: cust.name || regName,
-        email: cust.email || regEmail,
-        picture: '',
-        phone: cust.phone || regPhone,
-        salary: cust.salary || Number(regSalary),
-        city: cust.city || regCity,
-        creditScore: cust.credit_score || 785,
-      });
-      const targetView = localStorage.getItem('postAuthView');
-      if (targetView) {
-        useLoanStore.setState({ currentView: targetView as any });
-        localStorage.removeItem('postAuthView');
-      }
-      onClose();
-    } else {
-      setError(res.error || 'Registration failed');
+    } catch (error: any) {
+      setLoading(false);
+      setError(error.message || 'Registration failed');
     }
   };
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
