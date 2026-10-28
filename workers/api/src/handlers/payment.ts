@@ -6,7 +6,7 @@ import type { CloudflareEnv } from "../types";
 import { success, badRequest, notFound, unauthorized } from "../utils/response";
 import { requireAuth } from "../utils/auth";
 import { cacheGet, cacheSet, CACHE_KEYS, CACHE_TTL } from "../services/cache";
-import { checkRateLimit, RATE_LIMITS } from "../middleware/rate-limit";
+import { checkRateLimit } from "../middleware/rate-limit";
 import { ids } from "../utils/id";
 
 /**
@@ -49,7 +49,7 @@ export async function submitPayment(
 
     // Verify loan ownership and status
     const loanStmt = env.DB.prepare("SELECT id, status FROM loans WHERE id = ? AND borrower_id = ?");
-    const loan = await loanStmt.bind(loanId, user.sub).first<any>();
+    const loan = (await loanStmt.bind(loanId, user.sub).first()) as any;
 
     if (!loan) {
       return notFound("Loan not found");
@@ -113,7 +113,7 @@ export async function getOutstanding(
 
     // Get loan details
     const loanStmt = env.DB.prepare("SELECT principal_pesewas FROM loans WHERE id = ?");
-    const loan = await loanStmt.bind(loanId).first<any>();
+    const loan = (await loanStmt.bind(loanId).first()) as any;
 
     if (!loan) {
       return notFound("Loan not found");
@@ -125,7 +125,7 @@ export async function getOutstanding(
       FROM payment_transactions
       WHERE loan_id = ? AND status = 'CLEARED'
     `);
-    const payment = await paymentStmt.bind(loanId).first<any>();
+    const payment = (await paymentStmt.bind(loanId).first()) as any;
 
     const outstanding = loan.principal_pesewas - (payment?.total_paid || 0);
 

@@ -4,7 +4,7 @@
  */
 
 import type { CloudflareEnv } from "./types";
-import { methodNotAllowed, serverError } from "./utils/response";
+import { serverError } from "./utils/response";
 import { login, register } from "./handlers/auth";
 import {
   getProfile,
@@ -20,7 +20,7 @@ import { submitPayment, getOutstanding } from "./handlers/payment";
 // ROUTER
 // ============================================
 
-async function handleRequest(request: Request, env: CloudflareEnv, ctx: ExecutionContext): Promise<Response> {
+async function handleRequest(request: Request, env: CloudflareEnv): Promise<Response> {
   const url = new URL(request.url);
   const path = url.pathname;
   const method = request.method;
@@ -66,7 +66,7 @@ async function handleRequest(request: Request, env: CloudflareEnv, ctx: Executio
     }
 
     if (path.match(/^\/borrower\/applications\/[^/]+\/submit$/) && method === "POST") {
-      const appId = path.split("/")[3];
+      const appId = path.split("/")[3] || "";
       return submitApplication(request, env, appId);
     }
 
@@ -79,22 +79,22 @@ async function handleRequest(request: Request, env: CloudflareEnv, ctx: Executio
     // ============================================
 
     if (path.match(/^\/loans\/[^/]+$/) && method === "GET") {
-      const loanId = path.split("/")[2];
+      const loanId = path.split("/")[2] || "";
       return getLoan(request, env, loanId);
     }
 
     if (path.match(/^\/loans\/[^/]+\/schedule$/) && method === "GET") {
-      const loanId = path.split("/")[2];
+      const loanId = path.split("/")[2] || "";
       return getSchedule(request, env, loanId);
     }
 
     if (path.match(/^\/loans\/[^/]+\/transactions$/) && method === "GET") {
-      const loanId = path.split("/")[2];
+      const loanId = path.split("/")[2] || "";
       return getTransactions(request, env, loanId);
     }
 
     if (path.match(/^\/loans\/[^/]+\/outstanding$/) && method === "GET") {
-      const loanId = path.split("/")[2];
+      const loanId = path.split("/")[2] || "";
       return getOutstanding(request, env, loanId);
     }
 
@@ -103,7 +103,7 @@ async function handleRequest(request: Request, env: CloudflareEnv, ctx: Executio
     // ============================================
 
     if (path.match(/^\/loans\/[^/]+\/payments$/) && method === "POST") {
-      const loanId = path.split("/")[2];
+      const loanId = path.split("/")[2] || "";
       return submitPayment(request, env, loanId);
     }
 
@@ -123,12 +123,12 @@ async function handleRequest(request: Request, env: CloudflareEnv, ctx: Executio
 // ============================================
 
 export default {
-  async fetch(request: Request, env: CloudflareEnv, ctx: ExecutionContext) {
-    return handleRequest(request, env, ctx);
+  async fetch(request: Request, env: CloudflareEnv) {
+    return handleRequest(request, env);
   },
 
-  async queue(batch: MessageBatch<any>, env: CloudflareEnv) {
-    for (const message of batch.messages) {
+  async queue(batch: any, env: CloudflareEnv) {
+    for (const message of batch.messages || []) {
       try {
         console.log("[QUEUE] Processing:", message.body);
         // TODO: Handle different event types
@@ -140,8 +140,8 @@ export default {
     }
   },
 
-  async scheduled(event: ScheduledEvent, env: CloudflareEnv, ctx: ExecutionContext) {
-    console.log("[SCHEDULED] Cron triggered:", event.cron);
+  async scheduled(event: any, env: CloudflareEnv) {
+    console.log("[SCHEDULED] Cron triggered:", (event as any).cron);
     // TODO: Implement scheduled tasks (loan overdue checks, reminders, etc.)
   },
 };
