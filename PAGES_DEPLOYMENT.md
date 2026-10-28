@@ -287,7 +287,7 @@ To disable auto-deploy:
 4. **Monitor:**
    - Watch deployments for errors
    - Check analytics
-   - Monitor performance
+   - Monitor performance.
 
 ---
 
