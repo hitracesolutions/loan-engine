@@ -19,6 +19,8 @@ interface AuthModalProps {
   onClose: () => void;
 }
 
+const REMEMBERED_EMAIL_KEY = 'gidfine_login_email';
+
 function FieldLabel({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
   return (
     <label htmlFor={htmlFor} className="mb-1.5 block text-[10px] font-bold uppercase tracking-[0.16em] text-white/50">
@@ -33,8 +35,13 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [loginEmail, setLoginEmail] = useState('');
+  const [loginEmail, setLoginEmail] = useState(() => (
+    typeof window !== 'undefined' ? localStorage.getItem(REMEMBERED_EMAIL_KEY) ?? '' : ''
+  ));
   const [loginPassword, setLoginPassword] = useState('');
+  const [rememberLogin, setRememberLogin] = useState(() => (
+    typeof window !== 'undefined' && Boolean(localStorage.getItem(REMEMBERED_EMAIL_KEY))
+  ));
   const [showLoginPassword, setShowLoginPassword] = useState(false);
 
   const [regName, setRegName] = useState('');
@@ -59,6 +66,12 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
       const response = await gidfineAPI.login(loginEmail.trim(), loginPassword);
       if (!response?.token) {
         throw new Error('Invalid credentials');
+      }
+
+      if (rememberLogin) {
+        localStorage.setItem(REMEMBERED_EMAIL_KEY, loginEmail.trim());
+      } else {
+        localStorage.removeItem(REMEMBERED_EMAIL_KEY);
       }
 
       setUser({
@@ -215,6 +228,20 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 </button>
               </div>
             </div>
+
+            <label className="flex cursor-pointer items-center gap-2 text-xs text-white/55">
+              <input
+                id="remember-login"
+                type="checkbox"
+                checked={rememberLogin}
+                onChange={(event) => setRememberLogin(event.target.checked)}
+                className="h-4 w-4 rounded border-white/20 bg-[#0A0A0A] accent-cyan-300 focus:ring-2 focus:ring-cyan-300/30"
+              />
+              <span>
+                Remember me
+                <span className="ml-1 text-white/30">(this device)</span>
+              </span>
+            </label>
 
             <button
               type="submit"
