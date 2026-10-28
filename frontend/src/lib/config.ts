@@ -3,6 +3,8 @@
  *
  * Resolution order:
  *   1. VITE_API_BASE — set per environment in Cloudflare Pages.
+ *      VITE_API_URL is accepted as a backwards-compatible alias for older
+ *      Pages deployments.
  *   2. Development   -> the local Worker (`wrangler dev`).
  *   3. Production    -> same origin, for deployments that mount the Worker on the
  *                       Pages domain. A warning is logged so a missing build
@@ -12,7 +14,9 @@
  * never route traffic to a retired backend.
  */
 function resolveApiBase(): string {
-  const configured = (import.meta.env.VITE_API_BASE ?? '').trim().replace(/\/+$/, '');
+  const configured = (
+    import.meta.env.VITE_API_BASE ?? import.meta.env.VITE_API_URL ?? ''
+  ).trim().replace(/\/+$/, '');
   if (configured) return configured;
 
   if (import.meta.env.DEV) return 'http://localhost:8787';

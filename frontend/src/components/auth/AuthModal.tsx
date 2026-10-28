@@ -1,318 +1,320 @@
 import { useState } from 'react';
+import {
+  ArrowRight,
+  Eye,
+  EyeOff,
+  LoaderCircle,
+  Lock,
+  Mail,
+  Phone,
+  ShieldCheck,
+  User,
+  X,
+} from 'lucide-react';
 import { gidfineAPI } from '../../lib/api-gidfine';
-import { API_BASE } from '../../lib/config';
 import { useLoanStore } from '../../store/useLoanStore';
-import { X, Lock, Phone, User, Mail, MapPin, Briefcase, ShieldCheck, ArrowRight } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+function FieldLabel({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
+  return (
+    <label htmlFor={htmlFor} className="mb-1.5 block text-[10px] font-bold uppercase tracking-[0.16em] text-white/50">
+      {children}
+    </label>
+  );
+}
+
 export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
-  const { setUser, setSessionId } = useLoanStore();
+  const { setUser } = useLoanStore();
   const [mode, setMode] = useState<'LOGIN' | 'REGISTER'>('LOGIN');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Login form fields
-  const [loginPhone, setLoginPhone] = useState('');
+  const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
 
-  // Register form fields
   const [regName, setRegName] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regPhone, setRegPhone] = useState('');
   const [regPassword, setRegPassword] = useState('');
-  const [regCity, setRegCity] = useState('');
-  const [regSalary, setRegSalary] = useState('');
-  const [regDob, setRegDob] = useState('');
-  const [regProfession, setRegProfession] = useState('Salaried');
+  const [showRegistrationPassword, setShowRegistrationPassword] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleGoogleOAuth = () => {
-    window.location.href = `${API_BASE}/auth/google/login`;
+  const switchMode = (nextMode: 'LOGIN' | 'REGISTER') => {
+    setMode(nextMode);
+    setError(null);
   };
 
-  const handleLoginSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLoginSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     setError(null);
     setLoading(true);
 
     try {
-      const res = await gidfineAPI.login(loginPhone, loginPassword);
-      setLoading(false);
-
-      if (res && res.token) {
-        // Store user info in format expected by UserProfile
-        setUser({
-          name: `${res.user.first_name || ''} ${res.user.last_name || ''}`.trim() || res.user.email,
-          email: res.user.email,
-          picture: '',
-        });
-
-        // Check if there's a post-auth view to navigate to
-        const targetView = localStorage.getItem('postAuthView');
-        if (targetView) {
-          useLoanStore.setState({ currentView: targetView as any });
-          localStorage.removeItem('postAuthView');
-        }
-
-        onClose();
-      } else {
-        setError('Invalid credentials');
+      const response = await gidfineAPI.login(loginEmail.trim(), loginPassword);
+      if (!response?.token) {
+        throw new Error('Invalid credentials');
       }
-    } catch (error: any) {
+
+      setUser({
+        name: response.user.fullName?.trim() || response.user.email,
+        email: response.user.email,
+        picture: '',
+      });
+
+      const targetView = localStorage.getItem('postAuthView');
+      if (targetView) {
+        useLoanStore.setState({ currentView: targetView as never });
+        localStorage.removeItem('postAuthView');
+      }
+
+      onClose();
+    } catch (cause: unknown) {
+      setError(cause instanceof Error ? cause.message : 'Login failed. Please try again.');
+    } finally {
       setLoading(false);
-      setError(error.message || 'Login failed');
     }
   };
 
-  const handleRegisterSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleRegisterSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     setError(null);
     setLoading(true);
 
     try {
-      const res = await gidfineAPI.register(regEmail, regPassword, regName, '');
-      setLoading(false);
-
-      if (res && res.token) {
-        // Store user info
-        setUser({
-          name: regName,
-          email: regEmail,
-          picture: '',
-        });
-
-        onClose();
-      } else {
-        setError('Registration failed');
+      const response = await gidfineAPI.register(regEmail.trim(), regPassword, regName.trim(), regPhone.trim());
+      if (!response?.token) {
+        throw new Error('Registration failed');
       }
-    } catch (error: any) {
+
+      setUser({
+        name: response.user.fullName?.trim() || regName.trim(),
+        email: response.user.email,
+        picture: '',
+      });
+      onClose();
+    } catch (cause: unknown) {
+      setError(cause instanceof Error ? cause.message : 'Registration failed. Please try again.');
+    } finally {
       setLoading(false);
-      setError(error.message || 'Registration failed');
     }
   };
-
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="bg-[#111] border border-white/10 rounded-2xl max-w-md w-full p-8 shadow-2xl relative overflow-hidden text-white">
-        {/* Close Button */}
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md animate-in fade-in duration-200"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div
+        className="relative max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-[1.75rem] border border-white/10 bg-[#111] p-6 text-white shadow-2xl shadow-black/50 sm:p-8"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="auth-modal-title"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-cyan-400/10 to-transparent" />
+
         <button
+          type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-white/40 hover:text-white rounded-lg transition-colors"
+          aria-label="Close sign in dialog"
+          className="absolute right-4 top-4 rounded-lg p-2 text-white/40 transition-colors hover:bg-white/5 hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-300/50"
         >
-          <X className="w-5 h-5" />
+          <X className="h-5 w-5" />
         </button>
 
-        {/* Modal Header */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white">
-            <ShieldCheck className="w-5 h-5" />
+        <div className="relative mb-7 flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-200">
+            <ShieldCheck className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="font-display font-medium text-xl tracking-tight">Access FinServe<span className="text-white/40">.AI</span></h3>
-            <p className="text-xs text-white/40">Autonomous Institutional Lending Platform</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan-200/70">Gidfine</p>
+            <h2 id="auth-modal-title" className="font-display text-xl font-medium tracking-tight">
+              {mode === 'LOGIN' ? 'Welcome back' : 'Create your account'}
+            </h2>
           </div>
         </div>
 
-        {/* Google OAuth Button */}
-        <button
-          onClick={handleGoogleOAuth}
-          className="w-full h-12 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-medium text-sm transition-all flex items-center justify-center gap-3 mb-6 shadow-sm"
-        >
-          <svg className="w-4 h-4" viewBox="0 0 24 24">
-            <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.6 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 9 5 12 5z" />
-            <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z" />
-            <path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12.4 0 15.2s.7 5.5 1.9 7.9l3.7-2.9c-.6-1.1-1-2.4-1-3.7z" />
-            <path fill="#34A853" d="M12 23.5c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.4-6.4-5.2L1.9 16.5C3.7 20.2 7.5 23.5 12 23.5z" />
-          </svg>
-          Continue with Google OAuth
-        </button>
-
-        <div className="relative flex items-center justify-center mb-6">
-          <div className="border-t border-white/10 w-full" />
-          <span className="bg-[#111] px-3 text-[10px] uppercase tracking-widest text-white/40 font-bold shrink-0">Or Instant Authentication</span>
-          <div className="border-t border-white/10 w-full" />
-        </div>
-
-        {/* Mode Switcher */}
-        <div className="flex bg-[#0A0A0A] p-1 rounded-xl border border-white/10 mb-6">
+        <div className="mb-6 flex rounded-xl border border-white/10 bg-[#0A0A0A] p-1" role="tablist" aria-label="Authentication mode">
           <button
-            onClick={() => { setMode('LOGIN'); setError(null); }}
-            className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
-              mode === 'LOGIN' ? 'bg-white text-black shadow' : 'text-white/50 hover:text-white'
-            }`}
+            type="button"
+            role="tab"
+            aria-selected={mode === 'LOGIN'}
+            onClick={() => switchMode('LOGIN')}
+            className={`flex-1 rounded-lg py-2.5 text-xs font-semibold transition-all ${mode === 'LOGIN' ? 'bg-white text-black shadow' : 'text-white/50 hover:text-white'}`}
           >
-            Sign In
+            Sign in
           </button>
           <button
-            onClick={() => { setMode('REGISTER'); setError(null); }}
-            className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
-              mode === 'REGISTER' ? 'bg-white text-black shadow' : 'text-white/50 hover:text-white'
-            }`}
+            type="button"
+            role="tab"
+            aria-selected={mode === 'REGISTER'}
+            onClick={() => switchMode('REGISTER')}
+            className={`flex-1 rounded-lg py-2.5 text-xs font-semibold transition-all ${mode === 'REGISTER' ? 'bg-white text-black shadow' : 'text-white/50 hover:text-white'}`}
           >
-            Register
+            Create account
           </button>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs font-medium">
+          <div className="mb-4 rounded-xl border border-red-400/20 bg-red-400/10 p-3 text-xs font-medium text-red-300" role="alert">
             {error}
           </div>
         )}
 
-        {/* PASSWORD LOGIN FORM */}
-        {mode === 'LOGIN' && (
-          <form onSubmit={handleLoginSubmit} className="space-y-4">
+        {mode === 'LOGIN' ? (
+          <form onSubmit={handleLoginSubmit} className="space-y-4" noValidate>
             <div>
-              <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 block mb-1">Email or Phone Number</label>
+              <FieldLabel htmlFor="login-email">Email address</FieldLabel>
               <div className="relative">
-                <Mail className="w-4 h-4 text-white/30 absolute left-3 top-3.5" />
+                <Mail className="absolute left-3 top-3.5 h-4 w-4 text-white/30" />
                 <input
+                  id="login-email"
+                  name="email"
                   required
-                  type="text"
-                  value={loginPhone}
-                  onChange={(e) => setLoginPhone(e.target.value)}
-                  placeholder="rahul@example.com or 99999 99999"
-                  className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:outline-none focus:border-white/30 placeholder:text-white/20"
+                  type="email"
+                  autoComplete="username"
+                  value={loginEmail}
+                  onChange={(event) => setLoginEmail(event.target.value)}
+                  placeholder="you@example.com"
+                  className="w-full rounded-xl border border-white/10 bg-[#0A0A0A] py-3 pl-10 pr-4 text-sm text-white outline-none transition-colors placeholder:text-white/20 focus:border-cyan-300/50 focus:ring-2 focus:ring-cyan-300/10"
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 block mb-1">Password</label>
+              <FieldLabel htmlFor="login-password">Password</FieldLabel>
               <div className="relative">
-                <Lock className="w-4 h-4 text-white/30 absolute left-3 top-3.5" />
+                <Lock className="absolute left-3 top-3.5 h-4 w-4 text-white/30" />
                 <input
+                  id="login-password"
+                  name="password"
                   required
-                  type="password"
+                  type={showLoginPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
                   value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:outline-none focus:border-white/30 placeholder:text-white/20"
+                  onChange={(event) => setLoginPassword(event.target.value)}
+                  placeholder="Enter your password"
+                  className="w-full rounded-xl border border-white/10 bg-[#0A0A0A] py-3 pl-10 pr-11 text-sm text-white outline-none transition-colors placeholder:text-white/20 focus:border-cyan-300/50 focus:ring-2 focus:ring-cyan-300/10"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowLoginPassword((visible) => !visible)}
+                  aria-label={showLoginPassword ? 'Hide password' : 'Show password'}
+                  className="absolute right-3 top-3 rounded-md p-0.5 text-white/35 transition-colors hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-300/50"
+                >
+                  {showLoginPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full h-12 mt-2 bg-white text-black font-semibold rounded-xl hover:bg-white/90 shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 text-sm"
+              aria-busy={loading}
+              className="mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-white text-sm font-semibold text-black shadow-lg shadow-white/10 transition-all hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {loading ? 'Authenticating...' : 'Sign In to Dashboard'}
-              <ArrowRight className="w-4 h-4" />
+              {loading ? <><LoaderCircle className="h-4 w-4 animate-spin" /> Signing you in…</> : <>Sign in to dashboard <ArrowRight className="h-4 w-4" /></>}
             </button>
+            <p className="text-center text-[11px] text-white/35">Secure access to your lending workspace.</p>
           </form>
-        )}
-
-        {/* REGISTER FORM */}
-        {mode === 'REGISTER' && (
-          <form onSubmit={handleRegisterSubmit} className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+        ) : (
+          <form onSubmit={handleRegisterSubmit} className="space-y-4" noValidate>
             <div>
-              <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 block mb-1">Full Name</label>
+              <FieldLabel htmlFor="register-name">Full name</FieldLabel>
               <div className="relative">
-                <User className="w-4 h-4 text-white/30 absolute left-3 top-3" />
+                <User className="absolute left-3 top-3.5 h-4 w-4 text-white/30" />
                 <input
+                  id="register-name"
+                  name="name"
                   required
                   type="text"
+                  autoComplete="name"
                   value={regName}
-                  onChange={(e) => setRegName(e.target.value)}
-                  placeholder="Rahul Sharma"
-                  className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-white/30 placeholder:text-white/20"
+                  onChange={(event) => setRegName(event.target.value)}
+                  placeholder="Your full name"
+                  className="w-full rounded-xl border border-white/10 bg-[#0A0A0A] py-3 pl-10 pr-4 text-sm text-white outline-none transition-colors placeholder:text-white/20 focus:border-cyan-300/50 focus:ring-2 focus:ring-cyan-300/10"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 block mb-1">Email</label>
+                <FieldLabel htmlFor="register-email">Email</FieldLabel>
                 <div className="relative">
-                  <Mail className="w-3.5 h-3.5 text-white/30 absolute left-3 top-3" />
+                  <Mail className="absolute left-3 top-3.5 h-4 w-4 text-white/30" />
                   <input
+                    id="register-email"
+                    name="email"
                     required
                     type="email"
+                    autoComplete="email"
                     value={regEmail}
-                    onChange={(e) => setRegEmail(e.target.value)}
-                    placeholder="rahul@example.com"
-                    className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white focus:outline-none focus:border-white/30 placeholder:text-white/20"
+                    onChange={(event) => setRegEmail(event.target.value)}
+                    placeholder="you@example.com"
+                    className="w-full rounded-xl border border-white/10 bg-[#0A0A0A] py-3 pl-10 pr-3 text-sm text-white outline-none transition-colors placeholder:text-white/20 focus:border-cyan-300/50 focus:ring-2 focus:ring-cyan-300/10"
                   />
                 </div>
               </div>
-
               <div>
-                <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 block mb-1">Phone</label>
+                <FieldLabel htmlFor="register-phone">Phone</FieldLabel>
                 <div className="relative">
-                  <Phone className="w-3.5 h-3.5 text-white/30 absolute left-3 top-3" />
+                  <Phone className="absolute left-3 top-3.5 h-4 w-4 text-white/30" />
                   <input
-                    required
+                    id="register-phone"
+                    name="phone"
                     type="tel"
+                    autoComplete="tel"
                     value={regPhone}
-                    onChange={(e) => setRegPhone(e.target.value)}
-                    placeholder="9999999999"
-                    className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white focus:outline-none focus:border-white/30 placeholder:text-white/20"
+                    onChange={(event) => setRegPhone(event.target.value)}
+                    placeholder="Optional"
+                    className="w-full rounded-xl border border-white/10 bg-[#0A0A0A] py-3 pl-10 pr-3 text-sm text-white outline-none transition-colors placeholder:text-white/20 focus:border-cyan-300/50 focus:ring-2 focus:ring-cyan-300/10"
                   />
                 </div>
               </div>
             </div>
 
             <div>
-              <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 block mb-1">Password</label>
+              <FieldLabel htmlFor="register-password">Password</FieldLabel>
               <div className="relative">
-                <Lock className="w-3.5 h-3.5 text-white/30 absolute left-3 top-3" />
+                <Lock className="absolute left-3 top-3.5 h-4 w-4 text-white/30" />
                 <input
+                  id="register-password"
+                  name="password"
                   required
-                  type="password"
+                  type={showRegistrationPassword ? 'text' : 'password'}
+                  autoComplete="new-password"
                   value={regPassword}
-                  onChange={(e) => setRegPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white focus:outline-none focus:border-white/30 placeholder:text-white/20"
+                  onChange={(event) => setRegPassword(event.target.value)}
+                  placeholder="At least 10 characters"
+                  className="w-full rounded-xl border border-white/10 bg-[#0A0A0A] py-3 pl-10 pr-11 text-sm text-white outline-none transition-colors placeholder:text-white/20 focus:border-cyan-300/50 focus:ring-2 focus:ring-cyan-300/10"
                 />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 block mb-1">Monthly Salary</label>
-                <div className="relative">
-                  <Briefcase className="w-3.5 h-3.5 text-white/30 absolute left-3 top-3" />
-                  <input
-                    required
-                    type="number"
-                    value={regSalary}
-                    onChange={(e) => setRegSalary(e.target.value)}
-                    placeholder="150000"
-                    className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white focus:outline-none focus:border-white/30 placeholder:text-white/20"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 block mb-1">City</label>
-                <div className="relative">
-                  <MapPin className="w-3.5 h-3.5 text-white/30 absolute left-3 top-3" />
-                  <input
-                    required
-                    type="text"
-                    value={regCity}
-                    onChange={(e) => setRegCity(e.target.value)}
-                    placeholder="Bengaluru"
-                    className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white focus:outline-none focus:border-white/30 placeholder:text-white/20"
-                  />
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowRegistrationPassword((visible) => !visible)}
+                  aria-label={showRegistrationPassword ? 'Hide password' : 'Show password'}
+                  className="absolute right-3 top-3 rounded-md p-0.5 text-white/35 transition-colors hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-300/50"
+                >
+                  {showRegistrationPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full h-11 mt-2 bg-white text-black font-semibold rounded-xl hover:bg-white/90 shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 text-xs"
+              aria-busy={loading}
+              className="mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-white text-sm font-semibold text-black shadow-lg shadow-white/10 transition-all hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {loading ? 'Creating MongoDB Record...' : 'Complete Registration'}
-              <ArrowRight className="w-4 h-4" />
+              {loading ? <><LoaderCircle className="h-4 w-4 animate-spin" /> Creating account…</> : <>Create account <ArrowRight className="h-4 w-4" /></>}
             </button>
           </form>
         )}
