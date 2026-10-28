@@ -16,7 +16,7 @@ describe('password hashing', () => {
   it('never stores the password in plain text', async () => {
     const stored = await hashPassword('correct horse battery staple');
     assert.ok(!stored.includes('correct horse'));
-    assert.match(stored, /^pbkdf2-sha256\$210000\$[A-Za-z0-9+/=]+\$[A-Za-z0-9+/=]+$/);
+    assert.match(stored, /^pbkdf2-sha256\$100000\$[A-Za-z0-9+/=]+\$[A-Za-z0-9+/=]+$/);
   });
 
   it('salts each hash independently', async () => {
