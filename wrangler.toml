@@ -47,18 +47,18 @@ script_name = "gidfine-api"
 # ============================================
 [env.development]
   name = "gidfine-api-dev"
-  route = "api-dev.gidfine.local/*"
   vars = { ENVIRONMENT = "development" }
 
 [env.staging]
   name = "gidfine-api-staging"
-  route = "api-staging.gidfine.com/*"
   vars = { ENVIRONMENT = "staging" }
 
 [env.production]
   name = "gidfine-api"
-  route = "api.gidfine.com/*"
   vars = { ENVIRONMENT = "production" }
+
+# Custom domain routes can be added after the domain is owned and configured.
+# Until then, Wrangler exposes these Workers through their workers.dev hostnames.
 
 # ============================================
 # Secrets (Use `wrangler secret put` to set)

@@ -2,7 +2,7 @@
 
 ## Overview
 Gidfine consists of two separate deployments:
-1. **API:** Cloudflare Workers (`workers/api/`) → `api.gidfine.com`
+1. **API:** Cloudflare Workers (`workers/api/`) → temporary `workers.dev` hostname
 2. **Frontend:** Cloudflare Pages (`frontend/`) → `gidfine.com`
 
 This guide covers deploying the **Frontend** to Pages.
@@ -31,7 +31,7 @@ This guide covers deploying the **Frontend** to Pages.
 
 **Step 3: Set Environment Variables**
 ```
-VITE_API_BASE = https://api.gidfine.com
+VITE_API_BASE = https://gidfine-api.YOUR_SUBDOMAIN.workers.dev
 VITE_ENVIRONMENT = production
 VITE_APP_NAME = Gidfine
 ```
@@ -58,13 +58,13 @@ pages_build_output_dir = "dist"
 routes = [
   { pattern = "gidfine.com", zone_name = "gidfine.com" }
 ]
-vars = { VITE_API_BASE = "https://api.gidfine.com", VITE_ENVIRONMENT = "production" }
+vars = { VITE_API_BASE = "https://gidfine-api.YOUR_SUBDOMAIN.workers.dev", VITE_ENVIRONMENT = "production" }
 
 [env.staging]
 routes = [
   { pattern = "staging.gidfine.com", zone_name = "gidfine.com" }
 ]
-vars = { VITE_API_BASE = "https://api-staging.gidfine.com", VITE_ENVIRONMENT = "staging" }
+vars = { VITE_API_BASE = "https://gidfine-api-staging.YOUR_SUBDOMAIN.workers.dev", VITE_ENVIRONMENT = "staging" }
 ```
 
 **Step 2: Deploy**
@@ -139,7 +139,7 @@ VITE_APP_NAME=Gidfine
 ### Staging (Pre-production)
 Set in Cloudflare Dashboard → Pages → gidfine-web → Settings → Environment:
 ```
-VITE_API_BASE = https://api-staging.gidfine.com
+VITE_API_BASE = https://gidfine-api-staging.YOUR_SUBDOMAIN.workers.dev
 VITE_ENVIRONMENT = staging
 VITE_APP_NAME = Gidfine (Staging)
 ```
@@ -147,7 +147,7 @@ VITE_APP_NAME = Gidfine (Staging)
 ### Production
 Set in Cloudflare Dashboard → Pages → gidfine-web → Settings → Environment:
 ```
-VITE_API_BASE = https://api.gidfine.com
+VITE_API_BASE = https://gidfine-api.YOUR_SUBDOMAIN.workers.dev
 VITE_ENVIRONMENT = production
 VITE_APP_NAME = Gidfine
 ```
@@ -172,7 +172,7 @@ VITE_APP_NAME = Gidfine
 
 Create `frontend/_redirects` for SPA routing:
 ```
-/api/*  https://api.gidfine.com/:splat  200
+/api/*  https://gidfine-api.YOUR_SUBDOMAIN.workers.dev/:splat  200
 /*      /index.html                       200
 ```
 
