@@ -31,10 +31,15 @@ This guide covers deploying the **Frontend** to Pages.
 
 **Step 3: Set Environment Variables**
 ```
-VITE_API_BASE = https://gidfine-api.YOUR_SUBDOMAIN.workers.dev
 VITE_ENVIRONMENT = production
 VITE_APP_NAME = Gidfine
 ```
+
+For the current Pages Functions deployment, leave `VITE_API_BASE` and the
+legacy `VITE_API_URL` unset in production. The frontend calls the API on the
+Pages origin. Configure these Pages Functions bindings and secrets in the
+Cloudflare dashboard: D1 `DB`, R2 `R2`, KV `CACHE`, and secrets
+`JWT_SIGNING_KEY`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD`.
 
 **Step 4: Save and Deploy**
 - Click "Save and Deploy"
@@ -58,13 +63,13 @@ pages_build_output_dir = "dist"
 routes = [
   { pattern = "gidfine.com", zone_name = "gidfine.com" }
 ]
-vars = { VITE_API_BASE = "https://gidfine-api.YOUR_SUBDOMAIN.workers.dev", VITE_ENVIRONMENT = "production" }
+vars = { VITE_ENVIRONMENT = "production", VITE_APP_NAME = "Gidfine" }
 
 [env.staging]
 routes = [
   { pattern = "staging.gidfine.com", zone_name = "gidfine.com" }
 ]
-vars = { VITE_API_BASE = "https://gidfine-api-staging.YOUR_SUBDOMAIN.workers.dev", VITE_ENVIRONMENT = "staging" }
+vars = { VITE_ENVIRONMENT = "staging", VITE_APP_NAME = "Gidfine" }
 ```
 
 **Step 2: Deploy**
