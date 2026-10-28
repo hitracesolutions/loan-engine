@@ -35,10 +35,19 @@ export interface ApiResponse<T = any> {
 }
 
 export interface ErrorResponse {
-  error: string;
-  code: string;
+  error: {
+    code?: string;
+    message?: string;
+  };
   details?: Record<string, unknown>;
   timestamp: string;
+}
+
+interface ApiEnvelope<T> {
+  ok?: boolean;
+  data?: T;
+  error?: ErrorResponse['error'];
+  requestId?: string;
 }
 
 class GidfineAPI {
@@ -88,7 +97,7 @@ class GidfineAPI {
       const contentType = response.headers.get('content-type') ?? '';
       if (contentType.includes('application/json')) {
         const errorData = (await response.json()) as Partial<ErrorResponse>;
-        throw new Error(errorData.error || 'API request failed');
+        throw new Error(errorData.error?.message || 'API request failed');
       }
       throw new Error('The login service returned an invalid response. Please try again later.');
     }
@@ -98,7 +107,11 @@ class GidfineAPI {
       throw new Error('The login service is not configured for this site yet.');
     }
 
-    return response.json() as Promise<T>;
+    const payload = (await response.json()) as ApiEnvelope<T> | T;
+    if (payload && typeof payload === 'object' && 'data' in payload && payload.data !== undefined) {
+      return payload.data;
+    }
+    return payload as T;
   }
 
   // ============================================
