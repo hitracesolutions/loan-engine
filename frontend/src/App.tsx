@@ -44,6 +44,16 @@ function App() {
     });
   }, [setUser, setSessionId]);
 
+  useEffect(() => {
+    const handleAuthInvalidated = () => {
+      useLoanStore.getState().clearSession();
+    };
+    window.addEventListener('gidfine:auth-invalidated', handleAuthInvalidated);
+    return () => {
+      window.removeEventListener('gidfine:auth-invalidated', handleAuthInvalidated);
+    };
+  }, []);
+
   // Public routes accessible without authentication
   const isDocsPath = window.location.pathname === '/docs';
   if (isDocsPath) {

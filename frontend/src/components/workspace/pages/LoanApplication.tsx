@@ -109,7 +109,7 @@ export default function LoanApplication() {
                 : 'text-white/60 hover:text-white bg-white/5'
             }`}
           >
-            <Layers className="w-3.5 h-3.5" /> Convex Loan Workflow
+            <Layers className="w-3.5 h-3.5" /> Direct Cloudflare API
           </button>
           <button
             onClick={() => setWorkflowMode('legacy')}

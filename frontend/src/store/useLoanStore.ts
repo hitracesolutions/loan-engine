@@ -10,7 +10,7 @@ export type AppState =
   | 'DECISION_READY'
   | 'ACTIVE_LOAN';
 
-export type DashboardView = 'DASHBOARD' | 'APPLICATION' | 'ACTIVE_LOANS' | 'ADVISOR' | 'PROFILE' | 'DOCS';
+export type DashboardView = 'DASHBOARD' | 'APPLICATION' | 'AGENCY_QUEUE' | 'ACTIVE_LOANS' | 'ADVISOR' | 'PROFILE' | 'DOCS';
 
 export interface UserProfile {
   name: string;

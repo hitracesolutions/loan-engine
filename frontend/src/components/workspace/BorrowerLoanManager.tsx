@@ -1,17 +1,30 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useOptionalConvex } from '../../lib/convex';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
-  loanService,
-  type BorrowerApplicationItem,
+  gidfineAPI,
+  ghsToPesewas,
   pesewasToGhsString,
   bpsToPercentString,
-  ConvexCloudUnavailableError,
-} from '../../services/loanService';
+} from '../../lib/api-gidfine';
 import { Banknote, FileText, CheckCircle2, AlertCircle, RefreshCw, Clock } from 'lucide-react';
-import type { Id } from '../../../convex/_generated/dataModel';
+
+export interface BorrowerApplicationItem {
+  applicationId: string;
+  requestedAmountPesewas: number;
+  tenureMonths: number;
+  purpose: string;
+  status: string;
+  createdAt: number;
+  updatedAt: number;
+  activeProposal?: {
+    proposalId: string;
+    version: number;
+    proposedAmountPesewas: number;
+    borrowerRateBps: number;
+    status: string;
+  } | null;
+}
 
 export const BorrowerLoanManager: React.FC = () => {
-  const convexClient = useOptionalConvex();
   const [activeTab, setActiveTab] = useState<'apply' | 'tracking'>('apply');
 
   // Application Form State
@@ -21,6 +34,7 @@ export const BorrowerLoanManager: React.FC = () => {
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submittedAppId, setSubmittedAppId] = useState<string | null>(null);
+  const submissionKeyRef = useRef<string | null>(null);
 
   // Tracking State
   const [applications, setApplications] = useState<BorrowerApplicationItem[]>([]);
@@ -34,21 +48,33 @@ export const BorrowerLoanManager: React.FC = () => {
   const [consentSuccess, setConsentSuccess] = useState<string | null>(null);
 
   const fetchApplications = useCallback(async () => {
+    if (!gidfineAPI.isAuthenticated()) {
+      setTrackingError("Please log in to track your submitted loan applications.");
+      setApplications([]);
+      return;
+    }
+
     setLoadingTracking(true);
     setTrackingError(null);
     try {
-      const items = await loanService.getBorrowerApplications(convexClient);
-      setApplications(items);
+      const items = await gidfineAPI.listApplications();
+      const mapped: BorrowerApplicationItem[] = (items || []).map((item: any) => ({
+        applicationId: item.id || item.applicationId || '',
+        requestedAmountPesewas: item.requestedAmountPesewas ?? item.amount_requested_pesewas ?? 0,
+        tenureMonths: item.tenureMonths ?? item.tenure_months ?? 0,
+        purpose: item.purpose || '',
+        status: item.status || 'SUBMITTED',
+        createdAt: item.createdAt ?? item.created_at ?? Date.now(),
+        updatedAt: item.updatedAt ?? item.updated_at ?? Date.now(),
+        activeProposal: item.activeProposal || null,
+      }));
+      setApplications(mapped);
     } catch (err: any) {
-      if (err instanceof ConvexCloudUnavailableError) {
-        setTrackingError("Convex Cloud backend is not linked or VITE_CONVEX_URL is not set. Matthias will handle cloud deployment.");
-      } else {
-        setTrackingError(err.message || 'Failed to retrieve applications.');
-      }
+      setTrackingError(err.message || 'Failed to retrieve applications.');
     } finally {
       setLoadingTracking(false);
     }
-  }, [convexClient]);
+  }, []);
 
   useEffect(() => {
     if (activeTab === 'tracking') {
@@ -61,6 +87,12 @@ export const BorrowerLoanManager: React.FC = () => {
     e.preventDefault();
     setSubmitError(null);
     setSubmittedAppId(null);
+
+    // Authentication check
+    if (!gidfineAPI.isAuthenticated()) {
+      setSubmitError('Authentication required. Please sign in before submitting an application.');
+      return;
+    }
 
     // Frontend validation
     if (amountGhs <= 0) {
@@ -76,21 +108,26 @@ export const BorrowerLoanManager: React.FC = () => {
       return;
     }
 
+    // Generate new idempotency key if one is not active for this submission
+    if (!submissionKeyRef.current) {
+      submissionKeyRef.current = crypto.randomUUID();
+    }
+
     setSubmitting(true);
     try {
-      const res = await loanService.submitApplication(convexClient, {
-        amountGhs,
-        tenureMonths,
-        purpose: purpose.trim(),
-      });
-      setSubmittedAppId(res.applicationId);
+      const res = await gidfineAPI.createApplication(
+        {
+          requestedAmountPesewas: ghsToPesewas(amountGhs),
+          tenureMonths,
+          purpose: purpose.trim(),
+        },
+        submissionKeyRef.current,
+      );
+      setSubmittedAppId(res.id);
       setPurpose('');
+      submissionKeyRef.current = null; // Reset key upon confirmed creation
     } catch (err: any) {
-      if (err instanceof ConvexCloudUnavailableError) {
-        setSubmitError("Convex Cloud backend is not linked or VITE_CONVEX_URL is not set. Matthias will handle cloud deployment.");
-      } else {
-        setSubmitError(err.message || 'Failed to submit application.');
-      }
+      setSubmitError(err.message || 'Failed to submit application.');
     } finally {
       setSubmitting(false);
     }
@@ -103,15 +140,10 @@ export const BorrowerLoanManager: React.FC = () => {
     setRecordingConsent(true);
     setSubmitError(null);
     try {
-      const res = await loanService.recordConsent(convexClient, {
-        applicationId: consentApp.applicationId,
-        proposalId: consentApp.activeProposal.proposalId,
-        affirmedConsent: true,
-      });
-      setConsentSuccess(`Affirmative consent recorded! SHA-256 fingerprint: ${res.termsSnapshotHash.slice(0, 16)}...`);
-      setConsentApp(null);
-      setAffirmed(false);
-      await fetchApplications();
+      // Phase 4 consent workflow is gated pending owner approval per IMPLEMENTATION_PLAN.md
+      throw new Error(
+        'Statutory consent recording is pending Phase 4 owner approval. Origination is currently in Phase 1/2.'
+      );
     } catch (err: any) {
       setTrackingError(err.message || 'Failed to record consent.');
     } finally {
@@ -207,7 +239,10 @@ export const BorrowerLoanManager: React.FC = () => {
                 step="50"
                 required
                 value={amountGhs}
-                onChange={(e) => setAmountGhs(Number(e.target.value))}
+                onChange={(e) => {
+                  setAmountGhs(Number(e.target.value));
+                  submissionKeyRef.current = null;
+                }}
                 className="w-full bg-[#1a1a1a] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500 transition-colors"
                 placeholder="e.g. 5000"
               />
@@ -227,7 +262,10 @@ export const BorrowerLoanManager: React.FC = () => {
               </div>
               <select
                 value={tenureMonths}
-                onChange={(e) => setTenureMonths(Number(e.target.value))}
+                onChange={(e) => {
+                  setTenureMonths(Number(e.target.value));
+                  submissionKeyRef.current = null;
+                }}
                 className="w-full bg-[#1a1a1a] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500 transition-colors"
               >
                 <option value={3}>3 Months</option>
@@ -247,7 +285,10 @@ export const BorrowerLoanManager: React.FC = () => {
                 required
                 rows={3}
                 value={purpose}
-                onChange={(e) => setPurpose(e.target.value)}
+                onChange={(e) => {
+                  setPurpose(e.target.value);
+                  submissionKeyRef.current = null;
+                }}
                 placeholder="e.g. Working capital for retail inventory expansion..."
                 className="w-full bg-[#1a1a1a] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500 transition-colors resize-none"
               />
@@ -260,7 +301,7 @@ export const BorrowerLoanManager: React.FC = () => {
             >
               {submitting ? (
                 <>
-                  <RefreshCw className="w-4 h-4 animate-spin" /> Submitting Request to Convex...
+                  <RefreshCw className="w-4 h-4 animate-spin" /> Submitting Application to Cloudflare API...
                 </>
               ) : (
                 'Submit Loan Request'

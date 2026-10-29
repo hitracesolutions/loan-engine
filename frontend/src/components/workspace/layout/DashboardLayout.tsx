@@ -1,8 +1,9 @@
-import { LayoutDashboard, FileText, CreditCard, Bot, LogOut, Book } from 'lucide-react';
+import { LayoutDashboard, FileText, CreditCard, Bot, LogOut, Book, ClipboardList } from 'lucide-react';
 import { useLoanStore } from '../../../store/useLoanStore';
 import AgentOverlay from '../../shared/AgentOverlay';
 import AnalyticsDashboard from '../pages/AnalyticsDashboard';
-import GenUiApplication from '../pages/GenUiApplication';
+import LoanApplication from '../pages/LoanApplication';
+import AgencyReviewQueue from '../../AgencyReviewQueue';
 import ActiveLoans from '../pages/ActiveLoans';
 import UserProfile from '../pages/UserProfile';
 import Docs from '../../../pages/Docs';
@@ -12,14 +13,16 @@ export default function DashboardLayout() {
 
   const navigation = [
     { name: 'Dashboard', id: 'DASHBOARD', icon: LayoutDashboard },
-    { name: 'System Intelligence', id: 'APPLICATION', icon: Bot },
+    { name: 'Loan Application', id: 'APPLICATION', icon: FileText },
+    { name: 'Agency Review Queue', id: 'AGENCY_QUEUE', icon: ClipboardList },
     { name: 'Active Loans & Ledgers', id: 'ACTIVE_LOANS', icon: CreditCard },
   ];
 
   const renderContent = () => {
     switch (currentView) {
       case 'DASHBOARD': return <AnalyticsDashboard />;
-      case 'APPLICATION': return <GenUiApplication />;
+      case 'APPLICATION': return <LoanApplication />;
+      case 'AGENCY_QUEUE': return <AgencyReviewQueue />;
       case 'ACTIVE_LOANS': return <ActiveLoans />;
       case 'PROFILE': return <UserProfile />;
       case 'DOCS': return <Docs />;
