@@ -63,23 +63,24 @@ class GidfineAPI {
   private async request<T>(
     method: string,
     endpoint: string,
-    data?: any
+    data?: any,
+    customHeaders?: Record<string, string>
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
-    const options: RequestInit = {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...customHeaders,
     };
 
     // Add authorization header if token exists
     if (this.token) {
-      options.headers = {
-        ...options.headers,
-        'Authorization': `Bearer ${this.token}`,
-      };
+      headers['Authorization'] = `Bearer ${this.token}`;
     }
+
+    const options: RequestInit = {
+      method,
+      headers,
+    };
 
     if (data) {
       options.body = JSON.stringify(data);
@@ -89,22 +90,44 @@ class GidfineAPI {
     try {
       response = await fetch(url, options);
     } catch {
-      throw new Error('Unable to reach the login service. Please try again in a moment.');
+      throw new Error('Unable to reach the backend service. Please check your connection and try again.');
     }
 
     // Handle non-OK responses
     if (!response.ok) {
+      if (response.status === 401) {
+        // Invalidate stale authentication state centrally
+        this.token = null;
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('auth_token');
+          window.dispatchEvent(new CustomEvent('gidfine:auth-invalidated'));
+        }
+        let message = 'Authentication required. Please sign in to continue.';
+        const contentType = response.headers.get('content-type') ?? '';
+        if (contentType.includes('application/json')) {
+          try {
+            const errorData = (await response.json()) as Partial<ErrorResponse>;
+            if (errorData.error?.message) {
+              message = errorData.error.message;
+            }
+          } catch {
+            // retain fallback message
+          }
+        }
+        throw new Error(message);
+      }
+
       const contentType = response.headers.get('content-type') ?? '';
       if (contentType.includes('application/json')) {
         const errorData = (await response.json()) as Partial<ErrorResponse>;
         throw new Error(errorData.error?.message || 'API request failed');
       }
-      throw new Error('The login service returned an invalid response. Please try again later.');
+      throw new Error('The service returned an invalid response. Please try again later.');
     }
 
     const contentType = response.headers.get('content-type') ?? '';
     if (!contentType.includes('application/json')) {
-      throw new Error('The login service is not configured for this site yet.');
+      throw new Error('The service returned an unexpected content type.');
     }
 
     const payload = (await response.json()) as ApiEnvelope<T> | T;
@@ -165,6 +188,7 @@ class GidfineAPI {
     this.token = null;
     if (typeof window !== 'undefined') {
       localStorage.removeItem('auth_token');
+      window.dispatchEvent(new CustomEvent('gidfine:auth-invalidated'));
     }
   }
 
@@ -190,16 +214,39 @@ class GidfineAPI {
   // ============================================
 
   async listApplications(): Promise<any[]> {
-    const response = (await this.request('GET', '/borrower/applications')) as any;
-    return response.results || response;
+    const response = (await this.request('GET', '/applications')) as any;
+    if (Array.isArray(response)) return response;
+    if (response && Array.isArray(response.applications)) return response.applications;
+    if (response && Array.isArray(response.results)) return response.results;
+    return [];
   }
 
-  async createApplication(data: {
-    amount_requested_pesewas: number;
-    tenure_months: number;
-    purpose: string;
-  }): Promise<any> {
-    return this.request('POST', '/borrower/applications', data);
+  async createApplication(
+    data: {
+      requestedAmountPesewas?: number;
+      amount_requested_pesewas?: number;
+      tenureMonths?: number;
+      tenure_months?: number;
+      purpose?: string;
+    },
+    idempotencyKey?: string,
+  ): Promise<any> {
+    const requestedAmountPesewas = data.requestedAmountPesewas ?? data.amount_requested_pesewas ?? 0;
+    const tenureMonths = data.tenureMonths ?? data.tenure_months ?? 12;
+    const headers: Record<string, string> = {};
+    if (idempotencyKey) {
+      headers['idempotency-key'] = idempotencyKey;
+    }
+    return this.request(
+      'POST',
+      '/applications',
+      {
+        requestedAmountPesewas,
+        tenureMonths,
+        purpose: data.purpose ?? '',
+      },
+      headers,
+    );
   }
 
   async submitApplication(applicationId: string): Promise<any> {
@@ -272,6 +319,7 @@ class GidfineAPI {
   isAuthenticated(): boolean {
     return this.token !== null;
   }
+
 }
 
 // Export singleton instance
@@ -279,3 +327,26 @@ export const gidfineAPI = new GidfineAPI();
 
 // For backward compatibility, export the instance as `api`
 export const api = gidfineAPI;
+
+// Currency & Rate Conversion Helpers
+export function ghsToPesewas(amountGhs: number): number {
+  if (isNaN(amountGhs) || amountGhs <= 0) {
+    throw new Error('Invalid amount: Must be a positive number.');
+  }
+  return Math.round(amountGhs * 100);
+}
+
+export function pesewasToGhs(pesewas: number): number {
+  return pesewas / 100;
+}
+
+export function pesewasToGhsString(pesewas: number): string {
+  return `GH₵ ${(pesewas / 100).toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
+export function bpsToPercentString(bps: number): string {
+  return `${(bps / 100).toFixed(2)}%`;
+}

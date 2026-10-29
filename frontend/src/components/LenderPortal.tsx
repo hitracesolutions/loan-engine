@@ -218,15 +218,14 @@ export const LenderPortal: React.FC<LenderPortalProps> = ({
         </div>
       </div>
 
-      {/* Cloud Pending Notice */}
+      {/* Phase 3 Gating Notice */}
       {!convexClient && (
-        <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-sm flex items-start gap-3">
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-sm flex items-start gap-3" role="status" aria-live="polite">
           <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
           <div>
-            <div className="font-semibold">Convex Cloud Deployment Pending</div>
+            <div className="font-semibold">Lender Workflow APIs Scheduled for Phase 3</div>
             <p className="mt-0.5 text-xs text-amber-700">
-              The lender interface requires a provisioned Convex backend (<code className="font-mono bg-amber-100 px-1 py-0.5 rounded">VITE_CONVEX_URL</code>).
-              Mock requests are not substituted to prevent accidental false commitments.
+              The Cloudflare Workers REST backend currently serves Phase 1-2 identity and application services. Institutional lender matching, proposal review, and decisioning endpoints will be enabled following Phase 3 schema migrations and legal disclosure sign-off (Owner Decision O-06).
             </p>
           </div>
         </div>
@@ -337,12 +336,16 @@ export const LenderPortal: React.FC<LenderPortalProps> = ({
             <RefreshCw className="w-8 h-8 text-indigo-600 animate-spin mx-auto mb-3" />
             <p className="text-sm font-medium text-slate-600">Loading lender proposal queue...</p>
           </div>
-        ) : proposals.length === 0 ? (
-          <div className="py-16 text-center">
-            <Landmark className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <h3 className="text-base font-semibold text-slate-700">No proposals found</h3>
+        ) : !convexClient || proposals.length === 0 ? (
+          <div className="py-16 text-center" role="status">
+            <Clock className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+            <h3 className="text-base font-semibold text-slate-700">
+              {!convexClient ? 'Lender Proposal Queue Inactive' : 'No proposals found'}
+            </h3>
             <p className="text-xs text-slate-500 max-w-md mx-auto mt-1">
-              There are currently no loan proposals assigned to your institution in the '{statusFilter}' status.
+              {!convexClient
+                ? 'Institutional proposal assignment and decisioning workflows are scheduled for Phase 3 implementation. No live proposals will appear until Phase 3 lender endpoints are deployed.'
+                : `There are currently no loan proposals assigned to your institution in the '${statusFilter}' status.`}
             </p>
           </div>
         ) : (

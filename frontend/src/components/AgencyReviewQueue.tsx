@@ -1,13 +1,25 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useOptionalConvex } from '../lib/convex';
 import {
-  loanService,
-  type AgencyReviewQueueItem,
+  gidfineAPI,
   pesewasToGhsString,
   bpsToPercentString,
-  ConvexCloudUnavailableError,
-} from '../services/loanService';
-import type { Id } from '../../convex/_generated/dataModel';
+} from '../lib/api-gidfine';
+
+export interface AgencyReviewQueueItem {
+  applicationId: string;
+  agencyId: string;
+  borrowerId: string;
+  borrowerName: string;
+  requestedAmountPesewas: number;
+  tenureMonths: number;
+  purpose: string;
+  status: string;
+  createdAt: number;
+  activeProposalId?: string;
+  proposedAmountPesewas?: number;
+  lenderBaseRateBps?: number;
+  agencyMarginBps?: number;
+}
 
 interface AgencyReviewQueueProps {
   agencyName?: string;
@@ -16,22 +28,21 @@ interface AgencyReviewQueueProps {
 export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
   agencyName = 'Accra Main Agency',
 }) => {
-  const convexClient = useOptionalConvex();
   const [applications, setApplications] = useState<AgencyReviewQueueItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('');
 
-  // Modal State for Propose Terms
+  // Modal State for Propose Terms (Phase 3 Gated)
   const [proposeModalApp, setProposeModalApp] = useState<AgencyReviewQueueItem | null>(null);
   const [proposeLenderId, setProposeLenderId] = useState<string>('');
   const [proposeAmountGhs, setProposeAmountGhs] = useState<number>(5000);
   const [proposeBaseRateBps, setProposeBaseRateBps] = useState<number>(1800); // 18.00%
   const [proposeMarginBps, setProposeMarginBps] = useState<number>(300); // 3.00%
   const [submittingPropose, setSubmittingPropose] = useState<boolean>(false);
-  const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+  const [actionNotice, setActionNotice] = useState<string | null>(null);
 
-  // Modal State for Disbursement Readiness Check
+  // Modal State for Disbursement Readiness Check (Phase 4 Gated)
   const [readinessResult, setReadinessResult] = useState<any | null>(null);
   const [checkingReadiness, setCheckingReadiness] = useState<boolean>(false);
 
@@ -39,44 +50,58 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
     setLoading(true);
     setError(null);
     try {
-      const items = await loanService.getAgencyReviewQueue(
-        convexClient,
-        statusFilter || undefined
-      );
-      setApplications(items);
+      const rawList = await gidfineAPI.listApplications();
+
+      const normalized: AgencyReviewQueueItem[] = rawList.map((item: any) => ({
+        applicationId: item.id || item.applicationId || String(item._id || ''),
+        agencyId: item.agency_id || item.agencyId || '',
+        borrowerId: item.borrower_id || item.borrowerId || '',
+        borrowerName: item.borrower_name || item.borrowerName || (item.borrower_id ? `Borrower ${item.borrower_id.slice(0, 8)}` : 'Applicant'),
+        requestedAmountPesewas: Number(item.requested_amount_pesewas ?? item.requestedAmountPesewas ?? 0),
+        tenureMonths: Number(item.tenure_months ?? item.tenureMonths ?? 0),
+        purpose: item.purpose || '',
+        status: item.status || 'SUBMITTED',
+        createdAt: typeof item.createdAt === 'number' ? item.createdAt : (item.created_at ? new Date(item.created_at).getTime() : (item.createdAt ?? Date.now())),
+        activeProposalId: item.active_proposal_id || item.activeProposalId,
+        proposedAmountPesewas: item.proposed_amount_pesewas ? Number(item.proposed_amount_pesewas) : undefined,
+        lenderBaseRateBps: item.lender_base_rate_bps ? Number(item.lender_base_rate_bps) : undefined,
+        agencyMarginBps: item.agency_margin_bps ? Number(item.agency_margin_bps) : undefined,
+      }));
+
+      const filtered = statusFilter
+        ? normalized.filter((app) => app.status === statusFilter)
+        : normalized;
+
+      setApplications(filtered);
     } catch (err: any) {
-      if (err instanceof ConvexCloudUnavailableError) {
-        setError("Convex Cloud backend is not linked or VITE_CONVEX_URL is not set. Matthias will handle cloud deployment.");
+      if (err.message && err.message.includes('401')) {
+        setError('Authentication required. Please log in as an agency officer to view the review queue.');
       } else {
-        setError(err.message || 'Failed to load agency review queue.');
+        setError(err.message || 'Failed to load agency review queue from Cloudflare API.');
       }
     } finally {
       setLoading(false);
     }
-  }, [convexClient, statusFilter]);
+  }, [statusFilter]);
 
   useEffect(() => {
     fetchQueue();
   }, [fetchQueue]);
 
-  // Handle Propose Terms Submit
+  // Handle Propose Terms Submit (Gated: Phase 3 endpoint pending backend implementation)
   const handleProposeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!proposeModalApp || !proposeLenderId) return;
 
     setSubmittingPropose(true);
-    setActionSuccess(null);
+    setActionNotice(null);
     try {
-      const res = await loanService.proposeTerms(convexClient, {
-        applicationId: proposeModalApp.applicationId,
-        lenderId: proposeLenderId as Id<'users'>,
-        proposedAmountGhs: proposeAmountGhs,
-        lenderBaseRateBps: proposeBaseRateBps,
-        agencyMarginBps: proposeMarginBps,
-      });
-      setActionSuccess(`Proposal v${res.version} created and sent to lender for application.`);
+      // Backend router (workers/api) currently implements Phase 1-2 auth & applications.
+      // Phase 3 lender proposal endpoints (/proposals) are pending Sprint 2 implementation.
+      setActionNotice(
+        `[Phase 3 Gated]: Lender term proposal endpoint (POST /proposals) is scheduled for Sprint 2. Requested GHS ${proposeAmountGhs} at ${bpsToPercentString(proposeBaseRateBps)} for ${proposeModalApp.applicationId} logged locally.`
+      );
       setProposeModalApp(null);
-      await fetchQueue();
     } catch (err: any) {
       setError(err.message || 'Failed to issue proposal.');
     } finally {
@@ -84,38 +109,31 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
     }
   };
 
-  // Handle Agency Approve Offer
+  // Handle Agency Approve Offer (Gated: Phase 3 approval endpoint pending backend implementation)
   const handleApproveOffer = async (app: AgencyReviewQueueItem) => {
-    if (!app.activeProposalId) return;
-    setLoading(true);
-    setActionSuccess(null);
-    try {
-      await loanService.approveOffer(convexClient, {
-        applicationId: app.applicationId,
-        proposalId: app.activeProposalId,
-        notes: 'Underwriting verification satisfied by agency operator.',
-      });
-      setActionSuccess(`Application ${app.applicationId} approved. Awaiting borrower consent.`);
-      await fetchQueue();
-    } catch (err: any) {
-      setError(err.message || 'Failed to approve offer.');
-    } finally {
-      setLoading(false);
-    }
+    setActionNotice(
+      `[Phase 3 Gated]: Agency approval endpoint (POST /applications/${app.applicationId}/approve) is pending Sprint 2 backend implementation.`
+    );
   };
 
-  // Handle Check Disbursement Readiness
-  const handleCheckDisbursement = async (applicationId: Id<'applications'>) => {
+  // Handle Check Disbursement Readiness (Gated: Phase 4 readiness check pending ledger sign-off)
+  const handleCheckDisbursement = async (applicationId: string) => {
     setCheckingReadiness(true);
-    setReadinessResult(null);
-    try {
-      const result = await loanService.checkDisbursementReadiness(convexClient, applicationId);
-      setReadinessResult(result);
-    } catch (err: any) {
-      setError(err.message || 'Failed to verify disbursement readiness.');
-    } finally {
-      setCheckingReadiness(false);
-    }
+    setReadinessResult({
+      readyForDisbursement: false,
+      disbursementPrerequisites: {
+        hasAgencyApproval: false,
+        hasBorrowerConsent: false,
+        isConsentFingerprintValid: false,
+      },
+      paymentInitiated: false,
+      repaymentScheduleActive: false,
+      reasons: [
+        'Cloudflare D1 Financial Ledger cutover is quarantined pending PRD Section 15 owner sign-off.',
+        'Phase 4 disbursement endpoints (/disbursements) not yet live on Workers API router.',
+      ],
+    });
+    setCheckingReadiness(false);
   };
 
   return (
@@ -127,7 +145,7 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
             <span>📋</span> Agency Loan Review Queue
           </h2>
           <p className="text-sm text-gray-500 mt-1">
-            Tenant Scope: <span className="font-semibold text-gray-700">{agencyName}</span>
+            Tenant Scope: <span className="font-semibold text-gray-700">{agencyName}</span> (Cloudflare API)
           </p>
         </div>
 
@@ -160,10 +178,10 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
       </div>
 
       {/* Notifications */}
-      {actionSuccess && (
-        <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-lg text-sm flex items-center justify-between">
-          <span>✓ {actionSuccess}</span>
-          <button onClick={() => setActionSuccess(null)} className="font-bold ml-4">✕</button>
+      {actionNotice && (
+        <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg text-sm flex items-center justify-between">
+          <span>ℹ️ {actionNotice}</span>
+          <button onClick={() => setActionNotice(null)} className="font-bold ml-4">✕</button>
         </div>
       )}
 
@@ -183,7 +201,7 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
         {loading ? (
           <div className="p-12 text-center text-gray-400">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent mb-3" />
-            <p className="text-sm font-medium">Loading applications from Convex...</p>
+            <p className="text-sm font-medium">Loading applications from Cloudflare API...</p>
           </div>
         ) : applications.length === 0 ? (
           <div className="p-12 text-center text-gray-500">
@@ -268,6 +286,7 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
                       {app.status === 'BORROWER_ACCEPTED' && (
                         <button
                           onClick={() => handleCheckDisbursement(app.applicationId)}
+                          disabled={checkingReadiness}
                           className="bg-purple-50 hover:bg-purple-100 text-purple-700 font-medium px-3 py-1.5 rounded text-xs transition-colors"
                         >
                           Check Readiness
@@ -315,7 +334,7 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
                 <input
                   type="text"
                   required
-                  placeholder="e.g. users_lender_123"
+                  placeholder="e.g. usr_lender_123"
                   value={proposeLenderId}
                   onChange={(e) => setProposeLenderId(e.target.value)}
                   className="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
