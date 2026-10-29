@@ -1,5 +1,12 @@
 # Gidfine Changelog
 
+## 2026-10-29 — Application disclosure boundary
+
+- Centralized application response redaction by role on the Worker API.
+- Agency staff can see borrower identity needed for review; borrower responses
+  exclude identity, assignment and internal review fields.
+- Added direct API assertions for staff disclosure and borrower field leakage.
+
 ## 2026-10-29 — Agency review workspace connection
 
 - Connected the React agency review queue to server-side status filtering and

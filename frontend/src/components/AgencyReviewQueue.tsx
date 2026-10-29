@@ -92,8 +92,8 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
       const normalized: AgencyReviewQueueItem[] = rawList.map((item) => ({
         applicationId: item.id,
         agencyId: '',
-        borrowerId: '',
-        borrowerName: 'Applicant',
+        borrowerId: item.borrowerId ?? '',
+        borrowerName: item.borrowerName ?? 'Applicant',
         requestedAmountPesewas: item.requestedAmountPesewas,
         tenureMonths: item.tenureMonths,
         purpose: item.purpose ?? '',

@@ -536,6 +536,15 @@ The current production baseline is Cloudflare Pages + Pages Functions, D1 and KV
   those flows still require their Phase 3/4 API and owner acceptance work.
 - Verified the frontend build, Worker typecheck, 51 API tests and diff checks.
 
+### 2026-10-29 — Application disclosure boundary
+
+- Added a shared Worker disclosure helper and joined borrower identity only for
+  agency-staff application responses.
+- Added direct-request assertions that borrower responses exclude identity,
+  assignment and internal review fields.
+- Fixed the joined queue query by qualifying application filter columns;
+  Worker typecheck, 51 API tests and the frontend build pass.
+
 ### 2026-10-29 — Ghana cedi frontend display
 
 - Updated user-facing monetary values to display Ghana cedis (`GH₵`) with

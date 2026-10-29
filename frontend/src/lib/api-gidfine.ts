@@ -71,6 +71,10 @@ export interface ApplicationRecord {
   requestedAmountPesewas: number;
   tenureMonths: number;
   purpose: string | null;
+  borrowerId?: string;
+  borrowerName?: string | null;
+  borrowerEmail?: string | null;
+  borrowerPhone?: string | null;
   assignedOfficerId?: string | null;
   submittedAt?: number | null;
   createdAt: number;

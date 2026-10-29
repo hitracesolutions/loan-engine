@@ -121,7 +121,10 @@ field leakage are denied and tested.
 **Completed slice:** the local D1 review migration and API foundation now expose
 staff-only queue filtering, reviewer assignment, guarded review transitions,
 internal notes and status history. Auditors can read the review evidence but
-cannot write notes or change status.
+cannot write notes or change status. Application disclosure is also centralized:
+agency staff receive borrower identity fields, while borrower responses exclude
+identity and internal review fields; direct-request leakage tests cover both
+paths.
 
 ### Phase 2 — origination and agency review
 
@@ -261,7 +264,9 @@ Start with the smallest unblocked slice after Phase 0:
 2. Add role/membership and application review migrations.
 3. Implement agency queue, assignment and review-note endpoints. **Complete**
    in the local D1/API slice.
-4. Add server-side disclosure primitives and direct-request tests.
+4. Add server-side disclosure primitives and direct-request tests. **Complete**
+   for application responses; lender proposal disclosure remains pending until
+   lender routes exist.
 5. Connect the agency review queue to the existing React workspace. **Complete**
    for queue filtering, guarded decisions, assignment, notes and history.
 6. Run the full API/typecheck/frontend-build verification before adding lender

@@ -397,6 +397,9 @@ describe('Gidfine Cloudflare Worker End-to-End API Integration', () => {
     const queueData = ((await adminQueue.json()) as any).data;
     assert.strictEqual(queueData.applications.length, 1);
     assert.strictEqual(queueData.applications[0].id, b1AppData.id);
+    assert.strictEqual(queueData.applications[0].borrowerName, 'Borrower One');
+    assert.strictEqual(queueData.applications[0].borrowerEmail, 'b1@example.com');
+    assert.strictEqual(queueData.applications[0].borrowerPhone, null);
   });
 
   it('Test 7: Role Protection & Gated Execution', async () => {
@@ -563,6 +566,19 @@ describe('Gidfine Cloudflare Worker End-to-End API Integration', () => {
     assert.strictEqual(reviewData.application.assignedOfficerId, 'officer_review_1');
     assert.strictEqual(reviewData.notes.length, 1);
     assert.strictEqual(reviewData.statusHistory.length, 2);
+
+    const borrowerApplications = await worker.fetch(
+      new Request('https://loan-engine.pages.dev/applications', {
+        headers: { Authorization: `Bearer ${borrowerToken}` },
+      }),
+      env,
+    );
+    const borrowerApplication = ((await borrowerApplications.json()) as any).data.applications[0];
+    assert.strictEqual(borrowerApplication.id, application.id);
+    assert.equal('borrowerEmail' in borrowerApplication, false);
+    assert.equal('borrowerPhone' in borrowerApplication, false);
+    assert.equal('assignedOfficerId' in borrowerApplication, false);
+    assert.equal('submittedAt' in borrowerApplication, false);
 
     const borrowerReview = await worker.fetch(
       new Request(`https://loan-engine.pages.dev/applications/${application.id}/review`, {

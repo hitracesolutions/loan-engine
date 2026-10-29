@@ -4,6 +4,7 @@ import { badRequest, forbidden, jsonResponse, notFound, readJsonObject } from '.
 import { assertKeyScope, findIdempotentResponse, idempotencyStatement } from '../lib/idempotency.ts';
 import { ulid } from '../lib/ids.ts';
 import { assertPositiveInteger, assertPositivePesewas } from '../lib/money.ts';
+import { discloseApplication, type ApplicationDisclosureRecord } from '../lib/disclosure.ts';
 import { optionalString, requireString } from '../lib/validation.ts';
 import type { RouteContext } from '../router.ts';
 import {
@@ -17,20 +18,7 @@ const MAX_TENURE_MONTHS = 480;
 const MAX_PRINCIPAL_PESEWAS = 10_000_000_00; // GH₵ 10,000,000.00
 const CREATION_SCOPE = 'applications.create';
 
-interface ApplicationRow {
-  id: string;
-  agency_id: string;
-  borrower_id: string;
-  status: string;
-  requested_amount_pesewas: number;
-  tenure_months: number;
-  purpose: string | null;
-  assigned_lender_id: string | null;
-  assigned_officer_id: string | null;
-  submitted_at: number | null;
-  created_at: number;
-  updated_at: number;
-}
+interface ApplicationRow extends ApplicationDisclosureRecord {}
 
 interface ReviewNoteRow {
   id: string;
@@ -70,31 +58,19 @@ function requireApplicationStatus(value: unknown): ApplicationStatus {
   return value as ApplicationStatus;
 }
 
-function toPublic(row: ApplicationRow, includeReviewFields = false) {
-  return {
-    id: row.id,
-    status: row.status as ApplicationStatus,
-    requestedAmountPesewas: row.requested_amount_pesewas,
-    tenureMonths: row.tenure_months,
-    purpose: row.purpose,
-    ...(includeReviewFields
-      ? {
-          assignedOfficerId: row.assigned_officer_id,
-          submittedAt: row.submitted_at,
-        }
-      : {}),
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  };
-}
-
 async function findApplication(
   db: D1Database,
   applicationId: string,
   agencyId: string,
 ): Promise<ApplicationRow> {
   const application = await db
-    .prepare('SELECT * FROM loan_applications WHERE id = ? AND agency_id = ?')
+    .prepare(
+      `SELECT loan_applications.*, borrower.full_name AS borrower_full_name,
+              borrower.email AS borrower_email, borrower.phone AS borrower_phone
+       FROM loan_applications
+       JOIN users AS borrower ON borrower.id = loan_applications.borrower_id
+       WHERE loan_applications.id = ? AND loan_applications.agency_id = ?`,
+    )
     .bind(applicationId, agencyId)
     .first<ApplicationRow>();
 
@@ -142,7 +118,7 @@ export async function createApplication({ request, env, requestId }: RouteContex
     updated_at: now,
   };
 
-  const payload = toPublic(application);
+  const payload = discloseApplication(application, actor.role);
   const statements: D1PreparedStatement[] = [
     env.DB.prepare(
       `INSERT INTO loan_applications
@@ -207,39 +183,45 @@ export async function listApplications({ request, env, requestId }: RouteContext
   if (isAgencyStaff) {
     const status = urlStatus(request.url);
     const assignedOfficerId = new URL(request.url).searchParams.get('assignedOfficerId');
-    const filters = ['agency_id = ?'];
+    const filters = ['loan_applications.agency_id = ?'];
     const values: string[] = [actor.agencyId];
 
     if (status) {
-      filters.push('status = ?');
+      filters.push('loan_applications.status = ?');
       values.push(status);
     }
     if (assignedOfficerId) {
-      filters.push('assigned_officer_id = ?');
+      filters.push('loan_applications.assigned_officer_id = ?');
       values.push(assignedOfficerId);
     }
 
     const query = env.DB
       .prepare(
-        `SELECT * FROM loan_applications
+        `SELECT loan_applications.*, borrower.full_name AS borrower_full_name,
+                borrower.email AS borrower_email, borrower.phone AS borrower_phone
+         FROM loan_applications
+         JOIN users AS borrower ON borrower.id = loan_applications.borrower_id
          WHERE ${filters.join(' AND ')}
-         ORDER BY created_at DESC LIMIT 100`,
+         ORDER BY loan_applications.created_at DESC LIMIT 100`,
       )
       .bind(...values);
     const { results } = await query.all<ApplicationRow>();
-    return jsonResponse({ applications: results.map((row) => toPublic(row, true)) }, requestId);
+    return jsonResponse({ applications: results.map((row) => discloseApplication(row, actor.role)) }, requestId);
   }
 
   const query = env.DB
     .prepare(
-      `SELECT * FROM loan_applications
-        WHERE agency_id = ? AND borrower_id = ?
-        ORDER BY created_at DESC LIMIT 100`,
+      `SELECT loan_applications.*, borrower.full_name AS borrower_full_name,
+              borrower.email AS borrower_email, borrower.phone AS borrower_phone
+       FROM loan_applications
+       JOIN users AS borrower ON borrower.id = loan_applications.borrower_id
+       WHERE loan_applications.agency_id = ? AND loan_applications.borrower_id = ?
+       ORDER BY loan_applications.created_at DESC LIMIT 100`,
     )
     .bind(actor.agencyId, actor.userId);
 
   const { results } = await query.all<ApplicationRow>();
-  return jsonResponse({ applications: results.map((row) => toPublic(row)) }, requestId);
+  return jsonResponse({ applications: results.map((row) => discloseApplication(row, actor.role)) }, requestId);
 }
 
 function urlStatus(requestUrl: string): ApplicationStatus | null {
@@ -455,7 +437,7 @@ export async function getApplicationReview({
 
   return jsonResponse(
     {
-      application: toPublic(application, true),
+      application: discloseApplication(application, actor.role),
       notes: notes.results,
       statusHistory: history.results,
     },
