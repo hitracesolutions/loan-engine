@@ -24,6 +24,9 @@ presented as production capability.
 - Cloudflare KV is available for cache and idempotency support.
 - Registration, login, current-user lookup, health checks, application create
   and application list are the current implemented API slice.
+- The first agency review slice is now implemented: filtered review queue,
+  reviewer assignment, guarded status transitions, internal notes and
+  application status history.
 - Passwords use PBKDF2-HMAC-SHA-256 through Web Crypto; sessions use an
   application-issued HS256 JWT.
 - Versioned D1 migrations, API tests, type checking and the frontend
@@ -32,8 +35,8 @@ presented as production capability.
 ### Not implemented yet
 
 - Lender onboarding, lender products, lender proposals and counteroffers.
-- Agency review queues, assignments, approval permissions and disclosure
-  policies.
+- Full agency review permissions and disclosure policies beyond the initial
+  queue/assignment workflow.
 - Versioned pricing rules, quote snapshots and repayment schedule generation.
 - Borrower consent, loans, disbursements, repayment allocation and reversals.
 - Private document storage, generated contracts/receipts and document access
@@ -114,6 +117,11 @@ fixtures exist in version control.
 
 **Exit gate:** unauthorized direct API requests, ID enumeration and cross-role
 field leakage are denied and tested.
+
+**Completed slice:** the local D1 review migration and API foundation now expose
+staff-only queue filtering, reviewer assignment, guarded review transitions,
+internal notes and status history. Auditors can read the review evidence but
+cannot write notes or change status.
 
 ### Phase 2 — origination and agency review
 

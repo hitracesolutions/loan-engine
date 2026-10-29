@@ -542,3 +542,12 @@ The current production baseline is Cloudflare Pages + Pages Functions, D1 and KV
   overloads.
 - Worker typecheck now passes, and the complete API test suite passes all 50
   tests.
+
+### 2026-10-29 — Agency review foundation
+
+- Added the additive application-review migration with reviewer assignment,
+  internal notes and append-only status history.
+- Added staff-only queue filtering, assignment, guarded review transitions and
+  review evidence endpoints, with auditors restricted to read-only access.
+- Applied the migration locally; Worker typecheck, 51 API tests and the
+  frontend production build pass.

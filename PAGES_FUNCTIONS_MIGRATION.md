@@ -6,7 +6,8 @@ The active HTTP API now runs from the same Cloudflare Pages project as the React
 
 - `frontend/functions/health.ts` → `GET /health`
 - `frontend/functions/auth/[[path]].ts` → `/auth/*`
-- `frontend/functions/applications.ts` → `/applications`
+- `frontend/functions/applications/[[path]].ts` → `/applications` and nested
+  application review routes
 - `frontend/functions/borrower/applications.ts` → `/borrower/applications`
 - `frontend/functions/_shared/api.ts` reuses the existing Worker router and auth implementation from `workers/api/src/`
 

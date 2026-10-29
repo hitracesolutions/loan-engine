@@ -9,7 +9,14 @@
 import type { AppEnv } from './env.ts';
 import { ensureAdminUser } from './lib/auth.ts';
 import { corsHeaders, errorResponse } from './lib/http.ts';
-import { createApplication, listApplications } from './routes/applications.ts';
+import {
+  addApplicationReviewNote,
+  assignApplication,
+  createApplication,
+  getApplicationReview,
+  listApplications,
+  reviewApplication,
+} from './routes/applications.ts';
 import { login, me, register } from './routes/auth.ts';
 import { health } from './routes/health.ts';
 import { Router } from './router.ts';
@@ -21,6 +28,11 @@ const router = new Router()
   .get('/auth/me', me)
   .post('/applications', createApplication)
   .get('/applications', listApplications)
+  .get('/applications/:applicationId/review', getApplicationReview)
+  .post('/applications/:applicationId/assign', assignApplication)
+  .post('/applications/:applicationId/review', reviewApplication)
+  .post('/applications/:applicationId/notes', addApplicationReviewNote)
+  .get('/agency/applications', listApplications)
   // Preserve the path used by the current frontend while it migrates to the
   // shorter resource-oriented API paths.
   .post('/borrower/applications', createApplication)

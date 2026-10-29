@@ -112,11 +112,13 @@ describe('Gidfine Cloudflare Worker End-to-End API Integration', () => {
   beforeEach(async () => {
     sqlite = new DatabaseSync(':memory:');
     sqlite.exec('PRAGMA foreign_keys = ON;');
-    const migrationSql = fs.readFileSync(
-      path.resolve(import.meta.dirname, '../migrations/0001_core.sql'),
-      'utf8',
-    );
-    sqlite.exec(migrationSql);
+    for (const migration of ['0001_core.sql', '0002_application_review.sql']) {
+      const migrationSql = fs.readFileSync(
+        path.resolve(import.meta.dirname, `../migrations/${migration}`),
+        'utf8',
+      );
+      sqlite.exec(migrationSql);
+    }
 
     env = {
       DB: createD1Adapter(sqlite),
@@ -437,5 +439,137 @@ describe('Gidfine Cloudflare Worker End-to-End API Integration', () => {
       env,
     );
     assert.strictEqual(unauthReq.status, 401);
+  });
+
+  it('Test 8: Agency Review Queue, Assignment, Notes, and Status History', async () => {
+    sqlite
+      .prepare(
+        `INSERT INTO users
+           (id, agency_id, role, email, phone, full_name, password_hash, is_active, created_at, updated_at)
+         VALUES (?, ?, 'loan_officer', ?, NULL, ?, ?, 1, ?, ?)`,
+      )
+      .run(
+        'officer_review_1',
+        'agency_default',
+        'reviewer@gidfine.test',
+        'Review Officer',
+        'test-password-hash',
+        Date.now(),
+        Date.now(),
+      );
+
+    const borrowerRegistration = await worker.fetch(
+      new Request('https://loan-engine.pages.dev/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: 'review.borrower@example.com',
+          password: 'ValidPassword123!',
+          fullName: 'Review Borrower',
+          agencySlug: 'gidfine',
+        }),
+      }),
+      env,
+    );
+    const { token: borrowerToken } = ((await borrowerRegistration.json()) as any).data;
+
+    const applicationResponse = await worker.fetch(
+      new Request('https://loan-engine.pages.dev/applications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${borrowerToken}`,
+        },
+        body: JSON.stringify({
+          requestedAmountPesewas: 500000,
+          tenureMonths: 12,
+          purpose: 'Review workflow fixture',
+        }),
+      }),
+      env,
+    );
+    const application = ((await applicationResponse.json()) as any).data;
+
+    const adminLogin = await worker.fetch(
+      new Request('https://loan-engine.pages.dev/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: 'admin@gidfine.com',
+          password: 'SecureAdminPassword123!',
+        }),
+      }),
+      env,
+    );
+    const { token: adminToken } = ((await adminLogin.json()) as any).data;
+
+    const queueResponse = await worker.fetch(
+      new Request('https://loan-engine.pages.dev/agency/applications?status=SUBMITTED', {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      }),
+      env,
+    );
+    assert.strictEqual(queueResponse.status, 200);
+    assert.strictEqual(((await queueResponse.json()) as any).data.applications[0].status, 'SUBMITTED');
+
+    const assignmentResponse = await worker.fetch(
+      new Request(`https://loan-engine.pages.dev/applications/${application.id}/assign`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${adminToken}`,
+        },
+        body: JSON.stringify({ assigneeId: 'officer_review_1' }),
+      }),
+      env,
+    );
+    assert.strictEqual(assignmentResponse.status, 200);
+
+    const reviewResponse = await worker.fetch(
+      new Request(`https://loan-engine.pages.dev/applications/${application.id}/review`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${adminToken}`,
+        },
+        body: JSON.stringify({ targetStatus: 'UNDER_REVIEW' }),
+      }),
+      env,
+    );
+    assert.strictEqual(reviewResponse.status, 200);
+
+    const noteResponse = await worker.fetch(
+      new Request(`https://loan-engine.pages.dev/applications/${application.id}/notes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${adminToken}`,
+        },
+        body: JSON.stringify({ note: 'Income evidence requested for review.' }),
+      }),
+      env,
+    );
+    assert.strictEqual(noteResponse.status, 201);
+
+    const reviewDetails = await worker.fetch(
+      new Request(`https://loan-engine.pages.dev/applications/${application.id}/review`, {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      }),
+      env,
+    );
+    const reviewData = ((await reviewDetails.json()) as any).data;
+    assert.strictEqual(reviewDetails.status, 200);
+    assert.strictEqual(reviewData.application.status, 'UNDER_REVIEW');
+    assert.strictEqual(reviewData.application.assignedOfficerId, 'officer_review_1');
+    assert.strictEqual(reviewData.notes.length, 1);
+    assert.strictEqual(reviewData.statusHistory.length, 2);
+
+    const borrowerReview = await worker.fetch(
+      new Request(`https://loan-engine.pages.dev/applications/${application.id}/review`, {
+        headers: { Authorization: `Bearer ${borrowerToken}` },
+      }),
+      env,
+    );
+    assert.strictEqual(borrowerReview.status, 403);
   });
 });

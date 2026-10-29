@@ -1,5 +1,16 @@
 # Gidfine Changelog
 
+## 2026-10-29 — Agency review foundation
+
+- Added the `0002_application_review.sql` migration for reviewer assignment,
+  internal notes and append-only application status history.
+- Added staff-only review queue filters, assignment, guarded status transitions
+  and review evidence endpoints.
+- Auditors retain read-only access; borrowers cannot access internal review
+  notes or history.
+- Applied the migration locally and verified the Worker typecheck, 51 API tests
+  and frontend production build.
+
 ## 2026-10-29 — Owner decision baseline
 
 - Recorded the owner’s Phase 0 decisions for tenancy, intermediary operation,
