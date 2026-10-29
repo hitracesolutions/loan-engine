@@ -1,5 +1,14 @@
 # Gidfine Changelog
 
+## 2026-10-29 — Agency review workspace connection
+
+- Connected the React agency review queue to server-side status filtering and
+  the review API.
+- Added assignment, guarded status decisions, internal notes and status-history
+  viewing to the review dialog.
+- Kept lender proposal, agency approval and disbursement actions gated until
+  their Phase 3/4 backend and owner acceptance work is complete.
+
 ## 2026-10-29 — Agency review foundation
 
 - Added the `0002_application_review.sql` migration for reviewer assignment,

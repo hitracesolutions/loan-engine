@@ -43,6 +43,62 @@ export interface ErrorResponse {
   timestamp: string;
 }
 
+export type ApplicationStatus =
+  | 'DRAFT'
+  | 'SUBMITTED'
+  | 'UNDER_REVIEW'
+  | 'MATCHING'
+  | 'LENDER_PENDING'
+  | 'LENDER_ACCEPTED'
+  | 'AGENCY_APPROVED'
+  | 'BORROWER_ACCEPTED'
+  | 'PENDING_DISBURSEMENT'
+  | 'ACTIVE'
+  | 'PAID_OFF'
+  | 'CLOSED'
+  | 'MORE_INFO_REQUIRED'
+  | 'LENDER_DECLINED'
+  | 'AGENCY_REJECTED'
+  | 'BORROWER_DECLINED'
+  | 'CANCELLED'
+  | 'EXPIRED'
+  | 'DELINQUENT'
+  | 'RESTRUCTURED';
+
+export interface ApplicationRecord {
+  id: string;
+  status: ApplicationStatus;
+  requestedAmountPesewas: number;
+  tenureMonths: number;
+  purpose: string | null;
+  assignedOfficerId?: string | null;
+  submittedAt?: number | null;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface ApplicationStatusHistoryEntry {
+  id: string;
+  actorId: string;
+  fromStatus: ApplicationStatus | null;
+  toStatus: ApplicationStatus;
+  reason: string | null;
+  createdAt: number;
+}
+
+export interface ApplicationReviewNote {
+  id: string;
+  actorId: string;
+  note: string;
+  createdAt: number;
+}
+
+export interface ApplicationReview {
+  application: ApplicationRecord;
+  notes: ApplicationReviewNote[];
+  statusHistory: ApplicationStatusHistoryEntry[];
+}
+
 interface ApiEnvelope<T> {
   ok?: boolean;
   data?: T;
@@ -213,12 +269,93 @@ class GidfineAPI {
   // APPLICATIONS
   // ============================================
 
-  async listApplications(): Promise<any[]> {
-    const response = (await this.request('GET', '/applications')) as any;
+  async listApplications(options: {
+    status?: ApplicationStatus;
+    assignedOfficerId?: string;
+  } = {}): Promise<ApplicationRecord[]> {
+    const params = new URLSearchParams();
+    if (options.status) params.set('status', options.status);
+    if (options.assignedOfficerId) params.set('assignedOfficerId', options.assignedOfficerId);
+    const query = params.toString();
+    const response = (await this.request('GET', `/applications${query ? `?${query}` : ''}`)) as
+      | ApplicationRecord[]
+      | { applications?: ApplicationRecord[]; results?: ApplicationRecord[] };
     if (Array.isArray(response)) return response;
     if (response && Array.isArray(response.applications)) return response.applications;
     if (response && Array.isArray(response.results)) return response.results;
     return [];
+  }
+
+  async assignApplication(applicationId: string, assigneeId: string): Promise<{
+    applicationId: string;
+    assignedOfficerId: string;
+    updatedAt: number;
+  }> {
+    return this.request('POST', `/applications/${applicationId}/assign`, { assigneeId });
+  }
+
+  async reviewApplication(
+    applicationId: string,
+    targetStatus: ApplicationStatus,
+    reason?: string,
+  ): Promise<{
+    applicationId: string;
+    fromStatus: ApplicationStatus;
+    status: ApplicationStatus;
+    updatedAt: number;
+  }> {
+    return this.request('POST', `/applications/${applicationId}/review`, {
+      targetStatus,
+      ...(reason ? { reason } : {}),
+    });
+  }
+
+  async addApplicationReviewNote(applicationId: string, note: string): Promise<ApplicationReviewNote> {
+    return this.request('POST', `/applications/${applicationId}/notes`, { note });
+  }
+
+  async getApplicationReview(applicationId: string): Promise<ApplicationReview> {
+    const response = (await this.request('GET', `/applications/${applicationId}/review`)) as {
+      application: ApplicationRecord;
+      notes?: Array<{
+        id: string;
+        actor_id?: string;
+        actorId?: string;
+        note: string;
+        created_at?: number;
+        createdAt?: number;
+      }>;
+      statusHistory?: Array<{
+        id: string;
+        actor_id?: string;
+        actorId?: string;
+        from_status?: ApplicationStatus | null;
+        fromStatus?: ApplicationStatus | null;
+        to_status?: ApplicationStatus;
+        toStatus?: ApplicationStatus;
+        reason: string | null;
+        created_at?: number;
+        createdAt?: number;
+      }>;
+    };
+
+    return {
+      application: response.application,
+      notes: (response.notes ?? []).map((note) => ({
+        id: note.id,
+        actorId: note.actorId ?? note.actor_id ?? '',
+        note: note.note,
+        createdAt: note.createdAt ?? note.created_at ?? 0,
+      })),
+      statusHistory: (response.statusHistory ?? []).map((entry) => ({
+        id: entry.id,
+        actorId: entry.actorId ?? entry.actor_id ?? '',
+        fromStatus: entry.fromStatus ?? entry.from_status ?? null,
+        toStatus: entry.toStatus ?? entry.to_status ?? 'SUBMITTED',
+        reason: entry.reason,
+        createdAt: entry.createdAt ?? entry.created_at ?? 0,
+      })),
+    };
   }
 
   async createApplication(

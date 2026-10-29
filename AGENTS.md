@@ -526,6 +526,16 @@ The current production baseline is Cloudflare Pages + Pages Functions, D1 and KV
   integration, notification channels and regulatory approval undone pending
   owner decisions.
 
+### 2026-10-29 — Agency review workspace connection
+
+- Connected the React agency queue to the staff-filtered application endpoint
+  and typed assignment, review-transition, note and evidence methods.
+- Added an accessible review dialog for assignment, guarded decisions, internal
+  notes and append-only status history.
+- Left lender proposals, agency approval and disbursement readiness gated;
+  those flows still require their Phase 3/4 API and owner acceptance work.
+- Verified the frontend build, Worker typecheck, 51 API tests and diff checks.
+
 ### 2026-10-29 — Ghana cedi frontend display
 
 - Updated user-facing monetary values to display Ghana cedis (`GH₵`) with

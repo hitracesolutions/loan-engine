@@ -129,7 +129,8 @@ cannot write notes or change status.
   review notes, hold/rejection reasons and state transition history.
 - Implement borrower draft/save/submit and agency queue/filter/assignment.
 - Build the borrower application screens and agency review queue using the
-  typed API client.
+  typed API client. The agency queue is now connected to the review API;
+  borrower application screens and lender-facing views remain outstanding.
 - Keep lender-facing data out of borrower and agency response paths unless the
   disclosure policy allows it.
 
@@ -258,11 +259,13 @@ Start with the smallest unblocked slice after Phase 0:
 
 1. Approve O-01, O-02, O-03, O-04 and O-09.
 2. Add role/membership and application review migrations.
-3. Implement agency queue, assignment and review-note endpoints.
+3. Implement agency queue, assignment and review-note endpoints. **Complete**
+   in the local D1/API slice.
 4. Add server-side disclosure primitives and direct-request tests.
-5. Connect the agency review queue to the existing React workspace.
+5. Connect the agency review queue to the existing React workspace. **Complete**
+   for queue filtering, guarded decisions, assignment, notes and history.
 6. Run the full API/typecheck/frontend-build verification before adding lender
-   or financial tables.
+   or financial tables. **Complete** for the current local verification.
 
 This sprint creates a secure origination foundation without prematurely adding
 R2, Durable Objects, a payment provider or a second backend runtime.
