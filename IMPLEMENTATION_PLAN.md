@@ -1,6 +1,6 @@
 # Gidfine Implementation Plan
 
-**Status:** Owner approval required before financial workflow implementation  
+**Status:** Phase 0 owner responses captured; Phase 1 implementation may begin
 **Date:** 29 October 2026  
 **Source of truth:** [`Gidfine_Dev_Guide.md`](./Gidfine_Dev_Guide.md)
 
@@ -65,6 +65,29 @@ financial code is written.
 | O-11 | Notification channels, consent and budget | Event/channel matrix | Outbox and integrations |
 | O-12 | Required generated documents | Template list and signing/consent rules | PDF/document delivery |
 | O-13 | Ghana regulatory and licensing review | Written legal sign-off | Production launch |
+
+### Owner decision register — 29 October 2026
+
+The following responses were provided by the owner during implementation
+planning. They define the initial product boundary; detailed pricing fixtures,
+fee schedules and disclosure fields must still be written before the related
+financial migrations are deployed.
+
+| ID | Agreed direction |
+| --- | --- |
+| O-01 | Start as one Gidfine agency, but preserve a multi-agency SaaS boundary. |
+| O-02 | Gidfine is an intermediary; lenders remain the creditor, funder and collector. |
+| O-03 | Rate method may vary by lender/product and must be stored explicitly. |
+| O-04 | Use a combination of rate spread and fees; fee payer may vary by lender/product. |
+| O-05 | Gidfine defines standard loan rules; lenders may set narrower limits. |
+| O-06 | Use a field-level disclosure matrix subject to legal requirements. |
+| O-07 | Support private uploads first; add generated documents later. R2 is required for uploads. |
+| O-08 | Allow multiple lenders to accept, decline or counter; Gidfine selects the final offer. |
+| O-09 | Agency administrator approval is sufficient for the MVP. |
+| O-10 | Lenders report repayments; Gidfine records and reconciles them manually first, with integrations later. |
+| O-11 | Use in-app, email and SMS notifications; borrower and agency receive them by default, with lender delivery only when permitted. |
+| O-12 | Generate loan contracts, disclosures, repayment schedules and payment receipts. |
+| O-13 | Owner reports Ghana-qualified legal/regulatory review as complete; supporting evidence should be attached to the launch record. |
 
 ## 4. Delivery phases
 

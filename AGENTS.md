@@ -534,3 +534,11 @@ The current production baseline is Cloudflare Pages + Pages Functions, D1 and KV
   pesewas with GHS semantics, so no database migration is needed.
 - Left broader Ghana localization of KYC and payment-provider references for a
   separate owner-approved scope.
+
+### 2026-10-29 — Worker typecheck foundation
+
+- Updated the local D1 integration-test adapter to match the generated
+  Cloudflare D1 contracts, including metadata, `withSession()` and `raw()`
+  overloads.
+- Worker typecheck now passes, and the complete API test suite passes all 50
+  tests.

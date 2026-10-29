@@ -7,10 +7,32 @@ import worker from '../src/index.ts';
 import { ensureAdminUser } from '../src/lib/auth.ts';
 import type { AppEnv } from '../src/env.ts';
 
+type SqliteValue = null | number | bigint | string | NodeJS.ArrayBufferView;
+
+function notImplementedRaw<T = unknown[]>(options: { columnNames: true }): Promise<[string[], ...T[]]>;
+function notImplementedRaw<T = unknown[]>(options?: { columnNames?: false }): Promise<T[]>;
+function notImplementedRaw<T = unknown[]>(
+  _options?: { columnNames?: boolean },
+): Promise<T[] | [string[], ...T[]]> {
+  throw new Error('Not implemented');
+}
+
 function createD1Adapter(sqliteDb: DatabaseSync): D1Database {
-  function createPreparedStatement(sql: string, params: any[] = []): D1PreparedStatement {
+  function testMeta(changes = 0): D1Meta & Record<string, unknown> {
     return {
-      bind(...values: any[]) {
+      duration: 0,
+      size_after: 0,
+      rows_read: 0,
+      rows_written: changes,
+      last_row_id: 0,
+      changed_db: changes > 0,
+      changes,
+    };
+  }
+
+  function createPreparedStatement(sql: string, params: SqliteValue[] = []): D1PreparedStatement {
+    return {
+      bind(...values: SqliteValue[]) {
         return createPreparedStatement(sql, values);
       },
       async first<T = unknown>(colName?: string): Promise<T | null> {
@@ -26,34 +48,31 @@ function createD1Adapter(sqliteDb: DatabaseSync): D1Database {
         return {
           results,
           success: true,
-          meta: {} as any,
+          meta: testMeta(),
         };
       },
-      async run(): Promise<D1Response> {
+      async run<T = Record<string, unknown>>(): Promise<D1Result<T>> {
         const stmt = sqliteDb.prepare(sql);
         const res = stmt.run(...params);
         return {
+          results: [],
           success: true,
-          meta: { changes: res.changes } as any,
+          meta: testMeta(Number(res.changes)),
         };
       },
-      raw<T = unknown>(): Promise<T[]> {
-        throw new Error('Not implemented');
-      },
+      raw: notImplementedRaw,
     };
   }
 
-  return {
-    prepare(query: string): D1PreparedStatement {
-      return createPreparedStatement(query);
-    },
-    async batch<T = unknown>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]> {
+  const prepare = (query: string): D1PreparedStatement => createPreparedStatement(query);
+
+  const batch = async <T = unknown>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]> => {
       sqliteDb.exec('BEGIN TRANSACTION;');
       try {
-        const results = [];
+        const results: D1Result<T>[] = [];
         for (const s of statements) {
           const res = await s.run();
-          results.push({ results: [], success: true, meta: res.meta } as any);
+          results.push({ results: [], success: true, meta: res.meta });
         }
         sqliteDb.exec('COMMIT;');
         return results;
@@ -61,13 +80,26 @@ function createD1Adapter(sqliteDb: DatabaseSync): D1Database {
         sqliteDb.exec('ROLLBACK;');
         throw err;
       }
-    },
-    async exec(query: string): Promise<D1ExecResult> {
+    };
+
+  const exec = async (query: string): Promise<D1ExecResult> => {
       sqliteDb.exec(query);
       return { count: 0, duration: 0 };
-    },
+    };
+
+  return {
+    prepare,
+    batch,
+    exec,
     dump(): Promise<ArrayBuffer> {
       throw new Error('Not implemented');
+    },
+    withSession(): D1DatabaseSession {
+      return {
+        prepare,
+        batch,
+        getBookmark: () => null,
+      };
     },
   };
 }

@@ -1,5 +1,19 @@
 # Gidfine Changelog
 
+## 2026-10-29 — Owner decision baseline
+
+- Recorded the owner’s Phase 0 decisions for tenancy, intermediary operation,
+  lender/product pricing, fees, disclosures, documents, lender matching,
+  approvals, repayments, notifications and generated documents.
+- Marked Phase 1 implementation as unblocked while retaining detailed pricing,
+  fee, disclosure and legal evidence fixtures as launch prerequisites.
+
+## 2026-10-29 — Worker typecheck foundation
+
+- Aligned the local D1 integration-test adapter with the generated Cloudflare
+  D1 contracts and added session/metadata support.
+- Worker typecheck now passes; the API test suite passes all 50 tests.
+
 ## 2026-10-29 — Ghana cedi display
 
 - Replaced Indian rupee symbols and `en-IN` formatting across frontend loan,
