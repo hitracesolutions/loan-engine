@@ -504,7 +504,7 @@ describe('Gidfine Cloudflare Worker End-to-End API Integration', () => {
     const { token: adminToken } = ((await adminLogin.json()) as any).data;
 
     const queueResponse = await worker.fetch(
-      new Request('https://loan-engine.pages.dev/agency/applications?status=SUBMITTED', {
+      new Request('https://loan-engine.pages.dev/applications?status=SUBMITTED', {
         headers: { Authorization: `Bearer ${adminToken}` },
       }),
       env,

@@ -32,7 +32,6 @@ const router = new Router()
   .post('/applications/:applicationId/assign', assignApplication)
   .post('/applications/:applicationId/review', reviewApplication)
   .post('/applications/:applicationId/notes', addApplicationReviewNote)
-  .get('/agency/applications', listApplications)
   // Preserve the path used by the current frontend while it migrates to the
   // shorter resource-oriented API paths.
   .post('/borrower/applications', createApplication)
