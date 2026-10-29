@@ -525,3 +525,12 @@ The current production baseline is Cloudflare Pages + Pages Functions, D1 and KV
 - Left the financial domain expansion, document storage decision, payment
   integration, notification channels and regulatory approval undone pending
   owner decisions.
+
+### 2026-10-29 — Ghana cedi frontend display
+
+- Updated user-facing monetary values to display Ghana cedis (`GH₵`) with
+  Ghana locale formatting across the frontend.
+- Kept stored values and API contracts unchanged: amounts remain integer
+  pesewas with GHS semantics, so no database migration is needed.
+- Left broader Ghana localization of KYC and payment-provider references for a
+  separate owner-approved scope.

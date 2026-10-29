@@ -24,13 +24,13 @@ export default function ShapWidget() {
         final_approved_limit: 1200000,
         requested_amount: 2000000,
         decision_status: "limit_exceeded",
-        shap_summary: "Your requested amount of ₹2,000,000 exceeds your computed approved capacity of ₹1,200,000 by ₹800,000. Each feature contributes to this capacity — CIBIL score (800) adds ₹500,000, income adds ₹250,000, FOIR adds ₹50,000 and location adds ₹100,000. Reducing the amount to within ₹1,200,000 or improving income / lowering existing debt would change this decision.",
+        shap_summary: "Your requested amount of GH₵200,000 exceeds your computed approved capacity of GH₵120,000 by GH₵80,000. Each feature contributes to this capacity — credit score (800) adds GH₵50,000, income adds GH₵25,000, FOIR adds GH₵5,000 and location adds GH₵10,000. Reducing the amount to within GH₵120,000 or improving income / lowering existing debt would change this decision.",
         waterfall: [
           { feature: "Base Benchmark", rate_impact: 12.50, limit_impact: 300000, direction: "neutral", description: "National Benchmark Pricing for Personal Loans." },
           { feature: "CIBIL Bureau Score", rate_impact: -2.00, limit_impact: 500000, direction: "positive", description: "Tier-1 Prime Score (800+) reduced risk premium significantly." },
-          { feature: "Monthly Net Income", rate_impact: -0.50, limit_impact: 250000, direction: "positive", description: "Upper Salaried Tier (₹75k-₹1.5L/mo)." },
+          { feature: "Monthly Net Income", rate_impact: -0.50, limit_impact: 250000, direction: "positive", description: "Upper income tier (GH₵7.5k-GH₵15k/mo)." },
           { feature: "FOIR / Existing Debt", rate_impact: -0.25, limit_impact: 50000, direction: "positive", description: "Moderate Existing Debt Obligations (FOIR 25%-45%)." },
-          { feature: "Location Tier", rate_impact: -0.25, limit_impact: 100000, direction: "positive", description: "Mumbai BKC address registered as low default metropolitan tier." }
+          { feature: "Location Tier", rate_impact: -0.25, limit_impact: 100000, direction: "positive", description: "Ghana address registered as a low-default metropolitan tier." }
         ]
       });
       setLoading(false);
@@ -73,7 +73,7 @@ export default function ShapWidget() {
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-[#0A0A0A] p-4 rounded-xl border border-white/5">
             <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold font-mono">Requested Amount</p>
-            <p className="text-xl font-bold text-white mt-1">₹{shapData?.requested_amount ? Math.round(shapData.requested_amount).toLocaleString('en-IN') : '—'}</p>
+            <p className="text-xl font-bold text-white mt-1">GH₵{shapData?.requested_amount ? Math.round(shapData.requested_amount).toLocaleString('en-GH') : '—'}</p>
           </div>
           <div className={`p-4 rounded-xl border ${
             shapData?.decision_status === 'limit_exceeded'
@@ -83,7 +83,7 @@ export default function ShapWidget() {
             <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold font-mono">Max Approved Capacity</p>
             <p className={`text-xl font-bold mt-1 ${
               shapData?.decision_status === 'limit_exceeded' ? 'text-amber-400' : 'text-emerald-400'
-            }`}>₹{shapData?.final_approved_limit ? Math.round(shapData.final_approved_limit).toLocaleString('en-IN') : '—'}</p>
+            }`}>GH₵{shapData?.final_approved_limit ? Math.round(shapData.final_approved_limit).toLocaleString('en-GH') : '—'}</p>
           </div>
         </div>
 
@@ -135,7 +135,7 @@ export default function ShapWidget() {
                 <span className={`col-span-3 text-right font-mono font-bold ${
                   isBase ? 'text-white' : isNegative ? 'text-rose-400' : 'text-emerald-400'
                 }`}>
-                  {isBase ? '₹0' : `${isNegative ? '−' : '+'}₹${Math.abs(row.limit_impact).toLocaleString('en-IN')}`}
+                  {isBase ? 'GH₵0' : `${isNegative ? '−' : '+'}GH₵${Math.abs(row.limit_impact).toLocaleString('en-GH')}`}
                 </span>
                 <span className="col-span-4 pl-4 text-white/50 text-[11px] leading-snug">
                   {row.description}
@@ -146,7 +146,7 @@ export default function ShapWidget() {
           <div className="grid grid-cols-12 items-center text-xs pt-2.5 px-1">
             <span className="col-span-5 font-bold text-white">Maximum Approved Capacity</span>
             <span className="col-span-3 text-right font-mono font-bold text-white">
-              ₹{shapData?.final_approved_limit ? Math.round(shapData.final_approved_limit).toLocaleString('en-IN') : '—'}
+              GH₵{shapData?.final_approved_limit ? Math.round(shapData.final_approved_limit).toLocaleString('en-GH') : '—'}
             </span>
             <span className="col-span-4 pl-4 text-white/40 text-[11px]">Sum of all feature contributions</span>
           </div>

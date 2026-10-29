@@ -116,7 +116,7 @@ export default function Docs() {
         {[
           { q: 'How are interest rates determined?', a: 'Our dual‑LLM engine computes prime‑adjusted rates using 18 financial variables, including CIBIL, DTI, and employer‑class.' },
           { q: 'Can I prepay my loan?', a: 'Yes. Pre‑closure is permitted any time subject to a 24‑hour cooling period. Visit Active Loans → Prepay.' },
-          { q: 'What is the maximum loan amount?', a: 'Self‑employed: ₹50L. Salaried: up to ₹1Cr, based on exposure‑multiplier and bureau score.' },
+          { q: 'What is the maximum loan amount?', a: 'Loan limits are configured in Ghana cedis according to the approved product, affordability policy and credit assessment.' },
         ].map((item, i) => (
           <div key={i} className="border-b border-white/10 pb-4 last:border-0">
             <p className="text-white font-medium text-sm">{item.q}</p>

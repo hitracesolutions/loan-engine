@@ -213,7 +213,7 @@ export default function ChatPane({ appState, setAppState, chatHistory, onSendMes
                   </div>
                   <div className="bg-slate-50 p-4 rounded-xl mb-5 border border-slate-100/50">
                     <div className="text-sm text-slate-600 font-medium mb-1">Approved Amount</div>
-                    <div className="text-2xl font-black text-emerald-600 mb-2">₹{new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(appState.requestedAmount)}</div>
+                    <div className="text-2xl font-black text-emerald-600 mb-2">GH₵{new Intl.NumberFormat('en-GH', { maximumFractionDigits: 0 }).format(appState.requestedAmount)}</div>
                     <p className="text-slate-500 text-[13px] leading-relaxed">
                       {msg.content}
                     </p>
@@ -280,7 +280,7 @@ export default function ChatPane({ appState, setAppState, chatHistory, onSendMes
               </div>
               <div className="bg-slate-50 p-4 rounded-xl mb-5 border border-slate-100/50">
                 <div className="text-sm text-slate-600 font-medium mb-1">Requested Amount</div>
-                <div className="text-2xl font-black text-amber-600 mb-2">₹{new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(appState.requestedAmount)}</div>
+                <div className="text-2xl font-black text-amber-600 mb-2">GH₵{new Intl.NumberFormat('en-GH', { maximumFractionDigits: 0 }).format(appState.requestedAmount)}</div>
                 <p className="text-slate-500 text-[13px] leading-relaxed">
                   {msg.content}
                 </p>
@@ -331,7 +331,7 @@ export default function ChatPane({ appState, setAppState, chatHistory, onSendMes
                   </div>
                   <div className="text-right">
                     <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Monthly EMI</div>
-                    <div className="text-2xl font-black text-emerald-600">₹{new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(appState.emi)}</div>
+                    <div className="text-2xl font-black text-emerald-600">GH₵{new Intl.NumberFormat('en-GH', { maximumFractionDigits: 0 }).format(appState.emi)}</div>
                   </div>
                 </div>
                 
@@ -407,7 +407,7 @@ export default function ChatPane({ appState, setAppState, chatHistory, onSendMes
                   <div className="text-slate-500 text-[11px]">Interest</div>
                 </div>
                 <div className="bg-cyan-50 p-2 rounded-lg">
-                  <div className="text-cyan-600 font-bold">₹{Math.round(offer.emi).toLocaleString()}</div>
+                  <div className="text-cyan-600 font-bold">GH₵{Math.round(offer.emi).toLocaleString('en-GH')}</div>
                   <div className="text-slate-500 text-[11px]">Monthly</div>
                 </div>
               </div>

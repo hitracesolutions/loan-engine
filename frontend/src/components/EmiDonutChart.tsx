@@ -21,15 +21,15 @@ export default function EmiDonutChart({ principal, emi, tenure }: Props) {
       <div className="grid grid-cols-1 gap-2">
         <div className="flex justify-between items-center p-2 bg-slate-50 rounded-md border border-slate-100">
           <div className="text-xs text-slate-500">Principal Amount</div>
-          <div className="text-sm font-bold text-slate-900">₹{new Intl.NumberFormat('en-IN').format(principal)}</div>
+          <div className="text-sm font-bold text-slate-900">GH₵{new Intl.NumberFormat('en-GH').format(principal)}</div>
         </div>
         <div className="flex justify-between items-center p-2 bg-slate-50 rounded-md border border-slate-100">
           <div className="text-xs text-slate-500">Total Interest</div>
-          <div className="text-sm font-bold text-slate-900">₹{new Intl.NumberFormat('en-IN').format(Math.max(0, totalInterest))}</div>
+          <div className="text-sm font-bold text-slate-900">GH₵{new Intl.NumberFormat('en-GH').format(Math.max(0, totalInterest))}</div>
         </div>
         <div className="flex justify-between items-center p-2 bg-slate-50 rounded-md border border-slate-100">
           <div className="text-xs text-slate-500">Total Payable</div>
-          <div className="text-sm font-bold text-slate-900">₹{new Intl.NumberFormat('en-IN').format(totalAmount)}</div>
+          <div className="text-sm font-bold text-slate-900">GH₵{new Intl.NumberFormat('en-GH').format(totalAmount)}</div>
         </div>
       </div>
     </div>

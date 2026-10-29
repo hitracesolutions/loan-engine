@@ -87,14 +87,14 @@ const WhatIfSimulator: React.FC<WhatIfSimulatorProps> = ({
             />
             <div className="flex justify-between items-center">
               <span className="text-lg font-bold text-gray-900">
-                ₹{newAmount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                GH₵{newAmount.toLocaleString('en-GH', { maximumFractionDigits: 0 })}
               </span>
               <span
                 className={`text-sm font-semibold ${
                   amountChange > 0 ? 'text-red-600' : amountChange < 0 ? 'text-green-600' : 'text-gray-600'
                 }`}
               >
-                {amountChange > 0 ? '+' : ''}{amountChange.toLocaleString('en-IN')}
+                {amountChange > 0 ? '+' : ''}{amountChange.toLocaleString('en-GH')}
               </span>
             </div>
           </div>
@@ -182,18 +182,18 @@ const WhatIfSimulator: React.FC<WhatIfSimulatorProps> = ({
                 <tr className="border-b border-gray-200 hover:bg-gray-50">
                   <td className="py-3 px-4 text-gray-900 font-semibold">Loan Amount</td>
                   <td className="py-3 px-4 text-right text-gray-700">
-                    ₹{(result.original.loan_amount || 0).toLocaleString('en-IN')}
+                    GH₵{(result.original.loan_amount || 0).toLocaleString('en-GH')}
                   </td>
                   <td className="py-3 px-4 text-right text-gray-700">
-                    ₹{(result.simulated.loan_amount || 0).toLocaleString('en-IN')}
+                    GH₵{(result.simulated.loan_amount || 0).toLocaleString('en-GH')}
                   </td>
                   <td className="py-3 px-4 text-right">
                     <span className="font-semibold text-gray-700">
                       {result.simulated.loan_amount ? (
                         result.simulated.loan_amount > result.original.loan_amount ? (
-                          <span className="text-red-600">+₹{((result.simulated.loan_amount || 0) - (result.original.loan_amount || 0)).toLocaleString('en-IN')}</span>
+                          <span className="text-red-600">+GH₵{((result.simulated.loan_amount || 0) - (result.original.loan_amount || 0)).toLocaleString('en-GH')}</span>
                         ) : (
-                          <span className="text-green-600">-₹{((result.original.loan_amount || 0) - (result.simulated.loan_amount || 0)).toLocaleString('en-IN')}</span>
+                          <span className="text-green-600">-GH₵{((result.original.loan_amount || 0) - (result.simulated.loan_amount || 0)).toLocaleString('en-GH')}</span>
                         )
                       ) : (
                         '-'
@@ -217,15 +217,15 @@ const WhatIfSimulator: React.FC<WhatIfSimulatorProps> = ({
                 </tr>
                 <tr className="hover:bg-gray-50">
                   <td className="py-3 px-4 text-gray-900 font-semibold">EMI</td>
-                  <td className="py-3 px-4 text-right text-gray-700">₹{(result.original.emi || 0).toLocaleString('en-IN')}</td>
-                  <td className="py-3 px-4 text-right text-gray-700">₹{(result.simulated.emi || 0).toLocaleString('en-IN')}</td>
+                  <td className="py-3 px-4 text-right text-gray-700">GH₵{(result.original.emi || 0).toLocaleString('en-GH')}</td>
+                  <td className="py-3 px-4 text-right text-gray-700">GH₵{(result.simulated.emi || 0).toLocaleString('en-GH')}</td>
                   <td className="py-3 px-4 text-right">
                     <span className="font-semibold text-gray-700">
                       {result.differences.emi_change ? (
                         result.differences.emi_change > 0 ? (
-                          <span className="text-red-600">+₹{result.differences.emi_change.toLocaleString('en-IN')}</span>
+                          <span className="text-red-600">+GH₵{result.differences.emi_change.toLocaleString('en-GH')}</span>
                         ) : (
-                          <span className="text-green-600">-₹{Math.abs(result.differences.emi_change).toLocaleString('en-IN')}</span>
+                          <span className="text-green-600">-GH₵{Math.abs(result.differences.emi_change).toLocaleString('en-GH')}</span>
                         )
                       ) : (
                         '-'
@@ -242,7 +242,7 @@ const WhatIfSimulator: React.FC<WhatIfSimulatorProps> = ({
             <div className="bg-green-50 p-4 rounded-lg">
               <p className="text-sm text-gray-600">Interest Savings</p>
               <p className="text-2xl font-bold text-green-600">
-                ₹{Math.abs(result.differences.interest_savings || 0).toLocaleString('en-IN')}
+                GH₵{Math.abs(result.differences.interest_savings || 0).toLocaleString('en-GH')}
               </p>
             </div>
           )}

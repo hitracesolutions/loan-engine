@@ -65,7 +65,7 @@ const LoanCard: React.FC<LoanCardProps> = ({
         <div>
           <p className="text-xs text-gray-600 mb-1">Monthly EMI</p>
           <p className="text-2xl font-bold text-blue-600">
-            ₹{loan.emi.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+            GH₵{loan.emi.toLocaleString('en-GH', { maximumFractionDigits: 0 })}
           </p>
         </div>
         <div>
@@ -79,7 +79,7 @@ const LoanCard: React.FC<LoanCardProps> = ({
         <div className="bg-gray-50 p-2 rounded">
           <p className="text-xs text-gray-600">Total Cost</p>
           <p className="font-semibold text-gray-900">
-            ₹{loan.total_cost.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+            GH₵{loan.total_cost.toLocaleString('en-GH', { maximumFractionDigits: 0 })}
           </p>
         </div>
         <div className="bg-gray-50 p-2 rounded">

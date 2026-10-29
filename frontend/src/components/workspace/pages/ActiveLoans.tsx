@@ -68,7 +68,7 @@ export default function ActiveLoans() {
       }
 
       setPaidInstallments((prev) => [...prev, selectedInstallment.number]);
-      setPaidSuccessMessage(`Installment #${selectedInstallment.number} (₹${selectedInstallment.amount.toLocaleString('en-IN')}) successfully paid via Razorpay! Transaction ID: RZP-${Math.random().toString(36).substring(2, 10).toUpperCase()}`);
+      setPaidSuccessMessage(`Installment #${selectedInstallment.number} (GH₵${selectedInstallment.amount.toLocaleString('en-GH')}) successfully paid! Transaction ID: TXN-${Math.random().toString(36).substring(2, 10).toUpperCase()}`);
       setShowRazorpayModal(false);
 
       if (user?.phone) {
@@ -131,14 +131,14 @@ export default function ActiveLoans() {
                 <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">Active Facility</span>
                 <span className="text-xs font-semibold text-white/50">{lenderName}</span>
               </div>
-              <h2 className="text-4xl font-display font-bold text-white tracking-tight mt-3">₹{facilityAmount.toLocaleString('en-IN')}</h2>
+              <h2 className="text-4xl font-display font-bold text-white tracking-tight mt-3">GH₵{facilityAmount.toLocaleString('en-GH')}</h2>
               <p className="text-xs text-white/40 mt-1 font-mono">Facility ID: {facilityId}</p>
            </div>
            
            <div className="bg-[#0A0A0A] p-4 rounded-xl border border-white/10 flex items-center gap-6">
               <div>
                  <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold">Upcoming EMI Due</p>
-                 <p className="text-lg font-bold text-white font-mono">₹{baseEmi.toLocaleString('en-IN')}</p>
+                 <p className="text-lg font-bold text-white font-mono">GH₵{baseEmi.toLocaleString('en-GH')}</p>
               </div>
               <div className="h-8 w-px bg-white/10" />
               <div>
@@ -155,7 +155,7 @@ export default function ActiveLoans() {
               className="w-full h-14 bg-white text-black font-semibold rounded-xl hover:bg-white/90 shadow-lg shadow-white/10 transition-all flex items-center justify-center gap-3 text-base"
            >
               <CreditCard className="w-5 h-5" />
-              Pay Upcoming EMI via Razorpay (₹{baseEmi.toLocaleString('en-IN')})
+              Pay Upcoming EMI (GH₵{baseEmi.toLocaleString('en-GH')})
            </button>
         </div>
       </div>
@@ -205,7 +205,7 @@ export default function ActiveLoans() {
 
                     <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
                       <span className={`font-bold text-sm ${isPaid ? 'text-emerald-400' : 'text-white'}`}>
-                        ₹{instAmount.toLocaleString('en-IN')}
+                        GH₵{instAmount.toLocaleString('en-GH')}
                       </span>
 
                       {isPaid ? (
@@ -250,7 +250,7 @@ export default function ActiveLoans() {
               <div className="bg-[#0A0A0A] p-4 rounded-xl border border-white/5 flex justify-between items-center">
                 <div>
                   <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold">Installment #{selectedInstallment.number} Due</p>
-                  <p className="text-2xl font-bold text-white font-mono">₹{selectedInstallment.amount.toLocaleString('en-IN')}</p>
+                  <p className="text-2xl font-bold text-white font-mono">GH₵{selectedInstallment.amount.toLocaleString('en-GH')}</p>
                 </div>
                 <div className="flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
                   <Lock className="w-3 h-3" /> 256-Bit SSL Secured
@@ -313,7 +313,7 @@ export default function ActiveLoans() {
                     Processing Razorpay Payment...
                   </>
                 ) : (
-                  <>Pay Installment #{selectedInstallment.number} (₹{selectedInstallment.amount.toLocaleString('en-IN')}) via Razorpay →</>
+                  <>Pay Installment #{selectedInstallment.number} (GH₵{selectedInstallment.amount.toLocaleString('en-GH')}) →</>
                 )}
               </button>
             </div>

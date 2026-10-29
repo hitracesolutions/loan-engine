@@ -37,11 +37,11 @@ export default function GenUiApplication() {
     {
       id: 'init-1',
       role: 'assistant',
-      content: `Hello ${firstName}. System Intelligence is active. Based on your verified profile (CIBIL: ${user?.creditScore || 785}), you are pre-approved for instant credit facilities up to ₹15,00,000. \n\nTo structure your capital, what is the primary purpose or goal for your loan today? (e.g. Business Expansion, Medical Emergency, Debt Consolidation, Personal)`,
+      content: `Hello ${firstName}. System Intelligence is active. Based on your verified profile (credit score: ${user?.creditScore || 785}), you are pre-approved for instant credit facilities up to GH₵150,000. \n\nTo structure your loan, what is the primary purpose or goal for your request today? (e.g. Business Expansion, Medical Emergency, Debt Consolidation, Personal)`,
       graphTrace: [
         'StateGraph initialized: load_session_node',
         'CIBIL Bureau Lookup: 785 (Tier-1 Prime)',
-        'Pre-approved Limit Engine: ₹15,00,000'
+        'Pre-approved Limit Engine: GH₵150,000'
       ],
       timestamp: Date.now()
     }
@@ -124,12 +124,12 @@ export default function GenUiApplication() {
       {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: `Based on your Tier-1 credit score of ${user?.creditScore || 785} and monthly income telemetry, your optimal pre-approved facility is ₹5,00,000 at a prime rate of 10.5% p.a. over 36 months (~₹16,250/mo EMI). You can confirm these parameters to proceed to KYC, or adjust them using the configurator below:`,
+        content: `Based on your credit score of ${user?.creditScore || 785} and monthly income telemetry, your optimal pre-approved facility is GH₵50,000 at a prime rate of 10.5% p.a. over 36 months (~GH₵1,625/mo EMI). You can confirm these parameters to proceed to verification, or adjust them using the configurator below:`,
         showConfiguratorPill: true,
         graphTrace: [
           'StateGraph Node: intent_agent (CLASSIFIED: Best Terms Inquiry)',
           'Invoking Underwriting Engine: FOIR = 18%, Risk Premium = 0%',
-          'Calculated Optimal Facility: ₹5,00,000 @ 10.5% p.a.'
+        'Calculated Optimal Facility: GH₵50,000 @ 10.5% p.a.'
         ],
         timestamp: Date.now()
       }
@@ -188,7 +188,7 @@ export default function GenUiApplication() {
         {
           id: Date.now().toString(),
           role: 'assistant',
-          content: `Capital parameters confirmed (Principal: ₹${loanDetails.requestedAmount.toLocaleString('en-IN')}, Tenure: ${loanDetails.tenureMonths} Months). For Vision AI identity verification, please complete 1-Click DigiLocker or upload your Aadhaar & PAN below:`,
+          content: `Capital parameters confirmed (Principal: GH₵${loanDetails.requestedAmount.toLocaleString('en-GH')}, Tenure: ${loanDetails.tenureMonths} Months). Please complete identity verification or upload the required documents below:`,
           component: 'KYC',
           graphTrace: ['StateGraph Node: kyc_agent (Aadhaar & PAN Verification Node)'],
           timestamp: Date.now()
@@ -359,7 +359,7 @@ export default function GenUiApplication() {
           `phase: ${phase}`,
         ];
         if (chatRes.data.next_agent) graphTraces.push(`→ ${chatRes.data.next_agent}`);
-        if (chatRes.data.loan_terms?.emi) graphTraces.push(`EMI ₹${Math.round(chatRes.data.loan_terms.emi).toLocaleString('en-IN')}/mo`);
+        if (chatRes.data.loan_terms?.emi) graphTraces.push(`EMI GH₵${Math.round(chatRes.data.loan_terms.emi).toLocaleString('en-GH')}/mo`);
 
         const lowerText = text.toLowerCase();
         const explicitlyWantsSlider = lowerText.includes('slider') || lowerText.includes('configure') || lowerText.includes('adjust slider');

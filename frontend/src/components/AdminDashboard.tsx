@@ -268,13 +268,13 @@ const DashboardView: React.FC<DashboardViewProps> = ({ periodDays }) => {
         />
         <KPICard
           label="Avg EMI Offered"
-          value={`₹${kpis.avg_emi.toLocaleString()}`}
+          value={`GH₵${kpis.avg_emi.toLocaleString('en-GH')}`}
           icon="💰"
           color="purple"
         />
         <KPICard
           label="Total Cost Savings"
-          value={`₹${(kpis.total_cost_savings / 1000000).toFixed(1)}M`}
+          value={`GH₵${(kpis.total_cost_savings / 1000000).toFixed(1)}M`}
           icon="💎"
           color="yellow"
         />

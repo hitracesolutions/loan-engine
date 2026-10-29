@@ -85,7 +85,7 @@ export default function AnalyticsDashboard() {
             <div>
               <p className="text-xs font-semibold uppercase tracking-widest text-white/50 mb-1">Instant Pre-Approved Limit</p>
               <h3 className="text-3xl font-display font-bold text-white tracking-tight">
-                ₹{(user?.preApprovedLimit || (user?.salary ? user.salary * 10 : 1500000)).toLocaleString('en-IN')}
+                GH₵{(user?.preApprovedLimit || (user?.salary ? user.salary * 10 : 1500000)).toLocaleString('en-GH')}
               </h3>
             </div>
             <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
@@ -105,7 +105,7 @@ export default function AnalyticsDashboard() {
           <div className="flex justify-between items-start mb-6">
             <div>
               <p className="text-xs font-semibold uppercase tracking-widest text-white/50 mb-1">Active Facility</p>
-              <h3 className="text-3xl font-display font-bold text-white tracking-tight">₹{loanDetails.requestedAmount.toLocaleString('en-IN')}</h3>
+          <h3 className="text-3xl font-display font-bold text-white tracking-tight">GH₵{loanDetails.requestedAmount.toLocaleString('en-GH')}</h3>
             </div>
             <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
               <Activity className="w-5 h-5" />
@@ -113,7 +113,7 @@ export default function AnalyticsDashboard() {
           </div>
           <div className="flex justify-between items-center text-xs text-white/60 mb-2">
              <span>Next Repayment</span>
-             <span className="text-white font-medium">₹{Math.round((loanDetails.requestedAmount * 1.105)/loanDetails.tenureMonths).toLocaleString('en-IN')}</span>
+             <span className="text-white font-medium">GH₵{Math.round((loanDetails.requestedAmount * 1.105)/loanDetails.tenureMonths).toLocaleString('en-GH')}</span>
           </div>
           <div className="flex justify-between items-center text-xs text-white/40">
              <span>Due Date</span>
@@ -143,7 +143,7 @@ export default function AnalyticsDashboard() {
                   <tr key={idx}>
                     <td className="py-4 text-white">#{item.session_id ? item.session_id.substring(0, 10).toUpperCase() : `FAC-${idx}`}</td>
                     <td className="py-4 text-white/60">{item.created_at ? new Date(item.created_at).toLocaleDateString() : 'Recent'}</td>
-                    <td className="py-4 text-white font-medium">₹{(item.amount || loanDetails.requestedAmount).toLocaleString('en-IN')}</td>
+                    <td className="py-4 text-white font-medium">GH₵{(item.amount || loanDetails.requestedAmount).toLocaleString('en-GH')}</td>
                     <td className="py-4">
                       <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border font-sans text-xs ${
                         item.status === 'Approved' || item.status === 'Disbursed'

@@ -1,5 +1,13 @@
 # Gidfine Changelog
 
+## 2026-10-29 — Ghana cedi display
+
+- Replaced Indian rupee symbols and `en-IN` formatting across frontend loan,
+  repayment, dashboard, advisor, sanction and comparison views with `GH₵` and
+  Ghana-style formatting.
+- Preserved the existing integer pesewas/GHS storage model and API contracts;
+  no database migration is required for this display-only change.
+
 ## 2026-10-29 — Documentation and platform baseline
 
 - Updated the development guide to reflect the current Cloudflare Pages +

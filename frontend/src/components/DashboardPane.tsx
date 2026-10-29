@@ -60,7 +60,7 @@ export default function DashboardPane({ appState, onLoadSession, onNewChat, onPa
                   </div>
                   <div className="text-[11px] text-slate-500 mt-1 flex items-center space-x-3">
                     <span>Score: <strong className="text-slate-700">{appState.creditScore || '-'}</strong></span>
-                    <span>Salary: <strong className="text-slate-700">{appState.salary ? `₹${Number(appState.salary).toLocaleString()}` : '-'}</strong></span>
+                    <span>Salary: <strong className="text-slate-700">{appState.salary ? `GH₵${Number(appState.salary).toLocaleString('en-GH')}` : '-'}</strong></span>
                   </div>
                 </>
               )}
@@ -72,15 +72,15 @@ export default function DashboardPane({ appState, onLoadSession, onNewChat, onPa
         {/* Financial State */}
         <div className="mb-6">
           <div className="grid grid-cols-2 gap-2.5 mb-4">
-            <MetricCard label="Principal" value={appState.requestedAmount} prefix="₹" />
+            <MetricCard label="Principal" value={appState.requestedAmount} prefix="GH₵" />
             <MetricCard label="Int. Rate" value={appState.roi} decimals={1} suffix="%" />
-            <MetricCard label="Monthly EMI" value={appState.emi} prefix="₹" />
+            <MetricCard label="Monthly EMI" value={appState.emi} prefix="GH₵" />
             <MetricCard
               label="Est. Total Interest"
               value={Math.max(0, (appState.emi * appState.tenure) - appState.requestedAmount)}
-              prefix="₹"
+              prefix="GH₵"
             />
-            <MetricCard label="Salary" value={appState.salary || 0} prefix="₹" />
+            <MetricCard label="Salary" value={appState.salary || 0} prefix="GH₵" />
             <MetricCard label="Credit Score" value={appState.creditScore || 0} />
           </div>
 
@@ -144,7 +144,7 @@ export default function DashboardPane({ appState, onLoadSession, onNewChat, onPa
               {appState.pastLoans.slice(0, 2).map((loan, i) => (
                 <div key={i} className="p-2.5 bg-slate-100/50 rounded-md border border-slate-200/60">
                   <div className="flex justify-between items-start mb-1.5">
-                    <span className="text-[10px] font-bold text-slate-700">₹{loan.amount?.toLocaleString()} ({loan.type})</span>
+                    <span className="text-[10px] font-bold text-slate-700">GH₵{loan.amount?.toLocaleString('en-GH')} ({loan.type})</span>
                     <span className={clsx(
                       "text-[8px] px-1 py-0.5 rounded font-bold uppercase",
                       loan.decision === 'approve' ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-600"
@@ -173,7 +173,7 @@ export default function DashboardPane({ appState, onLoadSession, onNewChat, onPa
                 <div key={offer.lender_id} className="flex items-center justify-between p-2 bg-white rounded-md border border-slate-100">
                   <div>
                     <div className="text-[11px] font-bold text-slate-800">{offer.lender_name}</div>
-                    <div className="text-[9px] text-slate-500">Rate: {offer.interest_rate}% • EMI: ₹{Number(offer.emi).toLocaleString()}</div>
+                    <div className="text-[9px] text-slate-500">Rate: {offer.interest_rate}% • EMI: GH₵{Number(offer.emi).toLocaleString('en-GH')}</div>
                   </div>
                   <div>
                     <button
@@ -228,7 +228,7 @@ export default function DashboardPane({ appState, onLoadSession, onNewChat, onPa
                     {/* Loan Amount & Type - Compact */}
                     <div className="flex justify-between items-center mb-1">
                       <span className="text-[9px] font-bold text-slate-900">
-                        ₹{session.loan_amount ? (session.loan_amount / 100000).toFixed(1) : '0'}L
+                        GH₵{session.loan_amount ? (session.loan_amount / 1000).toFixed(1) : '0'}K
                       </span>
                       <span className="text-[6px] font-bold text-slate-500 uppercase tracking-tight bg-slate-100 px-1 py-0.5 rounded">
                         {session.loan_type || 'Personal'}
