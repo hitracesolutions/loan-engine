@@ -68,7 +68,9 @@ async function findApplication(
       `SELECT loan_applications.*, borrower.full_name AS borrower_full_name,
               borrower.email AS borrower_email, borrower.phone AS borrower_phone
        FROM loan_applications
-       JOIN users AS borrower ON borrower.id = loan_applications.borrower_id
+       JOIN users AS borrower
+         ON borrower.id = loan_applications.borrower_id
+        AND borrower.agency_id = loan_applications.agency_id
        WHERE loan_applications.id = ? AND loan_applications.agency_id = ?`,
     )
     .bind(applicationId, agencyId)
@@ -200,7 +202,9 @@ export async function listApplications({ request, env, requestId }: RouteContext
         `SELECT loan_applications.*, borrower.full_name AS borrower_full_name,
                 borrower.email AS borrower_email, borrower.phone AS borrower_phone
          FROM loan_applications
-         JOIN users AS borrower ON borrower.id = loan_applications.borrower_id
+         JOIN users AS borrower
+           ON borrower.id = loan_applications.borrower_id
+          AND borrower.agency_id = loan_applications.agency_id
          WHERE ${filters.join(' AND ')}
          ORDER BY loan_applications.created_at DESC LIMIT 100`,
       )
@@ -214,7 +218,9 @@ export async function listApplications({ request, env, requestId }: RouteContext
       `SELECT loan_applications.*, borrower.full_name AS borrower_full_name,
               borrower.email AS borrower_email, borrower.phone AS borrower_phone
        FROM loan_applications
-       JOIN users AS borrower ON borrower.id = loan_applications.borrower_id
+       JOIN users AS borrower
+         ON borrower.id = loan_applications.borrower_id
+        AND borrower.agency_id = loan_applications.agency_id
        WHERE loan_applications.agency_id = ? AND loan_applications.borrower_id = ?
        ORDER BY loan_applications.created_at DESC LIMIT 100`,
     )
