@@ -1,9 +1,13 @@
 # Blockers and answers
 
-**Last updated:** 2026-10-30 (owner answered B-1 to B-11)
+**Last updated:** 2026-10-30 (owner answered B-1 to B-11; full programme authorised)
 **Purpose:** the single place a developer checks before starting work, so nobody
 waits on a question that is already answered and nobody builds on a decision that
 is not in force.
+**Implementation authorisation:** the owner approved the **complete programme**
+(S-00 to S-24) on 2026-10-30 — see [`EXECUTION_PLAN.md`](./EXECUTION_PLAN.md).
+The four counsel artefacts, the accountant confirmation and the "safety floor"
+listed there are the only remaining external gates.
 **Sources of truth:** [`ADR/`](./ADR/README.md) (decisions),
 [`EXECUTION_PLAN.md`](./EXECUTION_PLAN.md) (authorised steps),
 [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md) §3.1 (gate status).
@@ -108,7 +112,7 @@ placeholder copy marked as such, and never present it as approved.
 | E-4 | **Legacy Convex surface still live** — 73 `convex` references under `frontend/src`. | `IMPLEMENTATION_PLAN.md` §8 | S-03 |
 | E-5 | **Simulated MFA accepts fixed codes `123456` and `654321`.** Security defect, not a gate. | `workers/api/src/domain/hardeningMfa.ts` | S-06 |
 | E-6 | **No CI** — typecheck, tests and build never run automatically. Stale `frontend/tests/*` read a non-existent `../../migrations/0001_initial_d1_schema.sql`. | only `.github/workflows/db-migrate.yml` exists | S-08 |
-| E-7 | **Relaxing `check_maker_checker_distinct`** is now authorised in principle (B-3 answered) but is **sequenced last**: build the daily disbursement reconciliation report (S-07) first, prove it on fixtures, then migrate. | `0005_sprint4_consent_disbursement.sql` | S-07 → migration |
+| E-7 | **Relaxing `check_maker_checker_distinct`** is authorised as step **S-15**, with a fixed order: build the daily disbursement reconciliation report (S-07), prove it on fixtures, then migrate. Relaxing the constraint first leaves a money path with no detective control. | `0005_sprint4_consent_disbursement.sql` | S-07 → S-15 |
 | E-8 | **`AGENTS.md` points agents at the wrong skill.** It names `skills/support-training-hub/SKILL.md`, which is a Laravel 13 + Filament training platform. The closest library match is `ledger-vue-cloudflare`; the backend is the same, the React frontend is not. Owner chose to leave it for now — agents reading `AGENTS.md` will load the wrong skill until it is repointed. | `AGENTS.md`, "Workflow and skills library" | — |
 
 ### Migration discipline (read before adding a migration)

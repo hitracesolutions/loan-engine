@@ -1,5 +1,28 @@
 # Gidfine Changelog
 
+## 2026-10-30 — Full programme authorised (S-00 to S-24)
+
+- Replaced the partial step authorisation with approval of the **complete
+  programme**: 25 steps covering typecheck, Pages route parity, dead endpoints,
+  Convex retirement, negotiated-term migration, pricing, real MFA, reconciliation
+  reports, CI, margin revenue, matching, per-lender disclosure machinery,
+  catalogue validation, the approval-model switch, discrepancy escalation, R2
+  storage, document rendering, notification adapters, portal completion, token
+  alignment, observability, security review and UAT.
+- Added an explicit **safety floor**: four items that approval cannot unlock
+  because they are legal rather than engineering — live PII (C-2), live
+  disbursement (C-3), signable contracts (C-4) and per-lender disclosure
+  enablement (C-1). Building toward them is authorised; turning them on is not.
+- Added a **release gate** listing everything that must be true before real money
+  or real PII, including the reconciliation proof, accountant confirmation, signed
+  security review and a recorded backup/restore drill.
+- Fixed dependencies rather than leaving them implicit: S-15 (relax maker-checker)
+  requires S-07 proven first; S-18 requires S-13 and S-17; S-03 requires S-01 and
+  S-02.
+- Extended the progress log to all 25 steps with the measured baseline for each.
+- `BLOCKERS.md` now points at the authorisation and at S-15 for the constraint
+  sequence.
+
 ## 2026-10-30 — Development guide reconciled with the implementation plan
 
 - Rewrote §15 from fourteen open questions into a **decisions register**: each

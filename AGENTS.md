@@ -716,3 +716,14 @@ The current production baseline is Cloudflare Pages + Pages Functions, D1 and KV
   impersonation read-only rule in the security baseline.
 - No code changed. Guide content was aligned to the code and ADRs, not the reverse:
   where they disagreed, the guide was corrected in the same change.
+
+### 2026-10-30 — Full programme authorised
+
+- Owner approved all remaining work; `EXECUTION_PLAN.md` now defines 25 steps
+  (S-00 to S-24) with acceptance criteria, dependencies and a measured baseline.
+- Recorded the safety floor: live PII, live disbursement, signable contracts and
+  per-lender disclosure enablement stay closed until their counsel artefacts
+  exist. Approval covers building toward them, not switching them on.
+- Added a release gate checklist (reconciliation proof, accountant confirmation,
+  security review, restore drill, UAT, owner sign-off).
+- S-10 (impersonation) remains the only completed step; S-00 typecheck is next.
