@@ -1,5 +1,33 @@
 # Gidfine Changelog
 
+## 2026-10-30 — Landing page claims corrected
+
+- Replaced unverifiable marketing claims with product facts the code supports.
+  Removed: "50K+ borrowers", "₵500M+ disbursed", "2 minutes approval",
+  "AI-powered evaluation", "instant approval", OTP verification, ID upload,
+  "funds in 24 hours", "trusted by major Ghanaian banks", named bank
+  integrations (GCB, Access, Fidelity, Zenith, Ecobank), "thousands of
+  Ghanaians", a placeholder phone number and a `2024` copyright.
+- Hero now states the actual proposition: one application, several partner
+  lender offers, monthly and annual rate shown side by side. Supporting facts
+  cover cedis pricing, competing offers and human credit review.
+- "Built for Ghana" now lists verifiable positions: GHS throughout, DPC
+  registration under Act 843, credit-intermediary status, and daily
+  cashier reconciliation.
+- Removed the remote `grainy-gradients.vercel.app` noise asset; the background is
+  CSS-only now, so the page loads nothing from a third party.
+- Accessibility: skip-to-content link, `aria-label` on navigation, decorative
+  icons marked `aria-hidden`, real `<button type="button">` controls, stronger
+  dark-surface focus rings, heading levels no longer skip from `h2` to `h4`.
+- Fixed dead navigation: the `#benefits` anchor now exists, "Learn more" scrolls
+  instead of doing nothing, and footer placeholder `#` links were replaced.
+- Added `prefers-reduced-motion` handling in `index.css`. Several components start
+  at `opacity-0` and relied on an entrance animation, so reduced motion previously
+  left real content invisible; animations are now disabled and the end state forced.
+- Verified: `npm run build` exit 0, `git diff --check` clean, no remaining claim or
+  external-asset matches. **Not browser-verified** — no browser tooling available
+  in this session.
+
 ## 2026-10-30 — Workflow library review and protected decisions
 
 - Reviewed the shared workflow library: catalogued which skills apply to this

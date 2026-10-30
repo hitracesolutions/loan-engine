@@ -11,8 +11,8 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: ButtonSize;
 }
 
-const Button = ({ children, className = "", variant = "default", size = "default", ...props }: ButtonProps) => {
-  const baseStyle = "inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50";
+const Button = ({ children, className = "", variant = "default", size = "default", type = "button", ...props }: ButtonProps) => {
+  const baseStyle = "inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0A] disabled:pointer-events-none disabled:opacity-50";
 
   const variants: Record<ButtonVariant, string> = {
     default: "bg-white text-black shadow-lg shadow-white/10 hover:shadow-white/20 hover:scale-[1.02]",
@@ -27,7 +27,7 @@ const Button = ({ children, className = "", variant = "default", size = "default
   };
 
   return (
-    <button className={`${baseStyle} ${variants[variant]} ${sizes[size]} ${className}`} {...props}>
+    <button type={type} className={`${baseStyle} ${variants[variant]} ${sizes[size]} ${className}`} {...props}>
       {children}
     </button>
   );
@@ -42,78 +42,89 @@ const LandingPage = () => {
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-white selection:bg-white/20 overflow-x-hidden font-sans">
-      {/* Gradient Background */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-black"
+      >
+        Skip to content
+      </a>
+
+      {/* Decorative background. CSS only — no remote assets. */}
+      <div className="fixed inset-0 z-0 pointer-events-none" aria-hidden="true">
         <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-900/20 blur-[120px]" />
         <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-emerald-900/10 blur-[120px]" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay" />
       </div>
 
       {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.05] bg-[#0A0A0A]/80 backdrop-blur-xl">
+      <nav aria-label="Main" className="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.05] bg-[#0A0A0A]/80 backdrop-blur-xl">
         <div className="container mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <a href="#main-content" className="flex items-center gap-3 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70">
             <div className="h-10 w-10 overflow-hidden rounded-xl border border-white/10 bg-white/5">
-              <img src="/favicon.svg" alt="Gidfine" className="h-full w-full" />
+              <img src="/favicon.svg" alt="" className="h-full w-full" />
             </div>
             <span className="font-display font-medium text-xl tracking-tight">
               Gidfine<span className="text-cyan-200/60">.gh</span>
             </span>
-          </div>
+          </a>
           <div className="hidden md:flex items-center gap-8">
             <a href="#platform" className="text-sm text-white/60 hover:text-white transition-colors">Platform</a>
-            <a href="#benefits" className="text-sm text-white/60 hover:text-white transition-colors">Benefits</a>
+            <a href="#benefits" className="text-sm text-white/60 hover:text-white transition-colors">How it works</a>
             <a href="#about" className="text-sm text-white/60 hover:text-white transition-colors">About</a>
           </div>
           <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={handleOpenAuth}>Sign In</Button>
+            <Button variant="ghost" onClick={handleOpenAuth}>Sign in</Button>
             <Button onClick={handleOpenAuth} className="hidden sm:inline-flex">
-              Apply Now <ArrowRight className="w-4 h-4 ml-2" />
+              Apply now <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />
             </Button>
           </div>
         </div>
       </nav>
 
-      <main className="relative z-10 pt-20">
+      <main id="main-content" className="relative z-10 pt-20">
         {/* Hero Section */}
         <section className="relative pt-32 pb-24 md:pt-48 md:pb-32 px-6">
           <div className="container mx-auto max-w-5xl text-center">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 mb-8 animate-fade-in opacity-0" style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}>
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-xs font-medium tracking-widest text-white/70 uppercase">Ghana's Lending Platform</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-500" aria-hidden="true" />
+              <span className="text-xs font-medium tracking-widest text-white/70 uppercase">Loans arranged in Ghana</span>
             </div>
 
-            <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-medium tracking-tight mb-8 leading-[1.1] animate-slide-up opacity-0" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
-              Fast loans for <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-blue-400">every Ghanaian</span>
+            <h1 className="font-display text-4xl sm:text-5xl md:text-7xl font-medium tracking-tight mb-8 leading-[1.1] animate-slide-up opacity-0" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
+              One application, <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-blue-400">several lender offers</span>
             </h1>
 
             <p className="text-lg md:text-xl text-white/50 max-w-2xl mx-auto mb-12 font-light tracking-wide leading-relaxed animate-slide-up opacity-0" style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}>
-              Get instant loan decisions. Flexible repayment. No hidden charges. Gidfine connects you with Ghana's best lenders in seconds.
+              Apply once and Gidfine takes it to partner lenders. Every offer shows its
+              monthly and annual rate side by side, so you can compare the real cost
+              before you agree to anything.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-slide-up opacity-0" style={{ animationDelay: '0.4s', animationFillMode: 'forwards' }}>
               <Button size="lg" onClick={handleOpenAuth} className="w-full sm:w-auto min-w-[200px]">
-                Get Started Today
+                Start an application
               </Button>
-              <Button size="lg" variant="outline" className="w-full sm:w-auto min-w-[200px]">
-                Learn More <ChevronRight className="w-4 h-4 ml-2" />
-              </Button>
+              <a
+                href="#benefits"
+                className="inline-flex h-14 w-full sm:w-auto min-w-[200px] items-center justify-center rounded-lg border border-white/10 px-8 text-base text-white transition-colors hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0A]"
+              >
+                See how it works <ChevronRight className="w-4 h-4 ml-2" aria-hidden="true" />
+              </a>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 md:gap-8 mt-16 pt-8 border-t border-white/10 animate-slide-up opacity-0" style={{ animationDelay: '0.5s', animationFillMode: 'forwards' }}>
+            {/* Product facts — no performance claims */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 md:gap-8 mt-16 pt-8 border-t border-white/10 animate-slide-up opacity-0" style={{ animationDelay: '0.5s', animationFillMode: 'forwards' }}>
               <div>
-                <div className="text-3xl md:text-4xl font-bold mb-2">50K+</div>
-                <div className="text-sm text-white/50">Borrowers Served</div>
+                <div className="text-2xl md:text-3xl font-semibold mb-2">GH&#8373;</div>
+                <div className="text-sm text-white/50">Quoted and settled in Ghana cedis</div>
               </div>
               <div>
-                <div className="text-3xl md:text-4xl font-bold mb-2">₵500M+</div>
-                <div className="text-sm text-white/50">Loans Disbursed</div>
+                <div className="text-2xl md:text-3xl font-semibold mb-2">Multiple offers</div>
+                <div className="text-sm text-white/50">Partner lenders compete for your application</div>
               </div>
               <div>
-                <div className="text-3xl md:text-4xl font-bold mb-2">2 mins</div>
-                <div className="text-sm text-white/50">Approval Time</div>
+                <div className="text-2xl md:text-3xl font-semibold mb-2">Human review</div>
+                <div className="text-sm text-white/50">Checked by our credit team before approval</div>
               </div>
             </div>
           </div>
@@ -131,52 +142,52 @@ const LandingPage = () => {
               {/* Fast Approval */}
               <div className="p-8 rounded-2xl border border-white/10 bg-white/5 hover:border-white/20 transition-all hover:bg-white/10">
                 <Zap className="w-10 h-10 mb-4 text-emerald-400" />
-                <h3 className="text-xl font-semibold mb-2">Instant Decisions</h3>
-                <p className="text-white/60">Get approved in 2 minutes with AI-powered evaluation. No waiting, no hassle.</p>
+                <h3 className="text-xl font-semibold mb-2">Fast credit review</h3>
+                <p className="text-white/60">Your application is assessed by our credit team against each partner lender's criteria, so the decision you get is one a lender can stand behind.</p>
               </div>
 
               {/* Flexible Terms */}
               <div className="p-8 rounded-2xl border border-white/10 bg-white/5 hover:border-white/20 transition-all hover:bg-white/10">
                 <TrendingUp className="w-10 h-10 mb-4 text-blue-400" />
-                <h3 className="text-xl font-semibold mb-2">Flexible Repayment</h3>
-                <p className="text-white/60">Choose repayment periods that fit your budget. Loan amounts from ₵100 to ₵10,000.</p>
+                <h3 className="text-xl font-semibold mb-2">Terms that fit</h3>
+                <p className="text-white/60">Tenure and repayment frequency come from the lender's product, so the schedule matches how you actually get paid.</p>
               </div>
 
               {/* Transparent Pricing */}
               <div className="p-8 rounded-2xl border border-white/10 bg-white/5 hover:border-white/20 transition-all hover:bg-white/10">
                 <Lock className="w-10 h-10 mb-4 text-purple-400" />
-                <h3 className="text-xl font-semibold mb-2">No Hidden Charges</h3>
-                <p className="text-white/60">Transparent pricing. Know your rate upfront. No surprises at repayment.</p>
+                <h3 className="text-xl font-semibold mb-2">See the real cost</h3>
+                <p className="text-white/60">Every offer shows the monthly and annual rate side by side, so the cost is comparable before you agree to it.</p>
               </div>
 
               {/* Multiple Lenders */}
               <div className="p-8 rounded-2xl border border-white/10 bg-white/5 hover:border-white/20 transition-all hover:bg-white/10">
                 <Globe2 className="w-10 h-10 mb-4 text-yellow-400" />
-                <h3 className="text-xl font-semibold mb-2">Best Offers</h3>
-                <p className="text-white/60">Compare rates from Ghana's top lenders. Get the best deal every time.</p>
+                <h3 className="text-xl font-semibold mb-2">Compare lender offers</h3>
+                <p className="text-white/60">Send one application to our partner lenders and choose between the terms that come back.</p>
               </div>
 
               {/* Secure & Safe */}
               <div className="p-8 rounded-2xl border border-white/10 bg-white/5 hover:border-white/20 transition-all hover:bg-white/10">
                 <ShieldCheck className="w-10 h-10 mb-4 text-red-400" />
-                <h3 className="text-xl font-semibold mb-2">Bank-Level Security</h3>
-                <p className="text-white/60">Your data is encrypted and protected. Trusted by major Ghanaian banks.</p>
+                <h3 className="text-xl font-semibold mb-2">Your identity stays yours</h3>
+                <p className="text-white/60">ID details are encrypted at rest, access is role-based, and lenders see a masked summary rather than your documents.</p>
               </div>
 
               {/* Mobile-First */}
               <div className="p-8 rounded-2xl border border-white/10 bg-white/5 hover:border-white/20 transition-all hover:bg-white/10">
                 <Clock className="w-10 h-10 mb-4 text-cyan-400" />
-                <h3 className="text-xl font-semibold mb-2">Anytime, Anywhere</h3>
-                <p className="text-white/60">Apply from your phone. Check status. Make payments. All in one app.</p>
+                <h3 className="text-xl font-semibold mb-2">Works on your phone</h3>
+                <p className="text-white/60">Apply, follow your application status and see your repayment schedule in the browser — no app install.</p>
               </div>
             </div>
           </div>
         </section>
 
         {/* How It Works */}
-        <section className="relative py-24 px-6 border-t border-white/10">
+        <section id="benefits" aria-labelledby="how-it-works-heading" className="relative py-24 px-6 border-t border-white/10">
           <div className="container mx-auto max-w-4xl">
-            <h2 className="text-4xl md:text-5xl font-bold text-center mb-16">How It Works</h2>
+            <h2 id="how-it-works-heading" className="text-3xl md:text-5xl font-bold text-center mb-16">How it works</h2>
 
             <div className="space-y-8">
               <div className="flex gap-6 items-start">
@@ -186,8 +197,8 @@ const LandingPage = () => {
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold mb-2">Sign Up (1 minute)</h3>
-                  <p className="text-white/60">Create your account with your email and phone number. Verify with OTP.</p>
+                  <h3 className="text-xl font-semibold mb-2">Create your account</h3>
+                  <p className="text-white/60">Sign up with your email and phone number. No documents are needed to get started.</p>
                 </div>
               </div>
 
@@ -198,8 +209,8 @@ const LandingPage = () => {
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold mb-2">Complete Profile (2 minutes)</h3>
-                  <p className="text-white/60">Add your employment details, salary info, and upload ID. Instant verification.</p>
+                  <h3 className="text-xl font-semibold mb-2">Add your details</h3>
+                  <p className="text-white/60">Tell us your employer, income and ID details. Identity data is encrypted before it is stored.</p>
                 </div>
               </div>
 
@@ -210,8 +221,8 @@ const LandingPage = () => {
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold mb-2">Request Loan (1 minute)</h3>
-                  <p className="text-white/60">Tell us the amount and repayment period. Get instant approval decision.</p>
+                  <h3 className="text-xl font-semibold mb-2">Apply once</h3>
+                  <p className="text-white/60">Choose the amount and a tenure that suits you. That single application goes to our partner lenders.</p>
                 </div>
               </div>
 
@@ -222,8 +233,8 @@ const LandingPage = () => {
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold mb-2">Choose & Repay</h3>
-                  <p className="text-white/60">Pick your lender. Funds reach your account in 24 hours. Start repaying on schedule.</p>
+                  <h3 className="text-xl font-semibold mb-2">Accept an offer and repay</h3>
+                  <p className="text-white/60">Pick the offer you want and accept its terms. Repayments are recorded by our cashier team against your schedule.</p>
                 </div>
               </div>
             </div>
@@ -237,31 +248,31 @@ const LandingPage = () => {
             <div className="grid md:grid-cols-2 gap-8 mb-12">
               <div className="text-left">
                 <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                  Support All Major Banks
+                  <CheckCircle2 className="w-5 h-5 text-emerald-400" aria-hidden="true" />
+                  Ghana cedis throughout
                 </h3>
-                <p className="text-white/60">Works with GCB, Access Bank, Fidelity, Zenith, Ecobank, First Atlantic, and more.</p>
+                <p className="text-white/60">Amounts are quoted, agreed and repaid in GHS, so there is no exchange rate to absorb mid-loan.</p>
               </div>
               <div className="text-left">
                 <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                  Ghana Cedis
+                  <CheckCircle2 className="w-5 h-5 text-emerald-400" aria-hidden="true" />
+                  Registered data handling
                 </h3>
-                <p className="text-white/60">All transactions in GHS. No foreign exchange risk or hidden conversion charges.</p>
+                <p className="text-white/60">Gidfine is registered with the Data Protection Commission and handles your data under the Data Protection Act, 2012 (Act 843).</p>
               </div>
               <div className="text-left">
                 <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                  Local Support
+                  <CheckCircle2 className="w-5 h-5 text-emerald-400" aria-hidden="true" />
+                  A licensed intermediary
                 </h3>
-                <p className="text-white/60">Customer support in English and Twi. Help when you need it.</p>
+                <p className="text-white/60">Gidfine arranges credit rather than lending its own money, so your contract is with the lender and the final terms are theirs.</p>
               </div>
               <div className="text-left">
                 <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                  Bank Partner Network
+                  <CheckCircle2 className="w-5 h-5 text-emerald-400" aria-hidden="true" />
+                  Repayments checked daily
                 </h3>
-                <p className="text-white/60">Partnered with Ghana's leading financial institutions for reliable disbursals.</p>
+                <p className="text-white/60">Payments are recorded by our cashier team and reconciled against the ledger every business day.</p>
               </div>
             </div>
           </div>
@@ -270,52 +281,49 @@ const LandingPage = () => {
         {/* CTA Section */}
         <section className="relative py-24 px-6 border-t border-white/10">
           <div className="container mx-auto max-w-3xl text-center">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">Ready to Get a Loan?</h2>
-            <p className="text-xl text-white/60 mb-12">Join thousands of Ghanaians who have received instant loans through Gidfine.</p>
+            <h2 className="text-3xl md:text-5xl font-bold mb-6">Ready to apply?</h2>
+            <p className="text-lg md:text-xl text-white/60 mb-12">Start one application and compare the offers that come back from our partner lenders.</p>
             <Button size="lg" onClick={handleOpenAuth} className="inline-flex">
-              Apply Now - It's Free <ArrowRight className="w-4 h-4 ml-2" />
+              Start an application <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />
             </Button>
           </div>
         </section>
-
-        {/* Footer */}
-        <footer className="relative border-t border-white/10 py-12 px-6">
-          <div className="container mx-auto max-w-6xl">
-            <div className="grid md:grid-cols-4 gap-8 mb-12">
-              <div>
-                <h4 className="font-semibold mb-4">Gidfine</h4>
-                <p className="text-white/60 text-sm">Lending for every Ghanaian.</p>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-4">Company</h4>
-                <ul className="space-y-2 text-sm text-white/60">
-                  <li><a href="#" className="hover:text-white transition">About</a></li>
-                  <li><a href="#" className="hover:text-white transition">Blog</a></li>
-                  <li><a href="#" className="hover:text-white transition">Careers</a></li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-4">Legal</h4>
-                <ul className="space-y-2 text-sm text-white/60">
-                  <li><a href="#" className="hover:text-white transition">Privacy</a></li>
-                  <li><a href="#" className="hover:text-white transition">Terms</a></li>
-                  <li><a href="#" className="hover:text-white transition">Security</a></li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-4">Contact</h4>
-                <ul className="space-y-2 text-sm text-white/60">
-                  <li><a href="mailto:support@gidfine.com" className="hover:text-white transition">support@gidfine.com</a></li>
-                  <li><a href="tel:+233(0)123456789" className="hover:text-white transition">+233 (0) 123 456 789</a></li>
-                </ul>
-              </div>
-            </div>
-            <div className="border-t border-white/10 pt-8 text-center text-sm text-white/40">
-              <p>&copy; 2024 Gidfine. Lending for Ghana. All rights reserved.</p>
-            </div>
-          </div>
-        </footer>
       </main>
+
+      <footer className="relative z-10 border-t border-white/10 py-12 px-6">
+        <div className="container mx-auto max-w-6xl">
+          <div className="grid gap-8 md:grid-cols-3 mb-12">
+            <div>
+              <h2 className="font-semibold mb-4">Gidfine</h2>
+              <p className="text-white/60 text-sm max-w-xs">
+                Loan applications arranged with partner lenders in Ghana.
+              </p>
+            </div>
+            <nav aria-label="Product">
+              <h2 className="font-semibold mb-4">Product</h2>
+              <ul className="space-y-2 text-sm text-white/60">
+                <li><a href="#platform" className="hover:text-white transition">Platform</a></li>
+                <li><a href="#benefits" className="hover:text-white transition">How it works</a></li>
+                <li><a href="/docs" className="hover:text-white transition">Documentation</a></li>
+              </ul>
+            </nav>
+            <nav aria-label="Account">
+              <h2 className="font-semibold mb-4">Account</h2>
+              <ul className="space-y-2 text-sm text-white/60">
+                <li>
+                  <button type="button" onClick={handleOpenAuth} className="hover:text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70">
+                    Sign in or apply
+                  </button>
+                </li>
+              </ul>
+            </nav>
+          </div>
+          <div className="border-t border-white/10 pt-8 space-y-2 text-center text-sm text-white/40">
+            <p>&copy; {new Date().getFullYear()} Gidfine. All rights reserved.</p>
+            <p>Gidfine is a credit intermediary: loans are provided by partner lenders and final terms are set by the lender.</p>
+          </div>
+        </div>
+      </footer>
 
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
     </div>

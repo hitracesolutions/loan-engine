@@ -683,3 +683,22 @@ The current production baseline is Cloudflare Pages + Pages Functions, D1 and KV
 - Recorded the impersonation UI as configured-but-unverified (never opened in a
   browser) in `EXECUTION_PLAN.md` S-10.
 - `library-contribution` check run, no library writes (owner requested review only).
+
+### 2026-10-30 — Landing page claims corrected
+
+- Rewrote `LandingPage.tsx` copy so every statement matches a shipped capability.
+  Removed fabricated statistics, "AI-powered evaluation", OTP verification,
+  document upload, 24-hour disbursement, named bank integrations and the
+  placeholder phone number; added the arranger model, dual rate display, DPC
+  registration and daily reconciliation as verifiable claims.
+- Removed the third-party noise asset; background is CSS-only.
+- Fixed navigation: the `#benefits` target now exists, dead footer `#` links and
+  the no-op "Learn more" button were replaced with real targets.
+- Accessibility pass: skip link, nav labelling, `aria-hidden` decorative icons,
+  explicit button types, stronger focus rings, no skipped heading levels.
+- Added `prefers-reduced-motion` rules; entrance-animated elements start at
+  `opacity-0`, so reduced motion previously hid content outright.
+- Added a BLOCKERS rule: landing copy must not promise capabilities the platform
+  lacks.
+- Verified with `npm run build` (exit 0) and `git diff --check`; the UI itself was
+  not opened in a browser this session.

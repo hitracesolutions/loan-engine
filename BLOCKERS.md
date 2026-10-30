@@ -141,6 +141,9 @@ placeholder copy marked as such, and never present it as approved.
    and the borrower.
 8. Commit a secret, a real borrower record, or a production data export.
 9. Invent a legal, tax or regulatory position to keep building. Stop and raise it.
+10. Publish a capability the platform does not have — bank integrations, OTP
+    verification, document upload, "instant approval", or customer/volume
+    statistics. Landing copy describes what is shipped, not what is planned.
 
 ---
 
