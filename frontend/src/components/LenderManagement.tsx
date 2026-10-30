@@ -98,7 +98,7 @@ const LenderManagement: React.FC<LenderManagementProps> = () => {
                       {lender.selection_rate.toFixed(2)}%
                     </td>
                     <td className="text-right py-4 px-6 font-semibold text-gray-900">
-                      ₹{lender.avg_emi_offered.toLocaleString()}
+                      GH₵{lender.avg_emi_offered.toLocaleString('en-GH')}
                     </td>
                     <td className="text-right py-4 px-6 font-semibold text-gray-900">
                       {lender.avg_rate.toFixed(2)}%

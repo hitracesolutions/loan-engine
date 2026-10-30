@@ -163,14 +163,14 @@ const LoanComparisonTable: React.FC<LoanComparisonTableProps> = ({
                 {/* EMI */}
                 <td className="px-4 py-3">
                   <span className="font-semibold text-blue-600">
-                    ₹{loan.emi.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                    GH₵{loan.emi.toLocaleString('en-GH', { maximumFractionDigits: 0 })}
                   </span>
                 </td>
 
                 {/* Total Cost */}
                 <td className="px-4 py-3">
                   <span className="text-gray-900">
-                    ₹{loan.total_cost.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                    GH₵{loan.total_cost.toLocaleString('en-GH', { maximumFractionDigits: 0 })}
                   </span>
                 </td>
 

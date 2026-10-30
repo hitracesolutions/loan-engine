@@ -165,7 +165,7 @@ const TrendsSection: React.FC<TrendsSectionProps> = ({ trends }) => {
           data={trends.trends.dates}
           values={trends.trends.avg_emi}
           color="rgb(168, 85, 247)"
-          unit="₹"
+          unit="GH₵"
         />
         <TrendChart
           title="Average Interest Rate"
@@ -202,7 +202,7 @@ const TrendsSection: React.FC<TrendsSectionProps> = ({ trends }) => {
                     {trends.trends.conversions[index]}
                   </td>
                   <td className="text-right py-3 px-4 text-gray-900">
-                    ₹{trends.trends.avg_emi[index].toLocaleString()}
+                    GH₵{trends.trends.avg_emi[index].toLocaleString('en-GH')}
                   </td>
                   <td className="text-right py-3 px-4 text-gray-900">
                     {trends.trends.avg_rate[index].toFixed(2)}%
@@ -230,11 +230,11 @@ interface UserProfilesSectionProps {
 
 const UserProfilesSection: React.FC<UserProfilesSectionProps> = ({ userStats }) => {
   const stats = [
-    { label: 'Average Loan Amount', value: `₹${userStats.avg_loan_amount.toLocaleString()}`, icon: '💰' },
+    { label: 'Average Loan Amount', value: `GH₵${userStats.avg_loan_amount.toLocaleString('en-GH')}`, icon: '💰' },
     { label: 'Average Tenure', value: `${userStats.avg_tenure} months`, icon: '📅' },
-    { label: 'Average Salary', value: `₹${userStats.avg_salary.toLocaleString()}`, icon: '💵' },
+    { label: 'Average Salary', value: `GH₵${userStats.avg_salary.toLocaleString('en-GH')}`, icon: '💵' },
     { label: 'Average Credit Score', value: `${userStats.avg_credit_score}`, icon: '📊' },
-    { label: 'Average Obligations', value: `₹${userStats.avg_obligations.toLocaleString()}`, icon: '⚖️' },
+    { label: 'Average Obligations', value: `GH₵${userStats.avg_obligations.toLocaleString('en-GH')}`, icon: '⚖️' },
     { label: 'Average Age', value: `${userStats.avg_age} years`, icon: '👤' },
   ];
 
@@ -310,7 +310,7 @@ const EfficiencySection: React.FC<EfficiencySectionProps> = ({ trends }) => {
         <EfficiencyMeter
           label="EMI Efficiency"
           score={emiScore}
-          subtitle={`Avg EMI: ₹${avgEMI.toLocaleString()}`}
+          subtitle={`Avg EMI: GH₵${avgEMI.toLocaleString('en-GH')}`}
           color="purple"
         />
         <EfficiencyMeter
@@ -335,7 +335,7 @@ const EfficiencySection: React.FC<EfficiencySectionProps> = ({ trends }) => {
           <li className="flex items-start gap-3">
             <span className="text-xl">💰</span>
             <span>
-              <strong>EMI Amounts:</strong> Average EMI of ₹{avgEMI.toLocaleString()} shows 
+              <strong>EMI Amounts:</strong> Average EMI of GH₵{avgEMI.toLocaleString('en-GH')} shows
               {avgEMI < 12000 ? ' competitive' : ' reasonable'} loan sizing.
             </span>
           </li>

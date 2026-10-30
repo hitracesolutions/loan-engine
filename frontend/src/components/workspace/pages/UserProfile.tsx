@@ -111,7 +111,7 @@ export default function UserProfile() {
             </div>
             <div className="flex justify-between items-center p-3 bg-[#0A0A0A] rounded-xl border border-white/5">
               <span className="text-white/50 font-sans">Pre-Approved Limit</span>
-              <span className="font-bold text-white text-sm">₹{preApprovedLimit.toLocaleString('en-IN')}</span>
+              <span className="font-bold text-white text-sm">GH₵{preApprovedLimit.toLocaleString('en-GH')}</span>
             </div>
             <div className="flex justify-between items-center p-3 bg-[#0A0A0A] rounded-xl border border-white/5">
               <span className="text-white/50 font-sans">Verification Status</span>
@@ -187,7 +187,7 @@ export default function UserProfile() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold uppercase tracking-widest text-white/50">Monthly Net Income (₹)</label>
+                <label className="text-xs font-semibold uppercase tracking-widest text-white/50">Monthly Net Income (GH₵)</label>
                 <div className="relative">
                   <Briefcase className="w-4 h-4 text-white/30 absolute left-3 top-3.5" />
                   <input

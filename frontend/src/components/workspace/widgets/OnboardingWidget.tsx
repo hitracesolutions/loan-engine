@@ -48,7 +48,7 @@ export default function OnboardingWidget({ onNext }: OnboardingWidgetProps) {
           Capital Requirement Configurator
         </h3>
         <span className="text-xs text-emerald-400 font-mono bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full flex items-center gap-1">
-          <Calculator className="w-3.5 h-3.5" /> ₹{calculatedEmi.toLocaleString('en-IN')}/mo EMI
+          <Calculator className="w-3.5 h-3.5" /> GH₵{calculatedEmi.toLocaleString('en-GH')}/mo EMI
         </span>
       </div>
       
@@ -56,7 +56,7 @@ export default function OnboardingWidget({ onNext }: OnboardingWidgetProps) {
         <div>
           <div className="flex items-center justify-between mb-3">
             <label className="text-xs font-semibold uppercase tracking-widest text-white/50">Requested Principal</label>
-            <span className="font-display text-2xl font-bold tracking-tight text-white">₹{amount.toLocaleString('en-IN')}</span>
+            <span className="font-display text-2xl font-bold tracking-tight text-white">GH₵{amount.toLocaleString('en-GH')}</span>
           </div>
           <input
             type="range"
@@ -68,9 +68,9 @@ export default function OnboardingWidget({ onNext }: OnboardingWidgetProps) {
             className="w-full h-1.5 bg-[#0A0A0A] rounded-lg appearance-none cursor-pointer accent-emerald-500"
           />
           <div className="flex justify-between text-xs text-white/30 mt-2 font-mono">
-            <span>₹20K</span>
-            <span>₹10L</span>
-            <span>₹20L</span>
+            <span>GH₵2K</span>
+            <span>GH₵10K</span>
+            <span>GH₵20K</span>
           </div>
         </div>
 
@@ -105,7 +105,7 @@ export default function OnboardingWidget({ onNext }: OnboardingWidgetProps) {
           </div>
           <div className="text-right">
             <span className="text-white/40 block font-sans text-[10px]">Calculated Monthly EMI</span>
-            <span className="text-emerald-400 font-bold text-base">₹{calculatedEmi.toLocaleString('en-IN')}</span>
+            <span className="text-emerald-400 font-bold text-base">GH₵{calculatedEmi.toLocaleString('en-GH')}</span>
           </div>
         </div>
 

@@ -42,7 +42,7 @@ export default function RejectionWidget() {
               <span className="text-xs font-bold text-red-500 bg-red-500/10 px-2 py-0.5 rounded">-42 pts</span>
             </div>
             <p className="text-xs text-white/50 leading-relaxed mb-3">
-               Requested EMI of ₹{emi.toLocaleString('en-IN')} combined with existing liabilities exceeds the safe 40% DTI threshold for your bracket.
+              Requested EMI of GH₵{emi.toLocaleString('en-GH')} combined with existing liabilities exceeds the safe 40% DTI threshold for your bracket.
             </p>
             <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
                <div className="h-full bg-red-500 w-[75%] rounded-full" />

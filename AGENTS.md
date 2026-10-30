@@ -525,3 +525,48 @@ The current production baseline is Cloudflare Pages + Pages Functions, D1 and KV
 - Left the financial domain expansion, document storage decision, payment
   integration, notification channels and regulatory approval undone pending
   owner decisions.
+
+### 2026-10-29 — Agency review workspace connection
+
+- Connected the React agency queue to the staff-filtered application endpoint
+  and typed assignment, review-transition, note and evidence methods.
+- Added an accessible review dialog for assignment, guarded decisions, internal
+  notes and append-only status history.
+- Left lender proposals, agency approval and disbursement readiness gated;
+  those flows still require their Phase 3/4 API and owner acceptance work.
+- Verified the frontend build, Worker typecheck, 51 API tests and diff checks.
+
+### 2026-10-29 — Application disclosure boundary
+
+- Added a shared Worker disclosure helper and joined borrower identity only for
+  agency-staff application responses.
+- Added direct-request assertions that borrower responses exclude identity,
+  assignment and internal review fields.
+- Fixed the joined queue query by qualifying application filter columns;
+  Worker typecheck, 51 API tests and the frontend build pass.
+
+### 2026-10-29 — Ghana cedi frontend display
+
+- Updated user-facing monetary values to display Ghana cedis (`GH₵`) with
+  Ghana locale formatting across the frontend.
+- Kept stored values and API contracts unchanged: amounts remain integer
+  pesewas with GHS semantics, so no database migration is needed.
+- Left broader Ghana localization of KYC and payment-provider references for a
+  separate owner-approved scope.
+
+### 2026-10-29 — Worker typecheck foundation
+
+- Updated the local D1 integration-test adapter to match the generated
+  Cloudflare D1 contracts, including metadata, `withSession()` and `raw()`
+  overloads.
+- Worker typecheck now passes, and the complete API test suite passes all 50
+  tests.
+
+### 2026-10-29 — Agency review foundation
+
+- Added the additive application-review migration with reviewer assignment,
+  internal notes and append-only status history.
+- Added staff-only queue filtering, assignment, guarded review transitions and
+  review evidence endpoints, with auditors restricted to read-only access.
+- Applied the migration locally; Worker typecheck, 51 API tests and the
+  frontend production build pass.

@@ -170,7 +170,7 @@ const LoanComparisonResults: React.FC<LoanComparisonResultsProps> = ({
                   <div key={alt.lender_id} className="flex justify-between items-center bg-white p-3 rounded">
                     <div>
                       <p className="font-semibold text-gray-900">{alt.lender_name}</p>
-                      <p className="text-sm text-gray-600">{alt.interest_rate.toFixed(2)}% • ₹{alt.emi.toLocaleString('en-IN')}</p>
+                      <p className="text-sm text-gray-600">{alt.interest_rate.toFixed(2)}% • GH₵{alt.emi.toLocaleString('en-GH')}</p>
                     </div>
                     <span className="text-lg">{alt.rank_badge}</span>
                   </div>

@@ -7,10 +7,32 @@ import worker from '../src/index.ts';
 import { ensureAdminUser } from '../src/lib/auth.ts';
 import type { AppEnv } from '../src/env.ts';
 
+type SqliteValue = null | number | bigint | string | NodeJS.ArrayBufferView;
+
+function notImplementedRaw<T = unknown[]>(options: { columnNames: true }): Promise<[string[], ...T[]]>;
+function notImplementedRaw<T = unknown[]>(options?: { columnNames?: false }): Promise<T[]>;
+function notImplementedRaw<T = unknown[]>(
+  _options?: { columnNames?: boolean },
+): Promise<T[] | [string[], ...T[]]> {
+  throw new Error('Not implemented');
+}
+
 function createD1Adapter(sqliteDb: DatabaseSync): D1Database {
-  function createPreparedStatement(sql: string, params: any[] = []): D1PreparedStatement {
+  function testMeta(changes = 0): D1Meta & Record<string, unknown> {
     return {
-      bind(...values: any[]) {
+      duration: 0,
+      size_after: 0,
+      rows_read: 0,
+      rows_written: changes,
+      last_row_id: 0,
+      changed_db: changes > 0,
+      changes,
+    };
+  }
+
+  function createPreparedStatement(sql: string, params: SqliteValue[] = []): D1PreparedStatement {
+    return {
+      bind(...values: SqliteValue[]) {
         return createPreparedStatement(sql, values);
       },
       async first<T = unknown>(colName?: string): Promise<T | null> {
@@ -26,48 +48,58 @@ function createD1Adapter(sqliteDb: DatabaseSync): D1Database {
         return {
           results,
           success: true,
-          meta: {} as any,
+          meta: testMeta(),
         };
       },
-      async run(): Promise<D1Response> {
+      async run<T = Record<string, unknown>>(): Promise<D1Result<T>> {
         const stmt = sqliteDb.prepare(sql);
         const res = stmt.run(...params);
         return {
+          results: [],
           success: true,
-          meta: { changes: res.changes } as any,
+          meta: testMeta(Number(res.changes)),
         };
       },
-      raw<T = unknown>(): Promise<T[]> {
-        throw new Error('Not implemented');
-      },
+      raw: notImplementedRaw,
     };
   }
 
-  return {
-    prepare(query: string): D1PreparedStatement {
-      return createPreparedStatement(query);
-    },
-    async batch<T = unknown>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]> {
-      sqliteDb.exec('BEGIN TRANSACTION;');
-      try {
-        const results = [];
-        for (const s of statements) {
-          const res = await s.run();
-          results.push({ results: [], success: true, meta: res.meta } as any);
-        }
-        sqliteDb.exec('COMMIT;');
-        return results;
-      } catch (err) {
-        sqliteDb.exec('ROLLBACK;');
-        throw err;
+  const prepare = (query: string): D1PreparedStatement => createPreparedStatement(query);
+
+  const batch = async <T = unknown>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]> => {
+    sqliteDb.exec('BEGIN TRANSACTION;');
+    try {
+      const results: D1Result<T>[] = [];
+      for (const s of statements) {
+        const res = await s.run();
+        results.push({ results: [], success: true, meta: res.meta });
       }
-    },
-    async exec(query: string): Promise<D1ExecResult> {
-      sqliteDb.exec(query);
-      return { count: 0, duration: 0 };
-    },
+      sqliteDb.exec('COMMIT;');
+      return results;
+    } catch (err) {
+      sqliteDb.exec('ROLLBACK;');
+      throw err;
+    }
+  };
+
+  const exec = async (query: string): Promise<D1ExecResult> => {
+    sqliteDb.exec(query);
+    return { count: 0, duration: 0 };
+  };
+
+  return {
+    prepare,
+    batch,
+    exec,
     dump(): Promise<ArrayBuffer> {
       throw new Error('Not implemented');
+    },
+    withSession(): D1DatabaseSession {
+      return {
+        prepare,
+        batch,
+        getBookmark: () => null,
+      };
     },
   };
 }
@@ -79,7 +111,7 @@ describe('Gidfine Cloudflare Worker End-to-End API Integration', () => {
 
   beforeEach(async () => {
     sqlite = new DatabaseSync(':memory:');
-    // Apply all forward migrations in order
+    sqlite.exec('PRAGMA foreign_keys = ON;');
     const migrationsDir = path.resolve(import.meta.dirname, '../migrations');
     const migrationFiles = fs.readdirSync(migrationsDir).filter(f => f.endsWith('.sql')).sort();
     for (const file of migrationFiles) {
@@ -190,7 +222,7 @@ describe('Gidfine Cloudflare Worker End-to-End API Integration', () => {
     assert.strictEqual(invalidRes.status, 401);
   });
 
-  it('Test 3: Application Submission and Pesewas Integrity', async () => {
+  it('Test 3 & 4: Application Submission, Pesewas Integrity, and Idempotency Replay', async () => {
     // Register borrower
     const regReq = new Request('https://loan-engine.pages.dev/auth/register', {
       method: 'POST',
@@ -205,12 +237,15 @@ describe('Gidfine Cloudflare Worker End-to-End API Integration', () => {
     const regRes = await worker.fetch(regReq, env);
     const { token } = ((await regRes.json()) as any).data;
 
+    const idempotencyKey = 'idemp_test_borrower_01';
+
     // Submit initial application
     const appReq = new Request('https://loan-engine.pages.dev/applications', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
+        'idempotency-key': idempotencyKey,
       },
       body: JSON.stringify({
         requestedAmountPesewas: 750000, // GH₵ 7,500.00
@@ -232,43 +267,6 @@ describe('Gidfine Cloudflare Worker End-to-End API Integration', () => {
     // Verify row count in database
     const countRow = sqlite.prepare('SELECT COUNT(*) as count FROM loan_applications').get() as any;
     assert.strictEqual(countRow.count, 1);
-  });
-
-  it('Test 4: Idempotency Key Replay and Duplicate Suppression', async () => {
-    // Register borrower
-    const regReq = new Request('https://loan-engine.pages.dev/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: 'idemp.borrower@example.com',
-        password: 'ValidPassword123!',
-        fullName: 'Idemp Borrower',
-        agencySlug: 'gidfine',
-      }),
-    });
-    const regRes = await worker.fetch(regReq, env);
-    const { token } = ((await regRes.json()) as any).data;
-
-    const idempotencyKey = 'idemp_test_borrower_01';
-
-    // Submit initial application
-    const appReq = new Request('https://loan-engine.pages.dev/applications', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-        'idempotency-key': idempotencyKey,
-      },
-      body: JSON.stringify({
-        requestedAmountPesewas: 500000,
-        tenureMonths: 6,
-        purpose: 'Testing Idempotency Replay',
-      }),
-    });
-
-    const appRes = await worker.fetch(appReq, env);
-    assert.strictEqual(appRes.status, 201);
-    const appData = ((await appRes.json()) as any).data;
 
     // Retry identical submission with the same idempotency key
     const retryReq = new Request('https://loan-engine.pages.dev/applications', {
@@ -279,32 +277,34 @@ describe('Gidfine Cloudflare Worker End-to-End API Integration', () => {
         'idempotency-key': idempotencyKey,
       },
       body: JSON.stringify({
-        requestedAmountPesewas: 500000,
-        tenureMonths: 6,
-        purpose: 'Testing Idempotency Replay',
+        requestedAmountPesewas: 750000,
+        tenureMonths: 12,
+        purpose: 'Inventory purchase for trading shop',
       }),
     });
 
     const retryRes = await worker.fetch(retryReq, env);
     assert.strictEqual(retryRes.status, 200, 'Replay should succeed with 200');
-    const retryData = ((await retryRes.json()) as any).data;
+    const retryJson = (await retryRes.json()) as any;
+    assert.strictEqual(retryJson.ok, true);
+    const retryData = retryJson.data;
     assert.strictEqual(retryData.id, appData.id, 'Must return identical application ID');
 
     // Confirm no duplicate application was inserted
-    const countAfter = sqlite.prepare('SELECT COUNT(*) as count FROM loan_applications WHERE borrower_id = ?').get(appData.borrowerId) as any;
+    const countAfter = sqlite.prepare('SELECT COUNT(*) as count FROM loan_applications').get() as any;
     assert.strictEqual(countAfter.count, 1, 'Duplicate row MUST NOT be created');
   });
 
-  it('Test 5: Application Ownership Scoping and Borrower Isolation', async () => {
+  it('Test 5 & 6: Application Ownership Scoping, Tenant Isolation, and Queue Visibility', async () => {
     // 1. Register Borrower 1
     const b1Reg = await worker.fetch(
       new Request('https://loan-engine.pages.dev/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: 'b1_iso@example.com',
+          email: 'b1@example.com',
           password: 'Password123!',
-          fullName: 'Borrower One Iso',
+          fullName: 'Borrower One',
           agencySlug: 'gidfine',
         }),
       }),
@@ -318,9 +318,9 @@ describe('Gidfine Cloudflare Worker End-to-End API Integration', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: 'b2_iso@example.com',
+          email: 'b2@example.com',
           password: 'Password123!',
-          fullName: 'Borrower Two Iso',
+          fullName: 'Borrower Two',
           agencySlug: 'gidfine',
         }),
       }),
@@ -369,43 +369,8 @@ describe('Gidfine Cloudflare Worker End-to-End API Integration', () => {
     );
     const b2ListData = ((await b2List.json()) as any).data;
     assert.strictEqual(b2ListData.applications.length, 0, 'Borrower 2 must not see Borrower 1 data');
-  });
 
-  it('Test 6: Platform Admin Queue Visibility and Tenant Isolation', async () => {
-    // 1. Borrower submits application
-    const bReg = await worker.fetch(
-      new Request('https://loan-engine.pages.dev/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: 'b_queue@example.com',
-          password: 'Password123!',
-          fullName: 'Borrower Queue Test',
-          agencySlug: 'gidfine',
-        }),
-      }),
-      env,
-    );
-    const { token: bToken } = ((await bReg.json()) as any).data;
-
-    const bApp = await worker.fetch(
-      new Request('https://loan-engine.pages.dev/applications', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${bToken}`,
-        },
-        body: JSON.stringify({
-          requestedAmountPesewas: 450000,
-          tenureMonths: 12,
-          purpose: 'Working Capital',
-        }),
-      }),
-      env,
-    );
-    const bAppData = ((await bApp.json()) as any).data;
-
-    // 2. Platform Admin queries agency queue
+    // 6. Platform Admin (agency_admin seeded via ADMIN_EMAIL/ADMIN_PASSWORD) queries queue
     const adminLogin = await worker.fetch(
       new Request('https://loan-engine.pages.dev/auth/login', {
         method: 'POST',
@@ -429,9 +394,11 @@ describe('Gidfine Cloudflare Worker End-to-End API Integration', () => {
     );
     assert.strictEqual(adminQueue.status, 200);
     const queueData = ((await adminQueue.json()) as any).data;
-    assert.ok(queueData.applications.length >= 1);
-    const found = queueData.applications.some((a: any) => a.id === bAppData.id);
-    assert.strictEqual(found, true, 'Admin queue must include submitted application');
+    assert.strictEqual(queueData.applications.length, 1);
+    assert.strictEqual(queueData.applications[0].id, b1AppData.id);
+    assert.strictEqual(queueData.applications[0].borrowerName, 'Borrower One');
+    assert.strictEqual(queueData.applications[0].borrowerEmail, 'b1@example.com');
+    assert.strictEqual(queueData.applications[0].borrowerPhone, null);
   });
 
   it('Test 7: Role Protection & Gated Execution', async () => {
@@ -474,5 +441,150 @@ describe('Gidfine Cloudflare Worker End-to-End API Integration', () => {
       env,
     );
     assert.strictEqual(unauthReq.status, 401);
+  });
+
+  it('Test 8: Agency Review Queue, Assignment, Notes, and Status History', async () => {
+    sqlite
+      .prepare(
+        `INSERT INTO users
+           (id, agency_id, role, email, phone, full_name, password_hash, is_active, created_at, updated_at)
+         VALUES (?, ?, 'loan_officer', ?, NULL, ?, ?, 1, ?, ?)`,
+      )
+      .run(
+        'officer_review_1',
+        'agency_default',
+        'reviewer@gidfine.test',
+        'Review Officer',
+        'test-password-hash',
+        Date.now(),
+        Date.now(),
+      );
+
+    const borrowerRegistration = await worker.fetch(
+      new Request('https://loan-engine.pages.dev/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: 'review.borrower@example.com',
+          password: 'ValidPassword123!',
+          fullName: 'Review Borrower',
+          agencySlug: 'gidfine',
+        }),
+      }),
+      env,
+    );
+    const { token: borrowerToken } = ((await borrowerRegistration.json()) as any).data;
+
+    const applicationResponse = await worker.fetch(
+      new Request('https://loan-engine.pages.dev/applications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${borrowerToken}`,
+        },
+        body: JSON.stringify({
+          requestedAmountPesewas: 500000,
+          tenureMonths: 12,
+          purpose: 'Review workflow fixture',
+        }),
+      }),
+      env,
+    );
+    const application = ((await applicationResponse.json()) as any).data;
+
+    const adminLogin = await worker.fetch(
+      new Request('https://loan-engine.pages.dev/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: 'admin@gidfine.com',
+          password: 'SecureAdminPassword123!',
+        }),
+      }),
+      env,
+    );
+    const { token: adminToken } = ((await adminLogin.json()) as any).data;
+
+    const queueResponse = await worker.fetch(
+      new Request('https://loan-engine.pages.dev/applications?status=SUBMITTED', {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      }),
+      env,
+    );
+    assert.strictEqual(queueResponse.status, 200);
+    assert.strictEqual(((await queueResponse.json()) as any).data.applications[0].status, 'SUBMITTED');
+
+    const assignmentResponse = await worker.fetch(
+      new Request(`https://loan-engine.pages.dev/applications/${application.id}/assign`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${adminToken}`,
+        },
+        body: JSON.stringify({ assigneeId: 'officer_review_1' }),
+      }),
+      env,
+    );
+    assert.strictEqual(assignmentResponse.status, 200);
+
+    const reviewResponse = await worker.fetch(
+      new Request(`https://loan-engine.pages.dev/applications/${application.id}/review`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${adminToken}`,
+        },
+        body: JSON.stringify({ targetStatus: 'UNDER_REVIEW' }),
+      }),
+      env,
+    );
+    assert.strictEqual(reviewResponse.status, 200);
+
+    const noteResponse = await worker.fetch(
+      new Request(`https://loan-engine.pages.dev/applications/${application.id}/notes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${adminToken}`,
+        },
+        body: JSON.stringify({ note: 'Income evidence requested for review.' }),
+      }),
+      env,
+    );
+    assert.strictEqual(noteResponse.status, 201);
+
+    const reviewDetails = await worker.fetch(
+      new Request(`https://loan-engine.pages.dev/applications/${application.id}/review`, {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      }),
+      env,
+    );
+    const reviewData = ((await reviewDetails.json()) as any).data;
+    assert.strictEqual(reviewDetails.status, 200);
+    assert.strictEqual(reviewData.application.status, 'UNDER_REVIEW');
+    assert.strictEqual(reviewData.application.assignedOfficerId, 'officer_review_1');
+    assert.strictEqual(reviewData.notes.length, 1);
+    assert.strictEqual(reviewData.statusHistory.length, 2);
+
+    const borrowerApplications = await worker.fetch(
+      new Request('https://loan-engine.pages.dev/applications', {
+        headers: { Authorization: `Bearer ${borrowerToken}` },
+      }),
+      env,
+    );
+    const borrowerApplication = ((await borrowerApplications.json()) as any).data.applications[0];
+    assert.strictEqual(borrowerApplication.id, application.id);
+    assert.equal('borrowerEmail' in borrowerApplication, false);
+    assert.equal('borrowerPhone' in borrowerApplication, false);
+    assert.equal('assignedOfficerId' in borrowerApplication, false);
+    assert.equal('submittedAt' in borrowerApplication, false);
+
+    const borrowerReview = await worker.fetch(
+      new Request(`https://loan-engine.pages.dev/applications/${application.id}/review`, {
+        headers: { Authorization: `Bearer ${borrowerToken}` },
+      }),
+      env,
+    );
+    assert.strictEqual(borrowerReview.status, 403);
   });
 });

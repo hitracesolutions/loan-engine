@@ -65,7 +65,7 @@ export default function ProfileWidget() {
               value={salary}
               onChange={(e) => setSalary(e.target.value)}
               className="w-full bg-[#0A0A0A] border border-white/10 rounded-lg pl-10 pr-4 py-3 text-sm text-white focus:outline-none focus:border-white/30 transition-colors placeholder:text-white/20"
-              placeholder="₹ 1,50,000"
+              placeholder="GH₵ 1,500"
             />
           </div>
         </div>

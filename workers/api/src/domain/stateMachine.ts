@@ -80,13 +80,13 @@ export const ALLOWED_TRANSITIONS: Partial<
   SUBMITTED: {
     UNDER_REVIEW: { allowedRoles: AGENCY_STAFF },
     MORE_INFO_REQUIRED: { allowedRoles: AGENCY_STAFF },
-    AGENCY_REJECTED: { allowedRoles: AGENCY_STAFF },
+    AGENCY_REJECTED: { allowedRoles: ['agency_admin', 'underwriter'] },
     CANCELLED: { allowedRoles: CANCELLING, requiresOwningBorrower: true },
   },
   UNDER_REVIEW: {
     MATCHING: { allowedRoles: AGENCY_STAFF },
     MORE_INFO_REQUIRED: { allowedRoles: AGENCY_STAFF },
-    AGENCY_REJECTED: { allowedRoles: AGENCY_STAFF },
+    AGENCY_REJECTED: { allowedRoles: ['agency_admin', 'underwriter'] },
     CANCELLED: { allowedRoles: CANCELLING, requiresOwningBorrower: true },
   },
   MORE_INFO_REQUIRED: {

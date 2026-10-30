@@ -14,7 +14,7 @@ const NODES = [
   { id: 'kyc_agent',          label: 'KYC & Fraud Agent',    sub: 'Identity Verification · AML Check',  icon: ShieldCheck },
   { id: 'underwriting_agent', label: 'Underwriting Agent',   sub: 'FOIR · DTI · CIBIL Risk Engine',     icon: Scale },
   { id: 'sanction_agent',     label: 'Sanction Agent',       sub: 'ReportLab PDF · SMTP Dispatch',      icon: BadgeCheck },
-  { id: 'bank_verification',  label: 'Bank Verification',    sub: 'Penny Drop ₹1 · eNACH Mandate',     icon: BadgeCheck },
+  { id: 'bank_verification',  label: 'Bank Verification',    sub: 'Account verification · Repayment mandate', icon: BadgeCheck },
   { id: 'disbursement',       label: 'Disbursement Node',    sub: 'Fund Release · Ledger Entry',        icon: Banknote },
 ];
 

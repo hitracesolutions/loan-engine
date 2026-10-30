@@ -107,7 +107,7 @@ export default function SanctionViewer() {
               <span className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold uppercase tracking-wider text-[10px] rounded-full">
                 OFFICIAL SANCTION
               </span>
-              <p className="text-white/40 text-[10px] mt-1">Date: {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+              <p className="text-white/40 text-[10px] mt-1">Date: {new Date().toLocaleDateString('en-GH', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
             </div>
           </div>
 
@@ -129,7 +129,7 @@ export default function SanctionViewer() {
             </div>
             <div className="grid grid-cols-2 p-3 border-b border-white/5">
               <span className="text-white/60">Sanctioned Principal</span>
-              <span className="text-white font-bold">INR {loanDetails.requestedAmount.toLocaleString('en-IN')}.00</span>
+              <span className="text-white font-bold">GH₵ {loanDetails.requestedAmount.toLocaleString('en-GH')}.00</span>
             </div>
             <div className="grid grid-cols-2 p-3 border-b border-white/5 bg-white/[0.01]">
               <span className="text-white/60">Interest Rate</span>
@@ -141,11 +141,11 @@ export default function SanctionViewer() {
             </div>
             <div className="grid grid-cols-2 p-3 border-b border-white/5 bg-white/[0.01]">
               <span className="text-white/60">Calculated Monthly EMI</span>
-              <span className="text-white font-bold">INR {emi.toLocaleString('en-IN')}.00</span>
+              <span className="text-white font-bold">GH₵ {emi.toLocaleString('en-GH')}.00</span>
             </div>
             <div className="grid grid-cols-2 p-3">
               <span className="text-white/60">Processing Fee</span>
-              <span className="text-white">1.0% (INR {(loanDetails.requestedAmount * 0.01).toLocaleString('en-IN')})</span>
+              <span className="text-white">1.0% (GH₵ {(loanDetails.requestedAmount * 0.01).toLocaleString('en-GH')})</span>
             </div>
           </div>
 
@@ -209,7 +209,7 @@ export default function SanctionViewer() {
                 <div className="bg-[#0A0A0A] p-4 rounded-xl border border-white/5 space-y-2 text-xs font-mono">
                   <div className="flex justify-between text-white/70">
                     <span>Net Disbursed Capital:</span>
-                    <span className="text-emerald-400 font-bold text-sm">₹{disbursementData.amount ? Math.round(disbursementData.amount).toLocaleString('en-IN') : loanDetails.requestedAmount.toLocaleString('en-IN')}</span>
+              <span className="text-emerald-400 font-bold text-sm">GH₵{disbursementData.amount ? Math.round(disbursementData.amount).toLocaleString('en-GH') : loanDetails.requestedAmount.toLocaleString('en-GH')}</span>
                   </div>
                   <div className="flex justify-between text-white/70">
                     <span>Credited Bank Account:</span>

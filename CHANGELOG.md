@@ -1,5 +1,54 @@
 # Gidfine Changelog
 
+## 2026-10-29 — Application disclosure boundary
+
+- Centralized application response redaction by role on the Worker API.
+- Agency staff can see borrower identity needed for review; borrower responses
+  exclude identity, assignment and internal review fields.
+- Added direct API assertions for staff disclosure and borrower field leakage.
+
+## 2026-10-29 — Agency review workspace connection
+
+- Connected the React agency review queue to server-side status filtering and
+  the review API.
+- Added assignment, guarded status decisions, internal notes and status-history
+  viewing to the review dialog.
+- Kept lender proposal, agency approval and disbursement actions gated until
+  their Phase 3/4 backend and owner acceptance work is complete.
+
+## 2026-10-29 — Agency review foundation
+
+- Added the `0002_application_review.sql` migration for reviewer assignment,
+  internal notes and append-only application status history.
+- Added staff-only review queue filters, assignment, guarded status transitions
+  and review evidence endpoints.
+- Auditors retain read-only access; borrowers cannot access internal review
+  notes or history.
+- Applied the migration locally and verified the Worker typecheck, 51 API tests
+  and frontend production build.
+
+## 2026-10-29 — Owner decision baseline
+
+- Recorded the owner’s Phase 0 decisions for tenancy, intermediary operation,
+  lender/product pricing, fees, disclosures, documents, lender matching,
+  approvals, repayments, notifications and generated documents.
+- Marked Phase 1 implementation as unblocked while retaining detailed pricing,
+  fee, disclosure and legal evidence fixtures as launch prerequisites.
+
+## 2026-10-29 — Worker typecheck foundation
+
+- Aligned the local D1 integration-test adapter with the generated Cloudflare
+  D1 contracts and added session/metadata support.
+- Worker typecheck now passes; the API test suite passes all 50 tests.
+
+## 2026-10-29 — Ghana cedi display
+
+- Replaced Indian rupee symbols and `en-IN` formatting across frontend loan,
+  repayment, dashboard, advisor, sanction and comparison views with `GH₵` and
+  Ghana-style formatting.
+- Preserved the existing integer pesewas/GHS storage model and API contracts;
+  no database migration is required for this display-only change.
+
 ## 2026-10-29 — Documentation and platform baseline
 
 - Updated the development guide to reflect the current Cloudflare Pages +

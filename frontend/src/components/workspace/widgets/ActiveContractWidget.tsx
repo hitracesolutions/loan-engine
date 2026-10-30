@@ -25,7 +25,7 @@ export default function ActiveContractWidget() {
       <div className="flex justify-between items-start mb-8 relative z-10">
         <div>
            <p className="text-xs font-semibold uppercase tracking-widest text-white/50 mb-1">Total Outstanding</p>
-           <h3 className="text-3xl font-display font-medium text-white">₹{loanDetails.requestedAmount.toLocaleString('en-IN')}</h3>
+           <h3 className="text-3xl font-display font-medium text-white">GH₵{loanDetails.requestedAmount.toLocaleString('en-GH')}</h3>
         </div>
         <div className="text-right">
            <p className="text-xs font-semibold uppercase tracking-widest text-white/50 mb-1">Next EMI Due</p>
@@ -36,7 +36,7 @@ export default function ActiveContractWidget() {
       <div className="grid grid-cols-2 gap-4 mb-6 relative z-10">
         <div className="p-4 rounded-xl bg-[#0A0A0A] border border-white/5">
            <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold mb-1">EMI Amount</p>
-           <p className="text-base font-medium text-white">₹{emiAmount.toLocaleString('en-IN')}</p>
+           <p className="text-base font-medium text-white">GH₵{emiAmount.toLocaleString('en-GH')}</p>
         </div>
         <div className="p-4 rounded-xl bg-[#0A0A0A] border border-white/5">
            <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold mb-1">Tenure Left</p>

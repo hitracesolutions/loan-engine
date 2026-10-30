@@ -20,7 +20,7 @@ export default function AdvisorChat() {
     {
       id: '1',
       role: 'assistant',
-      content: `Hello ${user?.name || 'Sarang'}. I am your dedicated Track-2 Autonomous Financial & Portfolio Advisor.\n\nI have evaluated your total asset portfolio (₹6.7 Lakhs in SIPs & FDs), active debt exposure (₹${loanDetails.requestedAmount.toLocaleString('en-IN')}), and CIBIL telemetry (${user?.creditScore || 800}).\n\nHow can I assist you with wealth allocation, tax optimization, or loan prepayment strategy today?`,
+      content: `Hello ${user?.name || 'there'}. I am your dedicated Financial & Portfolio Advisor.\n\nI have evaluated your total asset portfolio (GH₵67,000 in savings and investments), active debt exposure (GH₵${loanDetails.requestedAmount.toLocaleString('en-GH')}), and credit telemetry (${user?.creditScore || 800}).\n\nHow can I assist you with budgeting, loan prepayment, or repayment planning today?`,
       timestamp: Date.now()
     }
   ]);
@@ -56,7 +56,7 @@ export default function AdvisorChat() {
 
     try {
       if (sessionId) {
-        const res = await api.chatWithAgent(sessionId, `[FINANCIAL ADVISOR QUERY] User Salary: ₹${portfolioData.monthlySalary}, Active Debt: ₹${portfolioData.activeDebt}, EMI: ₹${portfolioData.monthlyEmi}, Investments: ₹${portfolioData.mutualFunds + portfolioData.fixedDeposits}. Question: ${queryText}`);
+        const res = await api.chatWithAgent(sessionId, `[FINANCIAL ADVISOR QUERY] User Salary: GH₵${portfolioData.monthlySalary}, Active Debt: GH₵${portfolioData.activeDebt}, EMI: GH₵${portfolioData.monthlyEmi}, Investments: GH₵${portfolioData.mutualFunds + portfolioData.fixedDeposits}. Question: ${queryText}`);
         setIsTyping(false);
 
         if (res.success && res.data?.reply) {
@@ -81,7 +81,7 @@ export default function AdvisorChat() {
           {
             id: (Date.now() + 1).toString(),
             role: 'assistant',
-            content: `Based on your monthly net income (₹${portfolioData.monthlySalary.toLocaleString('en-IN')}) and current DTI ratio of ${(portfolioData.dtiRatio * 100).toFixed(1)}%:\n\n1. **Prepayment vs SIPs**: Your loan rate is 10.5% p.a., while your Equity Mutual Fund portfolio yields ~14.2% CAGR. It is financially optimal to continue monthly SIPs rather than aggressive prepayments.\n2. **Emergency Buffer**: Maintaining ₹1.2 Lakhs in liquid funds provides 7.3x monthly EMI coverage.\n3. **Tax Optimization**: Loan interest payments up to ₹2 Lakhs are deductible under Section 24b.`,
+          content: `Based on your monthly net income (GH₵${portfolioData.monthlySalary.toLocaleString('en-GH')}) and current DTI ratio of ${(portfolioData.dtiRatio * 100).toFixed(1)}%:\n\n1. **Prepayment vs investing**: Compare your loan rate with your investment returns before making an early repayment.\n2. **Emergency buffer**: Maintaining GH₵12,000 in liquid funds provides a safety buffer for scheduled EMI payments.\n3. **Budget planning**: Keep repayment commitments within the approved affordability policy.`,
             timestamp: Date.now()
           }
         ]);
@@ -104,7 +104,7 @@ export default function AdvisorChat() {
             <span>Net Investment Assets</span>
             <PieChart className="w-4 h-4 text-emerald-400" />
           </div>
-          <p className="text-2xl font-display font-bold text-white">₹{(portfolioData.mutualFunds + portfolioData.fixedDeposits).toLocaleString('en-IN')}</p>
+          <p className="text-2xl font-display font-bold text-white">GH₵{(portfolioData.mutualFunds + portfolioData.fixedDeposits).toLocaleString('en-GH')}</p>
           <p className="text-[11px] text-emerald-400 mt-1 flex items-center gap-1 font-mono">
             <ArrowUpRight className="w-3 h-3" /> Mutual Funds + FDs
           </p>
@@ -115,8 +115,8 @@ export default function AdvisorChat() {
             <span>Active Debt Exposure</span>
             <Wallet className="w-4 h-4 text-blue-400" />
           </div>
-          <p className="text-2xl font-display font-bold text-white">₹{portfolioData.activeDebt.toLocaleString('en-IN')}</p>
-          <p className="text-[11px] text-white/40 mt-1 font-mono">EMI: ₹{portfolioData.monthlyEmi.toLocaleString('en-IN')}/mo</p>
+          <p className="text-2xl font-display font-bold text-white">GH₵{portfolioData.activeDebt.toLocaleString('en-GH')}</p>
+          <p className="text-[11px] text-white/40 mt-1 font-mono">EMI: GH₵{portfolioData.monthlyEmi.toLocaleString('en-GH')}/mo</p>
         </div>
 
         <div className="bg-[#111] border border-white/10 rounded-2xl p-5 relative overflow-hidden">
@@ -133,7 +133,7 @@ export default function AdvisorChat() {
             <span>Emergency Buffer</span>
             <ShieldAlert className="w-4 h-4 text-purple-400" />
           </div>
-          <p className="text-2xl font-display font-bold text-white">₹{portfolioData.emergencyFund.toLocaleString('en-IN')}</p>
+          <p className="text-2xl font-display font-bold text-white">GH₵{portfolioData.emergencyFund.toLocaleString('en-GH')}</p>
           <p className="text-[11px] text-purple-400 mt-1 font-mono">7.3x EMI Coverage</p>
         </div>
       </div>

@@ -61,7 +61,7 @@ const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({ periodDays = 30
         />
         <MetricCard
           label="Avg EMI Offered"
-          value={`₹${metrics.kpis.avg_emi.toLocaleString()}`}
+          value={`GH₵${metrics.kpis.avg_emi.toLocaleString('en-GH')}`}
           subtitle="System average"
           icon="💰"
         />

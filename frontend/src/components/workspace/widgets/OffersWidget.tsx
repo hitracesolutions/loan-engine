@@ -123,12 +123,12 @@ export default function OffersWidget({ onSelect }: OffersWidgetProps) {
                 </div>
                 <div className="flex justify-between items-center border-b border-white/5 pb-2">
                   <span className="text-white/50 uppercase tracking-widest font-sans">Monthly EMI</span>
-                  <span className="font-medium text-white text-sm">₹{emiVal.toLocaleString('en-IN')}</span>
+                <span className="font-medium text-white text-sm">GH₵{emiVal.toLocaleString('en-GH')}</span>
                 </div>
                 {offer.processing_fee && (
                   <div className="flex justify-between items-center text-[10px] text-white/40">
                     <span className="font-sans">Processing Fee</span>
-                    <span>₹{Math.round(offer.processing_fee).toLocaleString('en-IN')}</span>
+                    <span>GH₵{Math.round(offer.processing_fee).toLocaleString('en-GH')}</span>
                   </div>
                 )}
               </div>

@@ -11,9 +11,13 @@ import { ensureAdminUser } from './lib/auth.ts';
 import { corsHeaders, errorResponse } from './lib/http.ts';
 import {
   addApplicationNote,
+  addApplicationReviewNote,
+  assignApplication,
   createApplication,
+  getApplicationReview,
   listApplicationNotes,
   listApplications,
+  reviewApplication,
   submitBorrowerResponse,
   transitionApplication,
 } from './routes/applications.ts';
@@ -65,6 +69,9 @@ const router = new Router()
   .get('/audit/security', listSecurityAuditLogs)
   .post('/applications', createApplication)
   .get('/applications', listApplications)
+  .get('/applications/:id/review', getApplicationReview)
+  .post('/applications/:id/assign', assignApplication)
+  .post('/applications/:id/review', reviewApplication)
   .post('/applications/:id/notes', addApplicationNote)
   .get('/applications/:id/notes', listApplicationNotes)
   .post('/applications/:id/response', submitBorrowerResponse)
