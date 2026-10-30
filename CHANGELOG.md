@@ -1,5 +1,26 @@
 # Gidfine Changelog
 
+## 2026-10-30 — Owner decision records
+
+- Added `ADR/` with one decision record per owner gate O-01 to O-14, plus an
+  index that defines the status vocabulary and the procedure for closing a gate.
+- Recorded the owner's answers for all fourteen gates: single-agency tenancy
+  (accepted), mixed legal model designated per product, monthly and annual rates
+  quoted side by side with the method negotiated per deal, margin from either
+  side recognised on collection, flexible product frequencies with negotiated
+  grace/penalty/settlement, per-lender disclosure agreements, regulator-driven
+  retention, hybrid lender routing, single-approver disbursement with
+  supervisor-approved cashier reversals, manual-only payment collection,
+  in-app/email/SMS notifications funded by Gidfine, the full generated document
+  set, DPC registration held and a credit/moneylending licence held.
+- Flagged that single-approver disbursement contradicts the deployed
+  `check_maker_checker_distinct` constraint, so dual control stays enforced until
+  a forward migration relaxes it.
+- Flagged that the simulated MFA accepts fixed codes and must be replaced before
+  any privileged flow goes live.
+- Added the reconciled decision status table to `IMPLEMENTATION_PLAN.md` §3.1;
+  the original §3 assessment is preserved.
+
 ## 2026-10-30 — Automated D1 migrations
 
 - Added a GitHub Actions workflow that applies pending D1 migrations on `main`

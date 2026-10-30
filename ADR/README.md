@@ -27,15 +27,15 @@ accepted. Read the relevant ADR before changing behaviour that depends on it.
 | [0003](./0003-interest-calculation-method.md) | O-03 | Interest calculation method | Provisional | Live pricing engine, schedule generation |
 | [0004](./0004-agency-margin-and-revenue.md) | O-04 | Agency margin & revenue rules | Provisional | Live quote maths, ledger revenue accounts |
 | [0005](./0005-loan-product-parameters.md) | O-05 | Loan product parameters | Provisional | Product catalogue, schedule generator |
-| [0006](./0006-lender-kyc-disclosures.md) | O-06 | Lender KYC disclosures | Open | Legally valid lender-facing payloads |
+| [0006](./0006-lender-kyc-disclosures.md) | O-06 | Lender KYC disclosures | Provisional | Legally valid lender-facing payloads |
 | [0007](./0007-document-retention-policy.md) | O-07 | Document retention policy | Open | R2 binding, document upload/download |
 | [0008](./0008-lender-matching-workflow.md) | O-08 | Lender matching workflow | Provisional | Proposal routing model |
 | [0009](./0009-maker-checker-and-approvals.md) | O-09 | Maker-checker & approvals | Provisional | Live disbursement authority, MFA hardening |
 | [0010](./0010-payment-collection-scope.md) | O-10 | Payment collection scope | Provisional | Payment webhooks, reconciliation |
 | [0011](./0011-notification-channels-and-budget.md) | O-11 | Notification channels & budget | Provisional | Real email/SMS delivery |
-| [0012](./0012-generated-financial-documents.md) | O-12 | Generated financial documents | Open | PDF generation, digital signing |
-| [0013](./0013-data-protection-act-843.md) | O-13 | Data protection (Act 843) | Open | Live borrower PII processing |
-| [0014](./0014-lending-regulatory-licensing.md) | O-14 | Lending & credit licensing | Open | Commercial launch, live disbursement |
+| [0012](./0012-generated-financial-documents.md) | O-12 | Generated financial documents | Provisional | PDF generation, digital signing |
+| [0013](./0013-data-protection-act-843.md) | O-13 | Data protection (Act 843) | Provisional | Live borrower PII processing |
+| [0014](./0014-lending-regulatory-licensing.md) | O-14 | Lending & credit licensing | Provisional | Commercial launch, live disbursement |
 
 ## Closing a record
 

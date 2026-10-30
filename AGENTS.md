@@ -591,3 +591,18 @@ The current production baseline is Cloudflare Pages + Pages Functions, D1 and KV
 - Verified locally: all eight migration files apply through
   `db:migrate:local`, the workflow YAML parses, `npm ci` is in sync with the
   lockfile, and the frontend production build passes.
+
+### 2026-10-30 — Owner decision records
+
+- Added `ADR/` with a record per owner gate (O-01 to O-14) and an index defining
+  the status vocabulary (Open / Provisional / Accepted / Superseded) and how to
+  close a gate.
+- Recorded owner answers for all fourteen gates; O-01 (single agency) is
+  accepted, the rest are provisional pending the artefacts listed in each record.
+- Recorded that single-approver disbursement (O-09) contradicts the deployed
+  `check_maker_checker_distinct` constraint, so the decision is not in force and
+  dual control remains enforced until a forward migration relaxes it.
+- Recorded that simulated MFA accepts fixed codes `123456`/`654321` and must be
+  replaced before any privileged flow goes live.
+- Added the reconciled status table at `IMPLEMENTATION_PLAN.md` §3.1 without
+  altering the original §3 assessment.

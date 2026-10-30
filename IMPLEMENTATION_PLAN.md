@@ -94,6 +94,39 @@ The following decisions must be formally approved by Matthias and the Gidfine ex
 | **O-13** | **Data Protection Compliance (Act 843)** | Written legal sign-off under Ghana Data Protection Act, 2012 (Act 843) on consent capture, privacy notices, and data handling | Blocks Sprint 7 commercial processing of live borrower personal identifiable information (PII). | **BLOCKING Sprint 7** |
 | **O-14** | **Lending & Credit Regulatory Licensing** | Written legal confirmation of Gidfine's regulatory status with Bank of Ghana (credit intermediary license, moneylending permit, or arranger exemption) | Blocks Sprint 7 commercial launch and live financial loan disbursements. | **BLOCKING Sprint 7** |
 
+### 3.1 Decision record status (recorded 2026-10-30)
+
+Every gate now has a decision record under [`ADR/`](./ADR/README.md). The statuses
+below reflect the owner answers recorded on 2026-10-30; the §3 table above is the
+original assessment and is kept intact for history.
+
+| Gate | ADR | Status | Still outstanding |
+| :--- | :--- | :--- | :--- |
+| O-01 | [0001](./ADR/0001-tenancy-model.md) | **Accepted** — single agency, Gidfine operates for itself | SaaS onboarding would need a superseding ADR |
+| O-02 | [0002](./ADR/0002-legal-operating-model.md) | Provisional — mixed model, designated per product | Per-product designation; signed legal annex per model |
+| O-03 | [0003](./ADR/0003-interest-calculation-method.md) | Provisional — monthly and annual quoted side by side; method negotiated per deal | Rounding rule; worked fixtures per method |
+| O-04 | [0004](./ADR/0004-agency-margin-and-revenue.md) | Provisional — margin from either side, flat or percentage; recognised on collection | Allowed combinations; VAT/withholding |
+| O-05 | [0005](./ADR/0005-loan-product-parameters.md) | Provisional — flexible frequencies; grace, penalty and settlement negotiated per product | Parameter bounds; launch catalogue |
+| O-06 | [0006](./ADR/0006-lender-kyc-disclosures.md) | Provisional — per-lender disclosure agreements | Signed matrices per lender |
+| O-07 | [0007](./ADR/0007-document-retention-policy.md) | **Open** — follows the regulator | Retention period confirmation; access list; key custody |
+| O-08 | [0008](./ADR/0008-lender-matching-workflow.md) | Provisional — hybrid competitive then sequential | Blast radius; timeout and fallback owner |
+| O-09 | [0009](./ADR/0009-maker-checker-and-approvals.md) | Provisional — single approver for disbursement; cashier reversals need supervisor | **Forward migration to relax `check_maker_checker_distinct`**; real MFA |
+| O-10 | [0010](./ADR/0010-payment-collection-scope.md) | Provisional — manual cashier entry only for MVP | Cashier reconciliation procedure |
+| O-11 | [0011](./ADR/0011-notification-channels-and-budget.md) | Provisional — in-app + email + SMS, Gidfine-funded | Providers; monthly spend ceiling |
+| O-12 | [0012](./ADR/0012-generated-financial-documents.md) | Provisional — full document set | Templates; signing requirement; numbering scheme |
+| O-13 | [0013](./ADR/0013-data-protection-act-843.md) | Provisional — DPC registration held | Privacy notice text; consent wording; processing register |
+| O-14 | [0014](./ADR/0014-lending-regulatory-licensing.md) | Provisional — credit/moneylending licence held | Licence reference; per-model scope confirmation |
+
+Two consequences follow and must not be lost:
+
+1. **O-09 is not in force yet.** Single-approver disbursement contradicts the
+   deployed `CHECK (checker_id IS NULL OR checker_id != maker_id)` constraint in
+   `0005`, so dual control remains the enforced behaviour until a forward
+   migration relaxes it.
+2. **O-07 still blocks document storage.** No R2 bucket is bound, so KYC upload
+   and document retention cannot be demonstrated at launch until that record
+   closes.
+
 ---
 
 ## 4. Delivery Phases & Milestone Verification

@@ -17,6 +17,9 @@ consent basis and message templates that never leak lender-hidden data.
 
 **In-app + email + SMS.** WhatsApp is out of scope for now.
 
+**Cost:** Gidfine absorbs the per-message cost. It is not charged back to the
+lender or the borrower at launch.
+
 ## Rationale
 
 Recorded direction: borrowers in the target market are reachable by SMS, while
@@ -27,8 +30,9 @@ truth for state; email and SMS are notifications about it.
 
 - Two real adapters are needed (email provider, SMS provider) plus credential
   provisioning, retry/backoff behaviour and delivery-status tracking.
-- Cost allocation is still missing: someone must own the per-message spend and
-  the monthly ceiling.
+- Cost sits with Gidfine, so a monthly ceiling and an alerting threshold are
+  needed before volume grows; without them an outbox retry storm becomes an
+  unbudgeted SMS bill.
 - Template review becomes a compliance task: no hidden borrower data, no rate
   disclosure that contradicts ADR-0003/ADR-0004 terms.
 - Consent for SMS must be captured and stored, which links this record to
@@ -37,7 +41,7 @@ truth for state; email and SMS are notifications about it.
 ## Outstanding before acceptance
 
 - [ ] Provider selection for email and SMS, and who holds the accounts.
-- [ ] Budget owner and monthly spend ceiling.
+- [ ] Monthly spend ceiling and the person accountable for it.
 - [ ] SMS consent capture and opt-out handling.
 - [ ] Message template set (none exist yet).
 
