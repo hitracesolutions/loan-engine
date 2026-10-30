@@ -606,3 +606,19 @@ The current production baseline is Cloudflare Pages + Pages Functions, D1 and KV
   replaced before any privileged flow goes live.
 - Added the reconciled status table at `IMPLEMENTATION_PLAN.md` §3.1 without
   altering the original §3 assessment.
+
+### 2026-10-30 — Administrator impersonation
+
+- Added read-only "view as" sessions for `agency_admin`: start, stop and user
+  list endpoints, a pre-router guard that blocks every state-changing request
+  from an impersonated token, and start/stop audit events in
+  `security_audit_logs`.
+- Added server-side revocation so a stopped session cannot be reused inside its
+  TTL, plus privilege guards (no admin-on-admin, no nested impersonation, no
+  self-impersonation).
+- Added the admin panel, the persistent banner and the Pages Function entrypoint
+  the routes need in production.
+- Recorded boundaries in `ADR/0015-administrator-impersonation.md`; the
+  read-only rule is a decision, not an implementation accident.
+- Verified: `npm test` 81 pass (9 new), frontend build passes, typecheck
+  unchanged at its 33 pre-existing errors.

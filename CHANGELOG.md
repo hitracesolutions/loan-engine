@@ -1,5 +1,28 @@
 # Gidfine Changelog
 
+## 2026-10-30 — Administrator impersonation ("view as")
+
+- Added `POST /admin/impersonate`, `POST /admin/impersonate/stop` and
+  `GET /admin/users`. An administrator can start a 15-minute session as another
+  non-admin account in the same agency.
+- Impersonated sessions are **read-only**: a request guard that runs before the
+  router rejects every state-changing request except ending the session, so no
+  consent, offer, disbursement, payment or reversal can be performed while
+  impersonating.
+- Blocked privilege paths: only `agency_admin` may start a session, an
+  impersonated session may not start another, self-impersonation is rejected and
+  administrators cannot impersonate other administrators.
+- Every start and stop writes `IMPERSONATION_STARTED` / `IMPERSONATION_STOPPED`
+  to `security_audit_logs` with administrator, target, session id, IP and user
+  agent. Stopping revokes the token server-side while it is still inside its TTL.
+- Added the admin "View as user" panel and a persistent read-only banner, plus
+  `frontend/functions/admin/[[path]].ts` so the routes resolve same-origin in
+  production.
+- Recorded the boundaries as
+  [`ADR/0015-administrator-impersonation.md`](./ADR/0015-administrator-impersonation.md).
+- Verified: 9 new tests (81 total pass), frontend build exit 0, Worker typecheck
+  unchanged at its 33 pre-existing errors.
+
 ## 2026-10-30 — Owner decision records
 
 - Added `ADR/` with one decision record per owner gate O-01 to O-14, plus an
