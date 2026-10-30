@@ -37,6 +37,10 @@ export class Router {
     return this.add('POST', pattern, handler);
   }
 
+  put(pattern: string, handler: RouteHandler): this {
+    return this.add('PUT', pattern, handler);
+  }
+
   /** Returns the handler and captured path params, or throws 404. */
   match(method: string, pathname: string): { handler: RouteHandler; params: Record<string, string> } {
     const pathSegments = pathname.split('/').filter(Boolean);

@@ -80,17 +80,17 @@ export const ALLOWED_TRANSITIONS: Partial<
   SUBMITTED: {
     UNDER_REVIEW: { allowedRoles: AGENCY_STAFF },
     MORE_INFO_REQUIRED: { allowedRoles: AGENCY_STAFF },
-    AGENCY_REJECTED: { allowedRoles: ['agency_admin', 'underwriter'] },
+    AGENCY_REJECTED: { allowedRoles: AGENCY_STAFF },
     CANCELLED: { allowedRoles: CANCELLING, requiresOwningBorrower: true },
   },
   UNDER_REVIEW: {
     MATCHING: { allowedRoles: AGENCY_STAFF },
     MORE_INFO_REQUIRED: { allowedRoles: AGENCY_STAFF },
-    AGENCY_REJECTED: { allowedRoles: ['agency_admin', 'underwriter'] },
+    AGENCY_REJECTED: { allowedRoles: AGENCY_STAFF },
     CANCELLED: { allowedRoles: CANCELLING, requiresOwningBorrower: true },
   },
   MORE_INFO_REQUIRED: {
-    UNDER_REVIEW: { allowedRoles: ['borrower', 'agency_admin', 'loan_officer'] },
+    UNDER_REVIEW: { allowedRoles: ['borrower', 'agency_admin', 'loan_officer', 'underwriter'] },
     CANCELLED: { allowedRoles: CANCELLING, requiresOwningBorrower: true },
     EXPIRED: { allowedRoles: ['agency_admin'] },
   },
@@ -177,6 +177,8 @@ export interface TransitionContext {
   borrowerId: string;
   assignedLenderId?: string | null;
   hasValidConsentSnapshot?: boolean;
+  rejectionReason?: string | null;
+  hasBorrowerResponse?: boolean;
 }
 
 export type TransitionErrorCode =
@@ -186,7 +188,9 @@ export type TransitionErrorCode =
   | 'UNAUTHORIZED_ROLE'
   | 'LENDER_NOT_ASSIGNED'
   | 'BORROWER_MISMATCH'
-  | 'CONSENT_REQUIRED';
+  | 'CONSENT_REQUIRED'
+  | 'REJECTION_REASON_REQUIRED'
+  | 'BORROWER_RESPONSE_REQUIRED';
 
 export class StateTransitionError extends Error {
   readonly code: TransitionErrorCode;
@@ -232,6 +236,24 @@ export function validateStateTransition(ctx: TransitionContext): { valid: true }
       `Role '${ctx.actorRole}' may not perform '${ctx.currentStatus}' -> '${ctx.targetStatus}' (requires ${rule.allowedRoles.join(', ')})`,
       'UNAUTHORIZED_ROLE',
     );
+  }
+
+  if (ctx.targetStatus === 'AGENCY_REJECTED') {
+    if (!ctx.rejectionReason || ctx.rejectionReason.trim().length === 0) {
+      throw new StateTransitionError(
+        'A recorded rejection reason is required to reject an application',
+        'REJECTION_REASON_REQUIRED',
+      );
+    }
+  }
+
+  if (ctx.currentStatus === 'MORE_INFO_REQUIRED' && ctx.targetStatus === 'UNDER_REVIEW') {
+    if (!ctx.hasBorrowerResponse) {
+      throw new StateTransitionError(
+        'Borrower response or updated information is required before resubmitting',
+        'BORROWER_RESPONSE_REQUIRED',
+      );
+    }
   }
 
   if (rule.requiresAssignedLender && ctx.actorRole === 'lender') {

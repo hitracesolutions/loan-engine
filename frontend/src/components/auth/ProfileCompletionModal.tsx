@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { api } from '../../lib/api';
+import { gidfineAPI, ghsToPesewas } from '../../lib/api-gidfine';
 import { useLoanStore } from '../../store/useLoanStore';
 import { ShieldCheck, Phone, Briefcase, MapPin, ArrowRight } from 'lucide-react';
 
@@ -13,7 +13,7 @@ export default function ProfileCompletionModal({ isOpen, phoneInitial = '', onCo
   const { user, setUser } = useLoanStore();
   const [phone, setPhone] = useState(phoneInitial || user?.phone || '');
   const [salary, setSalary] = useState(user?.salary ? String(user.salary) : '');
-  const [city, setCity] = useState(user?.city || '');
+  const [city, setCity] = useState(user?.city || 'Accra');
   const [loading, setLoading] = useState(false);
 
   if (!isOpen) return null;
@@ -22,16 +22,17 @@ export default function ProfileCompletionModal({ isOpen, phoneInitial = '', onCo
     e.preventDefault();
     setLoading(true);
 
-    const targetIdentifier = phone || user?.phone || user?.email || '';
-    if (targetIdentifier) {
-      await api.updateProfile({
-        phone: targetIdentifier,
-        name: user?.name,
-        email: user?.email,
-        picture: user?.picture,
-        salary: Number(salary) || 75000,
-        city: city || 'Mumbai',
-      });
+    const parsedSalary = Number(salary) || 5000;
+    try {
+      if (gidfineAPI.isAuthenticated()) {
+        await gidfineAPI.updateBorrowerProfile({
+          phone: phone || user?.phone,
+          city: city || 'Accra',
+          monthlySalaryPesewas: ghsToPesewas(parsedSalary),
+        });
+      }
+    } catch (err) {
+      console.error('Failed to update borrower profile in D1:', err);
     }
 
     setLoading(false);
@@ -40,8 +41,8 @@ export default function ProfileCompletionModal({ isOpen, phoneInitial = '', onCo
       setUser({
         ...user,
         phone: phone || user.phone || '',
-        salary: Number(salary) || user.salary || 75000,
-        city: city || user.city || 'Mumbai',
+        salary: parsedSalary,
+        city: city || 'Accra',
       });
     }
 

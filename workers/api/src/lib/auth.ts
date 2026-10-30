@@ -5,7 +5,7 @@
  * Pages Functions without a Node-only JWT dependency.
  */
 
-import { unauthorized } from './http.ts';
+import { forbidden, unauthorized } from './http.ts';
 import type { UserRole } from '../domain/stateMachine.ts';
 import type { AppEnv } from '../env.ts';
 
@@ -230,19 +230,32 @@ export async function verifyAccessToken(token: string, secret: string): Promise<
 
 /** Extracts and verifies the access token from an Authorization header. */
 export async function requireActor(
-  request: Request,
-  secret: string,
+  reqOrCtx: Request | { request: Request; env: AppEnv },
+  secret?: string,
 ): Promise<{ userId: string; agencyId: string; role: UserRole }> {
+  const request = 'request' in reqOrCtx ? reqOrCtx.request : reqOrCtx;
+  const signingKey = secret ?? ('env' in reqOrCtx ? reqOrCtx.env.JWT_SIGNING_KEY : '');
   const header = request.headers.get('authorization') ?? '';
   const [scheme, token] = header.split(' ');
   if (scheme?.toLowerCase() !== 'bearer' || !token) {
     throw unauthorized('Missing bearer token');
   }
 
-  const claims = await verifyAccessToken(token, secret);
+  const claims = await verifyAccessToken(token, signingKey);
   if (!USER_ROLES.includes(claims.role)) {
     throw unauthorized('Token carries an unknown role');
   }
 
   return { userId: claims.sub, agencyId: claims.agencyId, role: claims.role };
+}
+
+export async function requireRole(
+  ctx: { request: Request; env: AppEnv },
+  ...allowedRoles: UserRole[]
+): Promise<{ userId: string; agencyId: string; role: UserRole }> {
+  const actor = await requireActor(ctx);
+  if (!allowedRoles.includes(actor.role)) {
+    throw forbidden(`Forbidden: required role in [${allowedRoles.join(', ')}]`);
+  }
+  return actor;
 }

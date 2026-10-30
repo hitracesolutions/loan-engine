@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLoanStore } from '../../../store/useLoanStore';
 import { User, Phone, Mail, MapPin, Briefcase, TrendingUp, ShieldCheck, CheckCircle2, Save, Building2, CreditCard } from 'lucide-react';
 import { api } from '../../../lib/api';
+import { gidfineAPI } from '../../../lib/api-gidfine';
 
 export default function UserProfile() {
   const { user, setUser } = useLoanStore();
@@ -9,14 +10,26 @@ export default function UserProfile() {
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState(user?.phone || '');
-  const [city, setCity] = useState(user?.city || 'Mumbai, Maharashtra');
-  const [salary, setSalary] = useState(user?.salary || 75000);
+  const [city, setCity] = useState(user?.city || 'Accra, Greater Accra');
+  const [salary, setSalary] = useState(user?.salary || 5000);
   const [picture, setPicture] = useState(user?.picture || '');
   const [isSaving, setIsSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   const creditScore = user?.creditScore || 785;
-  const preApprovedLimit = user?.salary ? user.salary * 10 : 1500000;
+  const preApprovedLimit = user?.salary ? user.salary * 10 : 50000;
+
+  useEffect(() => {
+    let mounted = true;
+    gidfineAPI.getBorrowerProfile().then((res) => {
+      if (res && res.profile && mounted) {
+        if (res.profile.monthly_salary_pesewas) {
+          setSalary(res.profile.monthly_salary_pesewas / 100);
+        }
+      }
+    }).catch(() => {});
+    return () => { mounted = false; };
+  }, []);
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,6 +47,10 @@ export default function UserProfile() {
           picture
         });
       }
+
+      await gidfineAPI.updateBorrowerProfile({
+        monthlySalaryPesewas: Math.round(Number(salary) * 100)
+      }).catch(() => {});
 
       setUser({
         ...user!,

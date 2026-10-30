@@ -201,10 +201,14 @@ class GidfineAPI {
   }
 
   async updateBorrowerProfile(profileData: {
-    first_name?: string;
-    last_name?: string;
+    fullName?: string;
+    phone?: string;
+    dateOfBirth?: string;
+    idType?: string;
+    idNumber?: string;
     employer?: string;
-    monthly_salary_pesewas?: number;
+    monthlySalaryPesewas?: number;
+    city?: string;
   }): Promise<any> {
     return this.request('PUT', '/borrower/profile', profileData);
   }
@@ -249,8 +253,34 @@ class GidfineAPI {
     );
   }
 
+  async addApplicationNote(applicationId: string, noteText: string): Promise<any> {
+    return this.request('POST', `/applications/${applicationId}/notes`, { noteText });
+  }
+
+  async getApplicationNotes(applicationId: string): Promise<any> {
+    const response = (await this.request('GET', `/applications/${applicationId}/notes`)) as any;
+    return response.notes || response;
+  }
+
+  async submitBorrowerResponse(applicationId: string, response: string): Promise<any> {
+    return this.request('POST', `/applications/${applicationId}/response`, { response });
+  }
+
+  async transitionApplication(
+    applicationId: string,
+    targetStatus: string,
+    reason?: string,
+    note?: string,
+  ): Promise<any> {
+    return this.request('POST', `/applications/${applicationId}/transition`, {
+      targetStatus,
+      reason,
+      note,
+    });
+  }
+
   async submitApplication(applicationId: string): Promise<any> {
-    return this.request('POST', `/borrower/applications/${applicationId}/submit`, {});
+    return this.transitionApplication(applicationId, 'SUBMITTED');
   }
 
   // ============================================
@@ -258,8 +288,8 @@ class GidfineAPI {
   // ============================================
 
   async listLoans(): Promise<any[]> {
-    const response = (await this.request('GET', '/borrower/loans')) as any;
-    return response.results || response;
+    const response = (await this.request('GET', '/loans')) as any;
+    return response.loans || response.results || response;
   }
 
   async getLoanDetails(loanId: string): Promise<any> {
@@ -291,6 +321,113 @@ class GidfineAPI {
     idempotency_key?: string;
   }): Promise<any> {
     return this.request('POST', `/loans/${loanId}/payments`, data);
+  }
+
+  // ============================================
+  // SPRINT 3: LENDERS, PRODUCTS & MATCHING
+  // ============================================
+
+  async listLenders(): Promise<any> {
+    return this.request('GET', '/lenders');
+  }
+
+  async createLender(data: { name: string; slug: string; contactEmail: string; licenseNumber?: string; contactPhone?: string }): Promise<any> {
+    return this.request('POST', '/lenders', data);
+  }
+
+  async listLenderProducts(lenderId: string): Promise<any> {
+    return this.request('GET', `/lenders/${lenderId}/products`);
+  }
+
+  async createLenderProduct(lenderId: string, data: any): Promise<any> {
+    return this.request('POST', `/lenders/${lenderId}/products`, data);
+  }
+
+  async runMatching(applicationId: string): Promise<any> {
+    return this.request('POST', `/applications/${applicationId}/match`);
+  }
+
+  async listApplicationProposals(applicationId: string): Promise<any> {
+    return this.request('GET', `/applications/${applicationId}/matches`);
+  }
+
+  async listLenderProposals(): Promise<any> {
+    return this.request('GET', '/lender/proposals');
+  }
+
+  async respondToProposal(proposalId: string, data: { action: 'ACCEPT' | 'DECLINE' | 'COUNTER'; notes?: string; counterAmountPesewas?: number; counterRateBps?: number; counterTenureMonths?: number }): Promise<any> {
+    return this.request('POST', `/lender/proposals/${proposalId}/respond`, data);
+  }
+
+  async generateQuote(applicationId: string, data?: any): Promise<any> {
+    return this.request('POST', `/applications/${applicationId}/quote`, data);
+  }
+
+  // ============================================
+  // SPRINT 4: OFFERS, CONSENT & DISBURSEMENT
+  // ============================================
+
+  async createOffer(applicationId: string, data: { quoteSnapshotId: string; expiresInDays?: number }): Promise<any> {
+    return this.request('POST', `/applications/${applicationId}/offer`, data);
+  }
+
+  async getActiveOffer(applicationId: string): Promise<any> {
+    return this.request('GET', `/applications/${applicationId}/offer`);
+  }
+
+  async submitBorrowerConsent(applicationId: string, data: { offerId: string; consentText: string }): Promise<any> {
+    return this.request('POST', `/applications/${applicationId}/consent`, data);
+  }
+
+  async prepareDisbursement(data: { applicationId: string; channel: string; destinationAccountMasked: string; notes?: string }): Promise<any> {
+    return this.request('POST', '/disbursements/prepare', data);
+  }
+
+  async confirmDisbursement(data: { disbursementId: string; notes?: string }): Promise<any> {
+    return this.request('POST', '/disbursements/confirm', data);
+  }
+
+  async listDisbursements(): Promise<any> {
+    return this.request('GET', '/disbursements');
+  }
+
+  // ============================================
+  // SPRINT 5: SERVICING & FINANCIAL LEDGER
+  // ============================================
+
+
+
+  async recordCashierPayment(loanId: string, data: { amountPesewas: number; paymentMethod: string; reference: string }): Promise<any> {
+    return this.request('POST', `/loans/${loanId}/payments`, data);
+  }
+
+  async reversePayment(paymentId: string, data: { reason: string }): Promise<any> {
+    return this.request('POST', `/payments/${paymentId}/reverse`, data);
+  }
+
+  async listJournalEntries(): Promise<any> {
+    return this.request('GET', '/ledger/entries');
+  }
+
+  // ============================================
+  // SPRINT 6 & 7: DOCUMENTS, OUTBOX & HARDENING
+  // ============================================
+
+  async createDocument(data: any): Promise<any> {
+    return this.request('POST', '/documents', data);
+  }
+
+  async listDocuments(params?: { entityType?: string; entityId?: string }): Promise<any> {
+    const q = params ? `?entityType=${params.entityType ?? ''}&entityId=${params.entityId ?? ''}` : '';
+    return this.request('GET', `/documents${q}`);
+  }
+
+  async setupMfa(): Promise<any> {
+    return this.request('POST', '/auth/mfa/setup');
+  }
+
+  async verifyMfa(code: string): Promise<any> {
+    return this.request('POST', '/auth/mfa/verify', { code });
   }
 
   // ============================================

@@ -17,6 +17,7 @@ export type AppEnv = Omit<
   readonly ALLOWED_ORIGINS: string;
   readonly ACCESS_TOKEN_TTL_SECONDS: string;
   readonly JWT_SIGNING_KEY: string;
+  readonly ID_ENCRYPTION_KEY?: string;
   readonly ADMIN_EMAIL?: string;
   readonly ADMIN_PASSWORD?: string;
 };

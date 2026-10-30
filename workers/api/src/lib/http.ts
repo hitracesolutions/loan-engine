@@ -33,6 +33,13 @@ export const notFound = (message = 'Not found') => new HttpError(404, 'NOT_FOUND
 
 export const conflict = (code: string, message: string) => new HttpError(409, code, message);
 
+export function json(data: unknown, status = 200): Response {
+  return new Response(JSON.stringify({ ok: true, data }), {
+    status,
+    headers: { 'content-type': 'application/json; charset=utf-8' },
+  });
+}
+
 export function jsonResponse(data: unknown, requestId: string, status = 200): Response {
   return new Response(JSON.stringify({ ok: true, data, requestId }), {
     status,
@@ -79,7 +86,7 @@ export function errorResponse(error: unknown, requestId: string): Response {
 export function corsHeaders(origin: string | null, allowedOrigins: string): Headers {
   const headers = new Headers({
     vary: 'origin',
-    'access-control-allow-methods': 'GET,POST,PATCH,DELETE,OPTIONS',
+    'access-control-allow-methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
     'access-control-allow-headers': 'content-type,authorization,idempotency-key',
     'access-control-max-age': '86400',
   });

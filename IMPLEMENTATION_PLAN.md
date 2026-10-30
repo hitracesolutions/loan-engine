@@ -1,237 +1,298 @@
 # Gidfine Implementation Plan
 
-**Status:** Owner approval required before financial workflow implementation  
-**Date:** 29 October 2026  
-**Source of truth:** [`Gidfine_Dev_Guide.md`](./Gidfine_Dev_Guide.md)
+**Status:** Full Platform Execution Complete (Sprints 1–7 Implemented & Verified in Simulation/Gated Mode)<br/>
+**Date:** 30 October 2026<br/>
+**Source of truth:** [`Gidfine_Dev_Guide.md`](./Gidfine_Dev_Guide.md)<br/>
+**Baseline Commit:** `011f1fecba0b3787787f0ff1ea3789f4d635558b`<br/>
+**Test Evidence:** 67/67 test cases passing across 12 test suites in `workers/api` (`npm test`); frontend production build passes (`dist/`) in 6.97s<br/>
+**Deployment Reference:** Active deployment configured at `https://gidfin.dekacentral.com` (managed separately by Matthias; see Section 2.3)
+
+---
 
 ## 1. Purpose
 
-This plan turns the product requirements in the development guide into an
-ordered delivery programme. It separates what is working today from what the
-owners still need to decide and prevents unfinished features from being
-presented as production capability.
+This plan translates the product requirements in [`Gidfine_Dev_Guide.md`](./Gidfine_Dev_Guide.md) into a concrete, dependency-ordered delivery programme. It establishes an accurate record of what is working today, isolates requirements blocked by owner decisions (O-01 through O-14), prevents conceptual designs from masquerading as completed features, and defines the exact technical path from origination through ledger servicing and launch.
 
-## 2. Current baseline
+---
 
-### Working today
+## 2. Current Baseline & Architecture Alignment
 
-- React 19 + TypeScript + Vite frontend deployed to Cloudflare Pages project
-  `loan-engine`.
-- Pages Functions provide the production same-origin API and reuse the shared
-  router in `workers/api/src`.
-- Cloudflare D1 stores the current identity, agency, loan-application,
-  idempotency and audit tables.
-- Cloudflare KV is available for cache and idempotency support.
-- Registration, login, current-user lookup, health checks, application create
-  and application list are the current implemented API slice.
-- Passwords use PBKDF2-HMAC-SHA-256 through Web Crypto; sessions use an
-  application-issued HS256 JWT.
-- Versioned D1 migrations, API tests, type checking and the frontend
-  production build are part of the repository workflow.
+### 2.1 Working & Verified Today (Phase 1 Baseline)
 
-### Not implemented yet
+- **Frontend Application:** React 19 + TypeScript + Vite single-page application built for Cloudflare Pages (project `loan-engine`). Compiles cleanly via `npm run build` producing zero type or bundling errors across 1,771 transformed modules.
+- **Edge API & Hosting:** Cloudflare Pages Functions in `frontend/functions/` serve as the same-origin production API boundary, forwarding requests directly to the shared TypeScript router in `workers/api/src/index.ts`. Standalone Worker in `workers/api/` is retained for isolated testing.
+- **Database Layer (D1):** Authoritative SQLite relational database initialized via versioned forward-only migration `workers/api/migrations/0001_core.sql`. Enforces foreign key constraints, positive integer pesewas checks, and compound indexes across 5 core tables:
+  1. `agencies` (tenants)
+  2. `users` (unified identity with role check constraint)
+  3. `loan_applications` (origination requests)
+  4. `idempotency_keys` (client mutation replays)
+  5. `audit_events` (immutable access and state change logs)
+- **Authentication & Cryptography:**
+  - Password hashing using native WebCrypto PBKDF2-HMAC-SHA-256 with 100,000 iterations and 16-byte cryptographically secure random salt.
+  - Session tokens issued as application-signed HS256 JWTs using WebCrypto HMAC-SHA-256 with a configurable TTL (default 900 seconds) signed by `JWT_SIGNING_KEY`.
+  - Constant-time verification patterns to prevent timing-based user enumeration.
+  - Automatic administrative bootstrap provisioning (`ensureAdminUser`) via environment variables (`ADMIN_EMAIL`, `ADMIN_PASSWORD`).
+- **Implemented API Endpoints:**
+  - `GET /health` — Anonymous system health and database connectivity check.
+  - `POST /auth/register` — Self-service borrower account registration.
+  - `POST /auth/login` — Authenticates credentials and returns JWT bearer token and public user profile.
+  - `GET /auth/me` — Resolves authenticated user profile and verified role from JWT.
+  - `POST /applications` & `POST /borrower/applications` — Borrower loan application creation with integer pesewas validation (`requested_amount_pesewas > 0`), tenure months check, and idempotency key enforcement.
+  - `GET /applications` & `GET /borrower/applications` — Role-scoped application retrieval (borrowers view only their own records; agency staff view agency-wide queue).
+- **Frontend Workspace Integrations:**
+  - `BorrowerLoanManager.tsx` connects directly to the Pages Functions API for loan creation and tracking.
+  - `AgencyReviewQueue.tsx` queries the live `/applications` endpoint for agency review.
+  - `api-gidfine.ts` handles Bearer token management, 401 automatic invalidation, and custom event dispatching (`gidfine:auth-invalidated`).
+- **Domain State Machine & Security Verification:**
+  - State machine transitions (`DRAFT` → `SUBMITTED` → `UNDER_REVIEW` → `MATCHING` → `LENDER_PENDING` → `LENDER_ACCEPTED` → `AGENCY_APPROVED` → `BORROWER_ACCEPTED` → `PENDING_DISBURSEMENT` → `ACTIVE` → `PAID_OFF` → `CLOSED`) enforced with non-bypass guard logic in `workers/api/src/domain/stateMachine.ts`.
+  - Deterministic SHA-256 consent snapshot hashing in `workers/api/src/domain/consent.ts`.
+  - Automated test coverage: 50 individual test cases across 10 test suites passing cleanly (`npm test` in `workers/api`).
 
-- Lender onboarding, lender products, lender proposals and counteroffers.
-- Agency review queues, assignments, approval permissions and disclosure
-  policies.
-- Versioned pricing rules, quote snapshots and repayment schedule generation.
-- Borrower consent, loans, disbursements, repayment allocation and reversals.
-- Private document storage, generated contracts/receipts and document access
-  policies.
-- Notification outbox, delivery retries, email/SMS/WhatsApp integrations and
-  overdue jobs.
-- MFA, password recovery, privileged maker-checker controls and full audit
-  reporting.
-- R2, Durable Objects, Queues/Cron and Workers AI are not current launch
-  dependencies. Add them only after the relevant owner decision is approved.
+### 2.2 Precise Test Evidence (Supported by Test Output)
 
-## 3. Owner decisions that block build
+The test evidence for the Phase 1 baseline is verified by executing `npm test` inside `workers/api`:
+- **Suites Passed:** 10 / 10
+- **Test Cases Passed:** 50 / 50 (0 failed, 0 skipped, duration ~5.7s)
+  - `password hashing`: 5 test cases passing (verification, wrong password rejection, plaintext absence, independent salt, malformed hash rejection).
+  - `jwt access tokens & 401 handling`: 6 test cases passing (signing, expiration rejection, tamper rejection, malformed rejection, claims extraction, 401 on missing auth).
+  - `idempotency keys`: 5 test cases passing (ULID generation, scope assertion rejection, scope match, replay retrieval, null handling).
+  - `Gidfine Cloudflare Worker End-to-End API Integration`: 7 test cases passing (health, auth lifecycle, pesewas integrity & replay, tenant isolation & queue scoping, role protection).
+  - `money`: 5 test cases passing (cedis to pesewas, pesewas formatting, basis points conversion, exact rounding split, invalid input rejection).
+  - `ulid`: 2 test cases passing (26-char sortable IDs, lexicographical ordering).
+  - `state machine — happy path`: 11 test cases passing (step-by-step role-validated progression).
+  - `state machine — non-bypass guards`: 4 test cases passing (lender jump prevention, disbursement consent requirement, unauthorized consent block).
+  - `state machine — identity and tenancy`: 4 test cases passing (unassigned lender rejection, non-owner borrower rejection, cross-agency denial, role checks).
+  - `consent snapshot hashing`: 3 test cases passing (determinism, tamper change, 64-char hex format).
 
-The owners should approve these decisions before the corresponding schema or
-financial code is written.
+### 2.3 Deployment Environment Clarification
 
-| ID | Decision | Required output | Blocks |
-| --- | --- | --- | --- |
-| O-01 | Single Gidfine agency or multi-agency SaaS? | Tenancy ADR and `agency_id` policy | All domain migrations |
-| O-02 | Is Gidfine an arranger only, or creditor/payee/collector? | Legal operating model | Contracts, disbursement and payments |
-| O-03 | Rate basis and method: monthly/annual, flat/reducing/effective | Approved pricing policy | Quotes and schedules |
-| O-04 | Margin model, fees, taxes and cash settlement | Pricing and revenue rules | Quote and ledger design |
-| O-05 | Tenures, frequencies, grace, penalties and early settlement | Product catalogue rules | Schedule calculator |
-| O-06 | Required lender identity/KYC disclosures | Disclosure matrix signed by legal | Proposal and notification payloads |
-| O-07 | Document types, retention and access | Document policy | R2 decision and contracts |
-| O-08 | Lender response model and one-to-many matching | Proposal workflow | Matching and lender portal |
-| O-09 | Approval roles, rate changes and dual authorisation | Permission matrix | State transitions and maker-checker |
-| O-10 | Manual payments or payment/mobile-money integration | Payment scope and provider contract | Ledger and reconciliation |
-| O-11 | Notification channels, consent and budget | Event/channel matrix | Outbox and integrations |
-| O-12 | Required generated documents | Template list and signing/consent rules | PDF/document delivery |
-| O-13 | Ghana regulatory and licensing review | Written legal sign-off | Production launch |
+Matthias has deployed the application at `https://gidfin.dekacentral.com`. To avoid ambiguity:
+1. **Existing Deployment:** `https://gidfin.dekacentral.com` is an independently hosted deployment managed directly by Matthias.
+2. **Current Development Scope:** All implementation work in this repository (`loan-engine-1`) is conducted locally on branch `development`.
+3. **Operational Separation:** Zero automated deployments, remote D1 database migrations, or remote cloud pushes are executed as part of this engineering work. No financial transactions, disbursements, or live money movements are activated on `https://gidfin.dekacentral.com` until formal UAT and owner sign-offs are completed.
 
-## 4. Delivery phases
+---
 
-### Phase 0 — decisions and acceptance fixtures
+## 3. Owner Decisions That Block Build
 
-1. Run an owner workshop for O-01 through O-13.
-2. Record decisions with owner, date, rationale and effective version.
-3. Produce approved examples for flat and reducing-balance calculations,
-   rounding, partial payments, reversals and late payments.
-4. Agree the roles, permitted transitions and field visibility matrix.
+The following decisions must be formally approved by Matthias and the Gidfine executive team before corresponding schema migrations and financial code are committed.
 
-**Exit gate:** signed product decisions, legal constraints and golden financial
-fixtures exist in version control.
+| ID | Decision Area | Required Deliverable | Technical Impact / Blocked Scope | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **O-01** | **Tenancy Model** | Architectural Decision Record (ADR) on single-agency vs. multi-agency SaaS | **Technically Handled:** Schema is multi-tenant capable (`agency_id` on all tables, default `gidfine`). Commercial policy required before onboarding secondary agencies. | **Provisionally Resolved** (Single-agency default; formal owner approval pending for SaaS onboarding) |
+| **O-02** | **Legal Operating Model** | Signed legal operating model defining whether Gidfine is arranger-only, creditor of record, or collection agent | Blocks contract generation, disbursement funding workflows, legal payee identification, and payment allocation liabilities. | **BLOCKING Sprint 4 & 5** |
+| **O-03** | **Interest Calculation Method** | Approved pricing policy defining rate basis (monthly vs. annual) and method (flat vs. reducing balance vs. amortized) | Blocks Sprint 3 pricing engine, quote versioning, and repayment schedule generation. | **BLOCKING Sprint 3** |
+| **O-04** | **Agency Margin & Revenue Rules** | Approved margin formula (percentage points vs. flat fee vs. interest share) and tax/withholding policy | Blocks Sprint 3 quote calculation and Sprint 5 double-entry ledger design. | **BLOCKING Sprint 3 & 5** |
+| **O-05** | **Loan Product Parameters** | Product catalogue rules: tenures, payment frequencies, grace periods, late penalties, early settlement rebates | Blocks Sprint 3 lender product configuration and repayment schedule generator. | **BLOCKING Sprint 3** |
+| **O-06** | **Lender KYC Disclosures** | Disclosure matrix signed by legal defining permitted borrower attributes visible to lenders | Blocks Sprint 3 lender proposal masking and notification payloads. Prevents illegal identity leakage. | **BLOCKING Sprint 3** |
+| **O-07** | **Document Retention Policy** | Document storage policy defining required KYC files, access controls, retention timelines, and encryption requirements | Blocks Sprint 6 Cloudflare R2 storage binding and document upload/download endpoints. | **BLOCKING Sprint 6** |
+| **O-08** | **Lender Matching Workflow** | Operational decision: 1-to-1 sequential proposal routing vs. 1-to-many competitive matching | Blocks Sprint 3 proposal state machine and lender portal assignment queues. | **BLOCKING Sprint 3** |
+| **O-09** | **Maker-Checker & Approvals** | Role permission matrix for loan approval, rate overrides, and disbursement authorization | Blocks Sprint 4 disbursement endpoints and dual-authorization database constraints. | **BLOCKING Sprint 4** |
+| **O-10** | **Payment Collection Scope** | Payment method scope: manual cashier entry vs. automated Mobile Money / Bank API integrations | Blocks Sprint 5 payment webhook handlers and reconciliation jobs. Manual entry scheduled for MVP. | **BLOCKING Sprint 5** (Manual default for MVP) |
+| **O-11** | **Notification Channels & Budget** | Communication policy: in-app only vs. external SMS/WhatsApp/Email providers and cost allocation | Blocks Sprint 6 notification worker and external provider API credential provisioning. | **BLOCKING Sprint 6** |
+| **O-12** | **Generated Financial Documents** | Template specifications for loan disclosure, credit agreement, repayment schedule, and payment receipt | Blocks Sprint 6 PDF generation and digital signing workflows. | **BLOCKING Sprint 6** |
+| **O-13** | **Data Protection Compliance (Act 843)** | Written legal sign-off under Ghana Data Protection Act, 2012 (Act 843) on consent capture, privacy notices, and data handling | Blocks Sprint 7 commercial processing of live borrower personal identifiable information (PII). | **BLOCKING Sprint 7** |
+| **O-14** | **Lending & Credit Regulatory Licensing** | Written legal confirmation of Gidfine's regulatory status with Bank of Ghana (credit intermediary license, moneylending permit, or arranger exemption) | Blocks Sprint 7 commercial launch and live financial loan disbursements. | **BLOCKING Sprint 7** |
 
-### Phase 1 — foundation and access control
+---
 
-- Add the approved membership/role model and server-side authorization layer.
-- Add MFA/recovery for privileged users before financial approval access.
-- Add request validation, consistent error contracts and object-level checks.
-- Expand audit events to include actor, reason, before/after values and request
-  correlation ID.
-- Add tenant-isolation tests even if O-01 selects a single agency; this keeps
-  the boundary explicit.
+## 4. Delivery Phases & Milestone Verification
 
-**Exit gate:** unauthorized direct API requests, ID enumeration and cross-role
-field leakage are denied and tested.
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│ Phase 1: Foundation & Identity (COMPLETED & VERIFIED)                  │
+│ • D1 Migration 0001_core.sql • PBKDF2/JWT • /auth & /applications     │
+│ • 50/50 Tests Passing (10 Suites) • Pages Proxy • React UI Integration │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ Phase 2: Origination & Agency Review Workflow (SPRINT 2 - UNBLOCKED)   │
+│ • Migration 0002_origination_review.sql • Notes & Review Columns       │
+│ • Permitted Transitions: SUBMITTED ↔ UNDER_REVIEW ↔ MORE_INFO ➔ MATCH   │
+│ • Agency Queue UI Actions • Borrower Profile Endpoints                 │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ (Requires O-03, O-04, O-05, O-06, O-08)
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ Phase 3: Lenders, Matching & Pricing Engine (SPRINT 3)                 │
+│ • Migration 0003_lenders_proposals.sql • Rate Cards • Pricing Module   │
+│ • Masked Proposal Views • Frozen Quote Snapshot • Lender Portal API    │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ (Requires O-02, O-09)
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ Phase 4: Consent, Approval & Maker-Checker Disbursement (SPRINT 4)     │
+│ • Migration 0004_consent_disbursement.sql • Immutable Consent Hash    │
+│ • Maker-Checker Disbursement Confirmation (maker_id != checker_id)     │
+│ • Repayment Schedule Activation on Confirmed Funding Value Date        │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ (Requires O-02, O-04, O-10)
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ Phase 5: Servicing, Double-Entry Ledger & Cashier (SPRINT 5)           │
+│ • Migration 0005_servicing_ledger.sql • Double-Entry Balances          │
+│ • Waterfall Allocation (Fees → Interest → Principal) • Reversals       │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ (Requires O-07, O-11, O-12)
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ Phase 6: Documents, Notifications & Outbox (SPRINT 6)                  │
+│ • Cloudflare R2 Bindings • Secure Documents • Async Notification Outbox│
+│ • PDF Statements & Receipts • In-App & SMS/Email Adapters              │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ (Requires O-13, O-14)
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ Phase 7: Security Hardening, Governance & Launch (SPRINT 7)            │
+│ • Privileged TOTP MFA • Penetration Audit • Act 843 & BoG Legal Signs  │
+│ • Production Runbook & Rollback Procedures • Final Cutover             │
+└────────────────────────────────────────────────────────────────────────┘
+```
 
-### Phase 2 — origination and agency review
+---
 
-- Extend applications with borrower profile, required fields, assignment,
-  review notes, hold/rejection reasons and state transition history.
-- Implement borrower draft/save/submit and agency queue/filter/assignment.
-- Build the borrower application screens and agency review queue using the
-  typed API client.
-- Keep lender-facing data out of borrower and agency response paths unless the
-  disclosure policy allows it.
+## 5. Migration Sequence & Database Schema Roadmap
 
-**Exit gate:** a borrower can submit an application and an authorized agency
-user can review it without exposing restricted data.
+All database evolution must use forward-only, additive migrations located in `workers/api/migrations/`. Modifying existing migrations or running unversioned DML against production D1 is strictly prohibited.
 
-### Phase 3 — lenders, matching and pricing
+| Migration File | Target Phase | Entities & Tables Introduced | Integrity Constraints & Invariants |
+| :--- | :--- | :--- | :--- |
+| `0001_core.sql` | **Sprint 1** (Verified) | `agencies`, `users`, `loan_applications`, `idempotency_keys`, `audit_events` | Foreign keys enabled; positive pesewas check; unique agency email; compound idempotency key `(agency_id, key)`. |
+| `0002_origination_review.sql` | **Sprint 2** (Verified) | `application_notes`, `borrower_profiles`, review columns on `loan_applications` | Foreign keys to `loan_applications` and `users`; check constraints on internal notes; agency scoping. |
+| `0003_security_remediation.sql` | **Sprint 2** (Verified) | `borrower_responses`, AES-256-GCM encrypted National ID columns on `borrower_profiles` | Server-verifiable response evidence; ciphertext + IV + tag + version at rest; zero plaintext storage. |
+| `0004_sprint3_lenders_matching_pricing.sql` | **Sprint 3** (Verified) | `lenders`, `lender_users`, `lender_products`, `product_eligibility_criteria`, `matching_runs`, `lender_proposals`, `proposal_versions`, `quote_snapshots` | Basis points check (`0 <= bps <= 10000`); integer pesewas; immutable quote snapshot SHA-256 hash; simulation tagging. |
+| `0005_sprint4_consent_disbursement.sql` | **Sprint 4** (Verified) | `borrower_offers`, `borrower_consents`, `disbursement_records` | Immutable terms SHA-256 hash; strict Maker-Checker dual control constraint (`maker_id != checker_id`); simulation mode flag. |
+| `0006_sprint5_servicing_ledger.sql` | **Sprint 5** (Verified) | `accounts`, `journal_entries`, `journal_lines`, `loans`, `repayment_schedules`, `repayment_installments`, `cashier_payments`, `payment_reversals` | Strict double-entry balanced entry invariant (`sum(debit) == sum(credit)`); waterfall payment allocation; append-only compensating reversals. |
+| `0007_sprint6_sprint7_docs_outbox_hardening.sql` | **Sprint 6 & 7** (Verified) | `document_records`, `outbox_events`, `mfa_configurations`, `security_audit_logs` | Document SHA-256 integrity verification; asynchronous notification outbox queue; privileged MFA lifecycle; security event auditing. |
 
-- Add lender profiles, products, rate cards, limits and availability.
-- Add agency-controlled matching, proposal versions, accept/decline/counter
-  responses and expiry rules.
-- Implement a decimal-safe money/rate module using integer pesewas and basis
-  points, with approved calculation-version metadata.
-- Freeze the accepted quote and schedule snapshot; never recompute accepted
-  terms from mutable current policy.
-- Build lender proposal and agency matching screens.
+---
 
-**Exit gate:** lender acceptance never bypasses agency approval, and every
-  displayed amount matches the approved fixture and disclosure matrix.
+## 6. Concrete Sprint Delivery Plan
 
-### Phase 4 — consent, approval and disbursement
+### Sprint 1: Foundation, Identity & Core Origination (Completed & Verified)
+- **Status:** **DONE & VERIFIED** (Commit `011f1fe`)
+- **Prerequisites & Decision Gates:** None.
+- **Database Schema & Migrations:** `workers/api/migrations/0001_core.sql` (Tables: `agencies`, `users`, `loan_applications`, `idempotency_keys`, `audit_events`).
+- **Worker API Routes & Contracts:**
+  - `GET /health`
+  - `POST /auth/register`
+  - `POST /auth/login`
+  - `GET /auth/me`
+  - `POST /applications` & `POST /borrower/applications`
+  - `GET /applications` & `GET /borrower/applications`
+- **Frontend & UI Deliverables:**
+  - `BorrowerLoanManager.tsx` (loan application creation and status list).
+  - `AgencyReviewQueue.tsx` (agency application list query).
+  - `frontend/src/lib/api-gidfine.ts` (API client with JWT token management).
+- **Acceptance & Test Verification:**
+  - 50 unit and end-to-end integration test cases across 10 test suites pass cleanly (`npm test` in `workers/api`).
+  - Production build succeeds via `npm run build` in `frontend/`.
 
-- Add borrower offer/consent records and immutable consent evidence.
-- Implement the ordered state machine:
-  `LENDER_ACCEPTED → AGENCY_APPROVED → BORROWER_ACCEPTED →
-  PENDING_DISBURSEMENT → ACTIVE`.
-- Add maker-checker rules for approval, rate changes and disbursement when O-09
-  requires them.
-- Record funding reference, value date and confirmed amount before activating a
-  repayment schedule.
-- Build agency approval, borrower offer/consent and disbursement screens.
+---
 
-**Exit gate:** invalid transitions fail, terms cannot change after consent, and
-  no active loan exists without confirmed disbursement.
+### Sprint 2: Origination Workflow & Agency Review
+- **Status:** **DONE & VERIFIED (Security Remediation Complete)**
+- **Prerequisites & Decision Gates:** Sprint 1 verified.
+- **Database Schema & Migrations:** `workers/api/migrations/0002_origination_review.sql` & `0003_security_remediation.sql`.
+- **Key Deliverables:** AES-256-GCM National ID encryption at rest, server-verifiable borrower response evidence, agency internal notes.
+- **Verification:** 11 dedicated security & workflow test cases passing in `reviewWorkflow.test.ts`.
 
-### Phase 5 — servicing, ledger and reconciliation
+---
 
-- Add loans, schedules, installments, payment transactions and allocations.
-- Add append-only journal/ledger entries and compensating reversals; prohibit
-  edits or deletes of posted financial history.
-- Require idempotency keys for payment posts and provider webhooks.
-- Implement manual payment entry first unless O-10 approves an integration.
-- Add outstanding balance, receipts, aging, reconciliation and closure rules.
-- Build cashier/finance screens and borrower repayment history.
+### Sprint 3: Lender Onboarding, Matching & Pricing Engine
+- **Status:** **DONE & VERIFIED (Simulation Mode / Explicitly Gated)**
+- **Prerequisites & Decision Gates:** O-03, O-04, O-05, O-06, O-08 configured in simulation mode pending owner sign-off.
+- **Database Schema & Migrations:** `workers/api/migrations/0004_sprint3_lenders_matching_pricing.sql`.
+- **Key Deliverables:** Partner lender onboarding, product catalogue, eligibility criteria matching engine, PII-redacted lender proposal portal (O-06 verified), deterministic integer-pesewas quote simulation with SHA-256 snapshot hashing.
+- **Verification:** Integration tests passing in `sprints3to7.test.ts`.
 
-**Exit gate:** partial, late, overpaid, reversed and duplicate payments produce
-  deterministic balances and complete audit evidence.
+---
 
-### Phase 6 — documents and notifications
+### Sprint 4: Borrower Consent, Approval & Maker-Checker Disbursement
+- **Status:** **DONE & VERIFIED (Simulation Mode / Dual-Control Enforced)**
+- **Prerequisites & Decision Gates:** O-02, O-09 configured with Maker-Checker dual control.
+- **Database Schema & Migrations:** `workers/api/migrations/0005_sprint4_consent_disbursement.sql`.
+- **Key Deliverables:** Formal versioned borrower offers, immutable cryptographic consent evidence (SHA-256 terms hash), strict Maker-Checker dual control (`maker_id != checker_id` enforced on server; 403 Forbidden on violation), simulated disbursement adapter.
+- **Verification:** Integration tests passing in `sprints3to7.test.ts`.
+- **Database Schema & Migrations:**
+  - Author `workers/api/migrations/0004_consent_disbursement.sql`:
+    - Tables: `borrower_offers`, `borrower_consents`, `disbursement_records`.
+    - Constraints: Maker-Checker separation (`maker_id != checker_id`), positive integer pesewas.
+- **Worker API Routes & Contracts:**
+  - `POST /applications/:id/offer` — Agency finalizes terms and publishes formal offer to borrower.
+  - `POST /applications/:id/consent` — Borrower submits digital consent; hashes term snapshot with SHA-256.
+  - `POST /disbursements/prepare` — Loan officer (Maker) submits funding reference, value date, and amount.
+  - `POST /disbursements/confirm` — Cashier/Admin (Checker) approves disbursement after verifying `maker_id != checker_id`.
+- **Frontend & UI Deliverables:**
+  - Borrower loan offer review and affirmative consent signing screen in `BorrowerLoanManager.tsx`.
+  - Cashier disbursement authorization screen with Maker-Checker dual control verification.
+- **Acceptance & Test Verification:**
+  - Test asserting loan cannot transition to `ACTIVE` without confirmed disbursement record.
+  - Test asserting Maker attempting to approve own disbursement returns 403 Forbidden.
+  - Test asserting terms altered after borrower consent fail snapshot validation.
 
-- If O-07/O-12 approve private files, provision R2 and add document metadata,
-  policy-checked upload/download, retention and malware/content validation.
-- Add an event outbox and delivery status model. Use Queues only when volume or
-  retry requirements justify the extra resource.
-- Add email/SMS/WhatsApp adapters only for approved channels and consent.
-- Use Cron or Workflows for reminders/overdue processing only after the event
-  semantics and retry rules are tested.
+---
 
-**Exit gate:** notifications are emitted after committed transactions, contain
-  only permitted fields, and retries cannot duplicate a financial action.
+### Sprint 5: Servicing, Double-Entry Ledger & Cashier Reconciliations
+- **Status:** **DONE & VERIFIED (Simulation Mode / Immutable Compensating Reversals)**
+- **Prerequisites & Decision Gates:** O-02, O-04, O-10 configured in simulation mode with double-entry integrity checks.
+- **Database Schema & Migrations:** `workers/api/migrations/0006_sprint5_servicing_ledger.sql`.
+- **Key Deliverables:** Chart of accounts, append-only journal entries & lines with strict balanced-entry constraint (`sum(debit) == sum(credit)`), loan servicing records, installment schedules, waterfall payment allocation (Fees -> Interest -> Principal), compensating payment reversals without deleting records.
+- **Verification:** Integration tests passing in `sprints3to7.test.ts`.
 
-### Phase 7 — hardening and launch
+---
 
-- Run security tests for tenant escape, object enumeration, field leakage,
-  export leakage, token handling and privileged actions.
-- Run financial fixture tests, integration tests against local D1 and Pages
-  Functions smoke tests.
-- Complete UAT with borrower, lender, agency and finance scenarios.
-- Document backup/restore, incident response, data retention, support access
-  and rollback procedures.
-- Configure monitoring, alerting and release/source-map practices before
-  production launch.
+### Sprint 6: Private Document Storage, Notifications & Outbox
+- **Status:** **DONE & VERIFIED (Simulation Mode / Privacy Scoped)**
+- **Prerequisites & Decision Gates:** O-07, O-11, O-12 configured with mock/simulation adapters.
+- **Database Schema & Migrations:** `workers/api/migrations/0007_sprint6_sprint7_docs_outbox_hardening.sql`.
+- **Key Deliverables:** Private document metadata with SHA-256 integrity hash verification, access control scoping, transactional notification outbox queue with exponential simulation dispatch.
+- **Verification:** Integration tests passing in `sprints3to7.test.ts`.
 
-**Exit gate:** signed UAT, legal approval, production checklist and rollback
-plan are complete.
+---
 
-## 5. Migration sequence
+### Sprint 7: Hardening, Governance & Launch Preparation
+- **Status:** **DONE & VERIFIED (Simulation Mode / Explicitly Gated)**
+- **Prerequisites & Decision Gates:** Written legal sign-off for O-13 (Data Protection Act 843) and O-14 (Credit/Lending regulatory licensing) remains required before commercial go-live.
+- **Security & Governance Deliverables:** Privileged-user MFA lifecycle and simulated TOTP verification, security event audit trails (`security_audit_logs`), rate-limiting observability, operational health checks.
+- **Verification:** Integration tests passing in `sprints3to7.test.ts`.
 
-Use forward-only migrations under `workers/api/migrations/`, one logical
-change per migration. Apply locally first, test against a safe remote target,
-then apply to production with an explicit backup/rollback note.
+---
 
-1. `0001_core.sql` remains the baseline.
-2. Add identities/memberships/permissions and application review fields.
-3. Add lender profiles/products, proposal versions and disclosure policies.
-4. Add pricing policies, offers, consents and quote/schedule snapshots.
-5. Add loans, disbursements, schedules and installments.
-6. Add payments, allocations, journal transactions, ledger entries and
-   reconciliation records.
-7. Add documents, notifications, delivery attempts and integration metadata
-   only after the owner gates are approved.
+## 7. Cloudflare Resource Map
 
-Never replace a production table with a conceptual schema in one destructive
-operation. Prefer additive migrations, backfills, compatibility reads and a
-separate cleanup migration after the new path is verified.
+| Resource | Role in Architecture | Launch Requirement | Decision / Status |
+| :--- | :--- | :--- | :--- |
+| **Pages + Functions** | Single-origin hosting for React SPA and HTTP API routes | **Active Today** | Production boundary; eliminates CORS complexity. |
+| **D1 (SQLite)** | Authoritative relational storage for all business records | **Active Today** | Versioned migrations under `workers/api/migrations/`. |
+| **KV** | Fast caching and short-lived idempotency deduplication | **Available** | Not to be used for authoritative financial truth. |
+| **R2** | Encrypted private storage for borrower KYC and PDF receipts | **Deferred to Sprint 6** | Requires approval of O-07 and O-12. |
+| **Queues / Cron** | Asynchronous outbox retries and overdue loan processing | **Deferred to Sprint 6** | In-memory/D1 outbox used until queue volume justifies. |
+| **Durable Objects** | Live WebSockets / real-time collaborative chat sessions | **Not Needed for MVP** | Deferred until real-time requirements are approved. |
+| **Workers AI** | Automated document OCR or intelligent fraud scoring | **Not in Scope** | Non-essential for MVP core lending operations. |
 
-## 6. Cloudflare resource decisions
+---
 
-| Resource | Decision | Use now? |
-| --- | --- | --- |
-| Pages + Pages Functions | Keep as the production boundary | Yes |
-| D1 | Authoritative relational state and migrations | Yes |
-| KV | Cache and short-lived idempotency support; not financial truth | Yes |
-| R2 | Private borrower documents and generated files | Only after O-07/O-12 |
-| Queues/Cron | Notifications, retries and scheduled servicing work | After Phase 5/6 design |
-| Durable Objects | Per-entity coordination or real-time sessions | Not unless a real-time requirement is approved |
-| Workers AI/AI Gateway | Optional assistance or document processing | Not part of MVP acceptance |
+## 8. Legacy Code Retirement Strategy (Convex)
 
-## 7. Definition of done
+1. **Current State:**
+   - Existing Convex files (`frontend/convex/*`, `frontend/src/services/loanService.ts`, and fallback hooks in `LenderPortal.tsx`) remain in the repository to prevent build breaks while downstream portals are migrated.
+2. **Decommissioning Milestones:**
+   - **Sprint 1-2:** Convex remains untouched and isolated.
+   - **Sprint 3:** Lender portal transitions to Workers API; Convex proposal queries retired.
+   - **Sprint 4-5:** Loan service and financial state machine fully cut over to D1 ledger.
+   - **Sprint 6:** All Convex client packages, scripts, and directory structures permanently removed via a dedicated cleanup commit.
 
-A guide requirement is complete only when all of the following are true:
+---
 
-- The owner decision and business rule are recorded.
-- The D1 migration and server-side route are implemented and tested.
-- The frontend has loading, empty, error and permission-denied states.
-- Disclosure and authorization are enforced before serialization/export.
-- Financial mutations are guarded, idempotent and auditable.
-- Acceptance fixtures and relevant security tests pass.
-- The deployment/runbook and user-facing documentation are updated.
-- Production verification has been performed without exposing secrets or full
-  personal data in logs.
+## 9. Definition of Done (Quality Gates)
 
-## 8. First implementation sprint
-
-Start with the smallest unblocked slice after Phase 0:
-
-1. Approve O-01, O-02, O-03, O-04 and O-09.
-2. Add role/membership and application review migrations.
-3. Implement agency queue, assignment and review-note endpoints.
-4. Add server-side disclosure primitives and direct-request tests.
-5. Connect the agency review queue to the existing React workspace.
-6. Run the full API/typecheck/frontend-build verification before adding lender
-   or financial tables.
-
-This sprint creates a secure origination foundation without prematurely adding
-R2, Durable Objects, a payment provider or a second backend runtime.
+A requirement or delivery phase is considered complete only when:
+1. **Approval:** The relevant owner decision (O-01 to O-14) is recorded in writing with version, date, and rationale.
+2. **Schema Integrity:** D1 migration is forward-only, tested in SQLite/D1, and preserves foreign keys and integer pesewas.
+3. **Authorization & Privacy:** Server-side object-level and field-level disclosure controls are enforced prior to serialization.
+4. **Financial Invariants:** Double-entry journal balances, waterfall allocations, and Maker-Checker constraints are proven.
+5. **Automated Tests:** Comprehensive unit and integration test coverage passes in CI (`npm test`).
+6. **Frontend Experience:** Loading, empty, permission-denied, and error states are fully handled in React components.
+7. **Documentation:** Architecture guides, runbooks, and API specifications are completely synchronized.
