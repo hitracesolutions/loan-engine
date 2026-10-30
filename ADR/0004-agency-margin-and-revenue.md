@@ -24,6 +24,9 @@ account, no tax treatment, no statement of which party bears the margin.
 charged either as a **flat amount** or as a **percentage**. Which of these
 applies is a per-deal/per-product term that Gidfine sets during negotiation.
 
+**Revenue recognition:** margin is recognised **when cash is collected** — not
+at disbursement, and not accrued over the loan life.
+
 ## Rationale
 
 Recorded direction: the commercial relationship differs between lenders and
@@ -39,8 +42,13 @@ code.
 - The lender-facing quote and the borrower-facing quote can differ by design;
   each must be reproducible from stored terms, which makes the immutable
   snapshot in ADR-0003 load-bearing.
-- Revenue recognition timing still requires a decision (at disbursement vs over
-  the loan life) before the ledger can post margin entries.
+- Recognition on collection means margin posts only when a payment is allocated,
+  so the waterfall in servicing becomes the revenue event. An unpaid or reversed
+  instalment must not leave recognised revenue behind, which links this record to
+  the reversal rules in ADR-0009.
+- Classification depends on the side: a borrower-side markup is agency income,
+  while a lender-side spread may be a cost-of-funds or commission treatment.
+  That difference is still to be settled with the lender agreements.
 - Tax and withholding treatment is still undecided and blocks invoicing/receipts
   (ADR-0012).
 
@@ -48,7 +56,6 @@ code.
 
 - [ ] Confirm allowed combinations (e.g. is margin-share plus flat fee allowed on
       the same deal?).
-- [ ] Revenue recognition timing per margin type.
 - [ ] VAT / withholding treatment per margin type.
 - [ ] Revenue accounts provisioned in the chart of accounts.
 
