@@ -9,6 +9,7 @@
 import type { AppEnv } from './env.ts';
 import { ensureAdminUser } from './lib/auth.ts';
 import { corsHeaders, errorResponse } from './lib/http.ts';
+import { enforceImpersonationScope } from './lib/impersonationGuard.ts';
 import {
   addApplicationNote,
   addApplicationReviewNote,
@@ -29,6 +30,11 @@ import {
   triggerOutboxBatch,
 } from './routes/documentsAndOutbox.ts';
 import { setupMfaHandler, verifyMfaHandler, listSecurityAuditLogs } from './routes/hardening.ts';
+import {
+  impersonateUser,
+  listImpersonatableUsers,
+  stopImpersonationHandler,
+} from './routes/impersonation.ts';
 import { health } from './routes/health.ts';
 import {
   createLender,
@@ -67,6 +73,10 @@ const router = new Router()
   .post('/auth/mfa/setup', setupMfaHandler)
   .post('/auth/mfa/verify', verifyMfaHandler)
   .get('/audit/security', listSecurityAuditLogs)
+  // Administrator impersonation ("view as") — read-only sessions.
+  .post('/admin/impersonate', impersonateUser)
+  .post('/admin/impersonate/stop', stopImpersonationHandler)
+  .get('/admin/users', listImpersonatableUsers)
   .post('/applications', createApplication)
   .get('/applications', listApplications)
   .get('/applications/:id/review', getApplicationReview)
@@ -165,6 +175,7 @@ async function handleRequest(request: Request, env: AppEnv): Promise<Response> {
 
   try {
     const url = new URL(request.url);
+    await enforceImpersonationScope(request, env);
     const { handler, params } = router.match(request.method, url.pathname);
     const response = await handler({ request, env, url, params, requestId });
     return withRequestHeaders(response, requestId, origin, env.ALLOWED_ORIGINS);
