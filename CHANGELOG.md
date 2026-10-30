@@ -1,5 +1,24 @@
 # Gidfine Changelog
 
+## 2026-10-30 — Blocker answers recorded
+
+- Owner answered B-1 to B-11 from `BLOCKERS.md`. Recorded in the ADRs and the
+  plan status table; no code changed.
+- **B-2 superseded ADR-0002:** launch model is now *arranger for every product*,
+  not mixed-per-product. Mixed is deferred to a future ADR rather than rejected.
+  Consequence: no per-product legal attribute, no trust/receivable accounts.
+- Other answers: 5-year KYC retention readable by staff, auditors and the
+  borrower (a lender may never open a document); daily supervisor reconciliation
+  as the control replacing dual authorisation; no hard notification cap
+  (alerting instead); round-half-up pesewa rounding; any margin combination with
+  VAT-exempt treatment pending accountant confirmation; tenure uncapped and early
+  settlement not allowed; all eligible lenders see a competitive round with a
+  48-hour timeout; click-to-accept plus terms hash is sufficient acceptance;
+  `agency_admin` or `loan_officer` as single approver; daily cashier-supervisor
+  reconciliation.
+- Ten residual questions and the four counsel artefacts remain; both are listed
+  in `BLOCKERS.md` §3.
+
 ## 2026-10-30 — Blocker triage sheet
 
 - Added `BLOCKERS.md`: one place listing what is already decided (A1-A12), the

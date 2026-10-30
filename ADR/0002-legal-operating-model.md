@@ -1,7 +1,7 @@
 # ADR-0002 — Legal operating model
 
 - **Gate:** O-02
-- **Status:** Provisional — direction recorded 2026-10-30, per-product designation and legal signature outstanding
+- **Status:** Provisional — arranger model decided 2026-10-30; signed legal annex outstanding
 - **Owner:** Matthias and the Gidfine executive team
 - **Version:** 0.1
 - **Depends on:** none
@@ -17,38 +17,35 @@ payments. Today all of it is simulated.
 
 ## Decision
 
-Owner direction: **mixed model, designated per product.** Gidfine is not locked
-into one role across the business — different products may run under different
-operating models. The model is recorded per product in the catalogue
-(ADR-0005), and each product must name:
+**Arranger for every product at launch.** Gidfine is an intermediary: contracts
+run lender ↔ borrower, Gidfine does not hold funds, and the legal payee for
+repayments is the lender.
 
-1. the contractual counterparty (lender ↔ borrower, or Gidfine ↔ borrower),
-2. the source of disbursed funds,
-3. the legal payee for repayments,
-4. who bears allocation liability on partial, early or disputed payment.
+This **supersedes** the earlier "mixed model, designated per product" direction
+(2026-10-30, unversioned draft). The mixed model is deliberately deferred, not
+rejected: reintroducing it requires a new ADR that supersedes this one.
 
 ## Rationale
 
-Recorded direction: a single model does not fit every product line, so the role
-is a per-product attribute rather than a company-wide constant. This keeps the
-engine flexible but makes the per-product designation mandatory — an
-undesignated product must not be funded or contracted.
+Recorded direction (2026-10-30, blocker B-2): one operating model for launch
+removes per-product legal annexes, keeps the ledger to commission revenue, and
+avoids holding customer funds — which would add trust-account and licensing
+obligations that are not needed to start.
 
 ## Consequences
 
-- `product_legal_model` becomes a required product attribute; disbursement and
-  contract paths must reject a product without it.
-- Ledger account semantics depend on the product model: a creditor model needs a
-  receivable account, an arranger model recognises commission only, an agent
-  model needs a trust/liability settlement account.
-- Legal annex per product is still required. Until then, disbursement stays
-  simulated.
+- No `product_legal_model` attribute is required at launch. Adding one later is a
+  forward migration, not a breaking change.
+- The chart of accounts needs commission revenue only; no receivable or trust
+  liability account is required yet.
+- If a creditor-of-record product is ever launched, this record is superseded and
+  the ledger, contracts and licensing scope all change together.
 
 ## Outstanding before acceptance
 
-- [ ] Designation of the operating model per product line.
-- [ ] Signed legal operating model covering each designation.
-- [ ] Contract templates naming the correct counterparty per model.
+- [ ] Signed legal operating-model document confirming the arranger model,
+      naming the lender as payee for repayments.
+- [ ] Contract templates naming the lender as counterparty.
 
 ## Evidence in the codebase
 

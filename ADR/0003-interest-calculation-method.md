@@ -23,6 +23,8 @@ agreed with a lender or borrower.
    negotiation, per deal/product. The engine must therefore support **flat** and
    **reducing balance** side by side, with the chosen method recorded on the
    quote, the offer and the consent evidence.
+3. **Rounding:** **round half up to the nearest pesewa.** Applies to both methods
+   and to every figure shown to a borrower or lender.
 
 ## Rationale
 
@@ -42,10 +44,9 @@ cost.
 
 ## Outstanding before acceptance
 
-- [ ] Confirm which rounding rule applies to pesewas per method.
 - [ ] Default or allowed set of methods per product (feeds ADR-0005).
 - [ ] Worked calculator fixtures for flat and reducing balance at monthly and
-      annual basis.
+      annual basis, using round-half-up.
 
 ## Evidence in the codebase
 

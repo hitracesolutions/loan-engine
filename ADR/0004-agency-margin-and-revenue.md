@@ -27,6 +27,15 @@ applies is a per-deal/per-product term that Gidfine sets during negotiation.
 **Revenue recognition:** margin is recognised **when cash is collected** — not
 at disbursement, and not accrued over the loan life.
 
+**Combinations:** **any combination is allowed** on one deal — for example a flat
+fee plus an interest share, on the same side or different sides. The ledger must
+be able to post more than one revenue component against a single loan.
+
+**Tax treatment:** **exempt** — the margin is treated as consideration for a
+financial/credit service, so no VAT line is posted. This is an owner assertion,
+not a tax ruling: it must be confirmed in writing by the company accountant
+before any invoice or receipt is issued.
+
 ## Rationale
 
 Recorded direction: the commercial relationship differs between lenders and
@@ -54,9 +63,8 @@ code.
 
 ## Outstanding before acceptance
 
-- [ ] Confirm allowed combinations (e.g. is margin-share plus flat fee allowed on
-      the same deal?).
-- [ ] VAT / withholding treatment per margin type.
+- [ ] Written accountant confirmation that the margin is VAT-exempt, recorded
+      here before invoicing is built.
 - [ ] Revenue accounts provisioned in the chart of accounts.
 
 ## Evidence in the codebase

@@ -31,7 +31,7 @@ counsel answer, see [`BLOCKERS.md`](../BLOCKERS.md).
 | [0004](./0004-agency-margin-and-revenue.md) | O-04 | Agency margin & revenue rules | Provisional | Live quote maths, ledger revenue accounts |
 | [0005](./0005-loan-product-parameters.md) | O-05 | Loan product parameters | Provisional | Product catalogue, schedule generator |
 | [0006](./0006-lender-kyc-disclosures.md) | O-06 | Lender KYC disclosures | Provisional | Legally valid lender-facing payloads |
-| [0007](./0007-document-retention-policy.md) | O-07 | Document retention policy | Open | R2 binding, document upload/download |
+| [0007](./0007-document-retention-policy.md) | O-07 | Document retention policy | Provisional | R2 binding, document upload/download |
 | [0008](./0008-lender-matching-workflow.md) | O-08 | Lender matching workflow | Provisional | Proposal routing model |
 | [0009](./0009-maker-checker-and-approvals.md) | O-09 | Maker-checker & approvals | Provisional | Live disbursement authority, MFA hardening |
 | [0010](./0010-payment-collection-scope.md) | O-10 | Payment collection scope | Provisional | Payment webhooks, reconciliation |

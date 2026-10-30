@@ -18,6 +18,13 @@ convenience for testing, not a routing policy.
 then fall back to sequential 1-to-1 routing. Which mode applies is a per-case
 decision by the agency, not a global setting.
 
+**Blast radius:** in competitive mode, **every eligible lender** may see the
+application. Eligibility filtering is therefore the privacy control, not a cap on
+lender count.
+
+**Round timeout:** 48 hours by default, configurable per product. The agency
+triggers the sequential fallback.
+
 ## Rationale
 
 Recorded direction: competitive matching where speed and price discovery matter,
@@ -36,10 +43,9 @@ available on the same application.
 
 ## Outstanding before acceptance
 
-- [ ] Invitation blast radius: how many lenders may see one application in
-      competitive mode.
-- [ ] Round timeout before sequential fallback, and who triggers the fallback.
 - [ ] Whether lenders may counter-offer, and who approves a counter.
+- [ ] Eligibility rules audited against the disclosure profile (ADR-0006): "all
+      eligible lenders" must never mean "all lenders".
 - [ ] Audit requirement: record who saw the application and when.
 
 ## Evidence in the codebase

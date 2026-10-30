@@ -19,9 +19,10 @@ combinations the business has not sanctioned.
    product in the catalogue; there is no fixed monthly-only assumption.
 2. **Grace periods and late penalties:** negotiated per product/deal, not set by
    global policy.
-3. **Tenure and amounts:** configured per product in the catalogue.
-4. **Early settlement:** negotiated per product/deal. No global rebate or penalty
-   formula is imposed.
+3. **Tenure:** **no cap.** Tenure is configured per product and the validation
+   rule must not impose a global maximum.
+4. **Early settlement:** **not allowed before maturity.** No rebate or penalty
+   formula is implemented; the schedule runs to term.
 
 ## Rationale
 
@@ -45,11 +46,8 @@ hard-coded in the engine.
 
 ## Outstanding before acceptance
 
-- [ ] Bounds per parameter: maximum tenure, maximum penalty, allowed frequency
-      set, minimum/maximum amount.
-- [ ] Early settlement must become a **per-product formula field** (rebate basis
-      or penalty basis). "Negotiated" cannot be computed, so each product needs
-      its settlement rule expressed as data.
+- [ ] Maximum late-penalty rate and minimum/maximum loan amount (tenure and early
+      settlement are decided).
 - [ ] Initial product catalogue shared by the lenders launching first.
 
 ## Evidence in the codebase

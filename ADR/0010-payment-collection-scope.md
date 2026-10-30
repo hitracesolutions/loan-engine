@@ -21,6 +21,10 @@ loan, with compensating reversals for corrections. `SIMULATED_MOMO` and
 `SIMULATED_BANK` are test-only values and must not be reachable in production
 paths.
 
+**Reconciliation:** the **cashier supervisor reconciles every business day** —
+daily cashier total against ledger movement, with discrepancies surfaced
+explicitly rather than absorbed.
+
 ## Rationale
 
 Recorded direction: launch without provider integration. It removes provider
@@ -42,8 +46,9 @@ double-entry control on every payment.
 ## Outstanding before acceptance
 
 - [ ] Written confirmation that manual-only scope is acceptable for launch.
-- [ ] Cashier reconciliation procedure (who checks the daily total against the
-      ledger, and how discrepancies are escalated).
+- [ ] Escalation path when the daily total does not match the ledger — the cadence
+      and owner are decided (daily, cashier supervisor); the dispute procedure is
+      not.
 
 ## Evidence in the codebase
 

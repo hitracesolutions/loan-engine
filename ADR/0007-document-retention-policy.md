@@ -1,7 +1,7 @@
 # ADR-0007 — Document retention policy
 
 - **Gate:** O-07
-- **Status:** Open — direction is "follow the regulator", which needs confirmation
+- **Status:** Provisional — retention and reader access decided 2026-10-30; key custody and deletion procedure outstanding
 - **Owner:** Matthias and the Gidfine executive team (with legal counsel)
 - **Version:** 0.1
 - **Depends on:** ADR-0013, ADR-0014
@@ -16,13 +16,13 @@ retention must be defined before any file is stored — not after.
 
 ## Decision
 
-**Retention period: as specified by the regulator.** Not yet pinned to a number;
-this depends on confirmation from the Bank of Ghana / Data Protection Commission
-position recorded in ADR-0014 and ADR-0013.
+**Retention: 5 years after the loan closes.** Then the record and its documents
+are deleted or anonymised under the procedure below.
 
-Retention period, access control list, and encryption at rest must all be agreed
-as one policy, because a document store without a deletion path is a permanent
-PII liability.
+**Access:** an uploaded KYC document may be opened by **agency staff** (per their
+existing role permissions), **auditors**, and **the borrower themselves**. A
+lender may never open a KYC document; lenders receive only the masked summary
+defined in ADR-0006.
 
 ## Rationale
 
@@ -43,10 +43,10 @@ licensed operating model.
 
 ## Outstanding before acceptance
 
-- [ ] Confirmed retention period (in years) and the authority it comes from.
-- [ ] Who may read a KYC document: agency staff, auditors, lender (probably not).
-- [ ] Encryption/key custody model for stored objects.
-- [ ] Deletion and anonymisation procedure, with audit trail.
+- [ ] Encryption/key custody model for stored objects (who can decrypt, and can
+      the operator read the file).
+- [ ] Deletion and anonymisation procedure executed at the 5-year mark, with
+      audit trail.
 
 ## Evidence in the codebase
 

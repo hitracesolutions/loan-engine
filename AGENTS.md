@@ -632,3 +632,15 @@ The current production baseline is Cloudflare Pages + Pages Functions, D1 and KV
   migrations are never renamed, and migrations run from `frontend/`.
 - Added a closed-list of prohibited shortcuts and the procedure for closing a
   blocker (ADR accepted → index → plan §3.1 → execution plan → simulation flags).
+
+### 2026-10-30 — Blocker answers
+
+- Recorded owner answers for B-1 to B-11 into the corresponding ADRs and the
+  `IMPLEMENTATION_PLAN.md` §3.1 status table.
+- Superseded ADR-0002: launch model is arranger-for-all-products; the earlier
+  mixed-per-product direction is preserved as superseded, not deleted.
+- Rewrote `BLOCKERS.md` so answered questions stay visible with their answer and
+  residual, instead of being removed.
+- Outstanding after this round: ten residual owner questions (R-1 to R-12) and
+  four counsel artefacts (C-1 to C-4).
+- No code changed in this step; tests, build and typecheck are unaffected.

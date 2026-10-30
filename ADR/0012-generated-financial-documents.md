@@ -22,6 +22,11 @@ no template engine, and no object store bound. Records are structured data only.
 4. payment receipts,
 5. account statements.
 
+**Signature:** an **audited click-to-accept plus the existing SHA-256 terms
+hash** is sufficient acceptance evidence. Where a wet signature is used, the
+platform records that it happened and stores the signed copy; it does not
+depend on it.
+
 ## Rationale
 
 Recorded direction: a lending product without a signed agreement and a schedule
@@ -43,7 +48,6 @@ the borrower can hold is not defensible in a dispute, and Act 843 obligations
 ## Outstanding before acceptance
 
 - [ ] Approved templates for each document type.
-- [ ] Whether an electronic signature is required, and of what kind.
 - [ ] Numbering scheme for agreements and receipts (auditable, gap-free).
 - [ ] Which documents must also be emailed or SMS-notified (ADR-0011), and
       whether attachments are permitted.

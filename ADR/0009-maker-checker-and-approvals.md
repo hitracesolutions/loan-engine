@@ -18,10 +18,15 @@ single action requires.
 ## Decision
 
 1. **Disbursement:** a **single authorised approver is sufficient.** Dual
-   authorisation is not required.
+   authorisation is not required. The approver is either `agency_admin` or
+   `loan_officer` — no new role is introduced.
 2. **Payment reversal:** a cashier may not reverse alone. A cashier-initiated
    reversal requires **supervisor approval**, while an **admin** may reverse
    directly.
+3. **Compensating control:** with dual control removed, a **daily supervisor
+   reconciliation report over disbursements** is mandatory. It is the only
+   detective control left on that money movement, so it is part of this decision,
+   not an optional extra.
 
 ## Rationale
 
@@ -52,9 +57,10 @@ per-day disbursement ceiling per approver.
 
 ## Outstanding before acceptance
 
-- [ ] Named approver role(s) and the permission matrix (who may approve, who may
-      override a rate, who may disburse).
-- [ ] Compensating control that replaces dual control on disbursement.
+- [ ] Named approver role(s) and the permission matrix (who may override a rate,
+      who may record a payment).
+- [ ] Build the daily disbursement reconciliation report before the constraint is
+      relaxed — it is the named compensating control.
 - [ ] Exact role names mapped to the code's role enum.
 - [ ] Forward migration to relax the maker/checker constraint.
 - [ ] **Replace the simulated MFA** — `hardeningMfa.ts` currently accepts the

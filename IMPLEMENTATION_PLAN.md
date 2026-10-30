@@ -103,17 +103,17 @@ original assessment and is kept intact for history.
 | Gate | ADR | Status | Still outstanding |
 | :--- | :--- | :--- | :--- |
 | O-01 | [0001](./ADR/0001-tenancy-model.md) | **Accepted** — single agency, Gidfine operates for itself | SaaS onboarding would need a superseding ADR |
-| O-02 | [0002](./ADR/0002-legal-operating-model.md) | Provisional — mixed model, designated per product | Per-product designation; signed legal annex per model |
-| O-03 | [0003](./ADR/0003-interest-calculation-method.md) | Provisional — monthly and annual quoted side by side; method negotiated per deal | Rounding rule; worked fixtures per method |
-| O-04 | [0004](./ADR/0004-agency-margin-and-revenue.md) | Provisional — margin from either side, flat or percentage; recognised on collection | Allowed combinations; VAT/withholding |
-| O-05 | [0005](./ADR/0005-loan-product-parameters.md) | Provisional — flexible frequencies; grace, penalty and settlement negotiated per product | Parameter bounds; launch catalogue |
+| O-02 | [0002](./ADR/0002-legal-operating-model.md) | Provisional — **arranger for every product at launch** (mixed model deferred to a new ADR) | Signed legal annex naming the lender as payee |
+| O-03 | [0003](./ADR/0003-interest-calculation-method.md) | Provisional — monthly and annual quoted side by side; method negotiated; **round half up** | Worked fixtures; allowed methods per product |
+| O-04 | [0004](./ADR/0004-agency-margin-and-revenue.md) | Provisional — **any margin combination allowed**, recognised on collection, **VAT-exempt** | Accountant confirmation of the exemption |
+| O-05 | [0005](./ADR/0005-loan-product-parameters.md) | Provisional — flexible frequencies; **tenure uncapped**; **early settlement not allowed**; grace/penalty negotiated | Penalty ceiling; min/max amount; launch catalogue |
 | O-06 | [0006](./ADR/0006-lender-kyc-disclosures.md) | Provisional — per-lender disclosure agreements | Signed matrices per lender |
-| O-07 | [0007](./ADR/0007-document-retention-policy.md) | **Open** — follows the regulator | Retention period confirmation; access list; key custody |
-| O-08 | [0008](./ADR/0008-lender-matching-workflow.md) | Provisional — hybrid competitive then sequential | Blast radius; timeout and fallback owner |
-| O-09 | [0009](./ADR/0009-maker-checker-and-approvals.md) | Provisional — single approver for disbursement; cashier reversals need supervisor | **Forward migration to relax `check_maker_checker_distinct`**; real MFA |
-| O-10 | [0010](./ADR/0010-payment-collection-scope.md) | Provisional — manual cashier entry only for MVP | Cashier reconciliation procedure |
-| O-11 | [0011](./ADR/0011-notification-channels-and-budget.md) | Provisional — in-app + email + SMS, Gidfine-funded | Providers; monthly spend ceiling |
-| O-12 | [0012](./ADR/0012-generated-financial-documents.md) | Provisional — full document set | Templates; signing requirement; numbering scheme |
+| O-07 | [0007](./ADR/0007-document-retention-policy.md) | Provisional — **5-year retention**; readable by staff, auditors and the borrower | Key custody/encryption; deletion procedure |
+| O-08 | [0008](./ADR/0008-lender-matching-workflow.md) | Provisional — hybrid competitive then sequential; **all eligible lenders**; 48-hour round | Counter-offers allowed?; eligibility audited against profiles |
+| O-09 | [0009](./ADR/0009-maker-checker-and-approvals.md) | Provisional — single approver (`agency_admin` or `loan_officer`); cashier reversals need supervisor; **daily disbursement reconciliation** is the compensating control | Build the report, **then** migrate to relax `check_maker_checker_distinct`; real MFA |
+| O-10 | [0010](./ADR/0010-payment-collection-scope.md) | Provisional — manual cashier entry only; **daily reconciliation by the cashier supervisor** | Discrepancy escalation path |
+| O-11 | [0011](./ADR/0011-notification-channels-and-budget.md) | Provisional — in-app + email + SMS, Gidfine-funded, **no hard cap (alerting instead)** | Providers; alert threshold; retry ceiling |
+| O-12 | [0012](./ADR/0012-generated-financial-documents.md) | Provisional — full document set; **click-to-accept + terms hash is sufficient** | Templates; numbering scheme; storage once O-07 closes |
 | O-13 | [0013](./ADR/0013-data-protection-act-843.md) | Provisional — DPC registration held | Privacy notice text; consent wording; processing register |
 | O-14 | [0014](./ADR/0014-lending-regulatory-licensing.md) | Provisional — credit/moneylending licence held | Licence reference; per-model scope confirmation |
 

@@ -1,7 +1,7 @@
 # ADR-0011 — Notification channels and budget
 
 - **Gate:** O-11
-- **Status:** Provisional — channel set recorded 2026-10-30, providers and budget owner outstanding
+- **Status:** Provisional — channel set 2026-10-30 (in-app + email + SMS, Gidfine-funded); providers outstanding
 - **Owner:** Matthias and the Gidfine executive team
 - **Version:** 0.1
 - **Constrains:** outbox dispatch worker, credentials, ADR-0013
@@ -19,6 +19,11 @@ consent basis and message templates that never leak lender-hidden data.
 
 **Cost:** Gidfine absorbs the per-message cost. It is not charged back to the
 lender or the borrower at launch.
+
+**Budget control:** there is **no hard spend cap**. Instead, send volume is
+monitored and the owner is alerted when daily or monthly spend looks abnormal.
+Guardrails live in the outbox dispatch (per-message cost accounting and a retry
+ceiling), not in a blocking limit.
 
 ## Rationale
 
@@ -41,7 +46,9 @@ truth for state; email and SMS are notifications about it.
 ## Outstanding before acceptance
 
 - [ ] Provider selection for email and SMS, and who holds the accounts.
-- [ ] Monthly spend ceiling and the person accountable for it.
+- [ ] Alerting threshold and notification route, set once provider pricing is
+      known (no hard cap was chosen, so detection is the control).
+- [ ] A retry ceiling per message, so a failing provider cannot multiply spend.
 - [ ] SMS consent capture and opt-out handling.
 - [ ] Message template set (none exist yet).
 
