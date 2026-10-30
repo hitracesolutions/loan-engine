@@ -3,6 +3,7 @@ import LandingPage from './components/LandingPage';
 import DashboardLayout from './components/workspace/layout/DashboardLayout';
 import ProfileCompletionModal from './components/auth/ProfileCompletionModal';
 import Docs from './pages/Docs';
+import { ImpersonationBanner } from './components/ImpersonationBanner';
 import { useLoanStore } from './store/useLoanStore';
 import { api } from './lib/api';
 
@@ -78,6 +79,7 @@ function App() {
 
   return (
     <>
+      <ImpersonationBanner />
       <DashboardLayout />
       <ProfileCompletionModal
         isOpen={showProfileCompletion}

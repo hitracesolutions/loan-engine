@@ -110,6 +110,29 @@ interface ApiEnvelope<T> {
   requestId?: string;
 }
 
+const IMPERSONATION_STATE_KEY = 'gidfine.impersonation';
+const IMPERSONATION_ADMIN_TOKEN_KEY = 'gidfine.impersonation.admin_token';
+
+export interface ImpersonationTargetUser {
+  id: string;
+  email: string;
+  role: string;
+  fullName: string;
+}
+
+/** Row shape returned by GET /admin/users. */
+export interface AdminUserSummary extends ImpersonationTargetUser {
+  isActive: number;
+}
+
+export interface ImpersonationState {
+  id: string;
+  /** Epoch seconds, as issued by the API. */
+  expiresAt: number;
+  impersonatedBy: string;
+  targetUser: ImpersonationTargetUser;
+}
+
 class GidfineAPI {
   private baseUrl: string;
   private token: string | null = null;
@@ -597,6 +620,82 @@ class GidfineAPI {
 
   isAuthenticated(): boolean {
     return this.token !== null;
+  }
+
+  // ============================================
+  // ADMIN IMPERSONATION ("view as")
+  // ============================================
+
+  async listImpersonatableUsers(): Promise<{ users: AdminUserSummary[] }> {
+    return this.request('GET', '/admin/users');
+  }
+
+  async startImpersonation(userId: string): Promise<{ token: string; impersonation: ImpersonationState }> {
+    const response = await this.request<{ token: string; impersonation: ImpersonationState }>(
+      'POST',
+      '/admin/impersonate',
+      { userId },
+    );
+
+    if (typeof window !== 'undefined') {
+      // Keep the administrator's own token so exiting restores their session.
+      if (this.token) {
+        localStorage.setItem(IMPERSONATION_ADMIN_TOKEN_KEY, this.token);
+      }
+      localStorage.setItem(IMPERSONATION_STATE_KEY, JSON.stringify(response.impersonation));
+      this.setToken(response.token);
+      window.dispatchEvent(new CustomEvent('gidfine:impersonation-changed'));
+    }
+
+    return response;
+  }
+
+  async stopImpersonation(): Promise<void> {
+    try {
+      await this.request('POST', '/admin/impersonate/stop');
+    } catch {
+      // The session may already have expired or been revoked server-side.
+    }
+
+    if (typeof window === 'undefined') {
+      this.token = null;
+      return;
+    }
+
+    const adminToken = localStorage.getItem(IMPERSONATION_ADMIN_TOKEN_KEY);
+    localStorage.removeItem(IMPERSONATION_STATE_KEY);
+    localStorage.removeItem(IMPERSONATION_ADMIN_TOKEN_KEY);
+
+    if (adminToken) {
+      this.setToken(adminToken);
+    } else {
+      this.logout();
+    }
+    window.dispatchEvent(new CustomEvent('gidfine:impersonation-changed'));
+  }
+
+  getImpersonationState(): ImpersonationState | null {
+    if (typeof window === 'undefined') return null;
+    const raw = localStorage.getItem(IMPERSONATION_STATE_KEY);
+    if (!raw) return null;
+
+    try {
+      const state = JSON.parse(raw) as ImpersonationState;
+      // expiresAt is in seconds; compare in milliseconds.
+      if (!state?.expiresAt || state.expiresAt * 1000 <= Date.now()) {
+        localStorage.removeItem(IMPERSONATION_STATE_KEY);
+        localStorage.removeItem(IMPERSONATION_ADMIN_TOKEN_KEY);
+        return null;
+      }
+      return state;
+    } catch {
+      localStorage.removeItem(IMPERSONATION_STATE_KEY);
+      return null;
+    }
+  }
+
+  isImpersonating(): boolean {
+    return this.getImpersonationState() !== null;
   }
 
 }

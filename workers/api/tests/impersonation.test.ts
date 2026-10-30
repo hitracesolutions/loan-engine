@@ -108,7 +108,7 @@ describe('Administrator impersonation', () => {
   const ADMIN_EMAIL = 'admin@gidfine.com';
   const ADMIN_PASSWORD = 'SecureAdminPassword123!';
 
-  type TestResponse = { status: number; body: any };
+  type TestResponse = { status: number; body: any; error: any };
 
   async function call(
     method: string,
@@ -127,7 +127,8 @@ describe('Administrator impersonation', () => {
       }),
       env,
     );
-    return { status: response.status, body: await response.json().catch(() => null) };
+    const payload = (await response.json().catch(() => null)) as any;
+    return { status: response.status, body: payload?.data, error: payload?.error };
   }
 
   async function registerBorrower(email: string) {
@@ -208,7 +209,7 @@ describe('Administrator impersonation', () => {
       body: { requestedAmountPesewas: 100000, tenureMonths: 6 },
     });
     assert.strictEqual(write.status, 403);
-    assert.match(String(write.body?.error?.message ?? ''), /read-only/i);
+    assert.match(String(write.error?.message ?? ''), /read-only/i);
   });
 
   it('cannot mint a second impersonation from an impersonated session', async () => {
@@ -246,7 +247,7 @@ describe('Administrator impersonation', () => {
       body: { userId: borrower.userId },
     });
     assert.strictEqual(attempt.status, 403);
-    assert.match(String(attempt.body?.error?.message ?? ''), /administrators/i);
+    assert.match(String(attempt.error?.message ?? ''), /administrators/i);
   });
 
   it('rejects unknown, disabled and self targets', async () => {
@@ -305,14 +306,19 @@ describe('Administrator impersonation', () => {
       .all() as Array<{ event_type: string; user_id: string; details: string }>;
 
     assert.strictEqual(events.length, 2);
-    assert.strictEqual(events[0].event_type, 'IMPERSONATION_STARTED');
-    assert.strictEqual(events[0].user_id, adminUserId);
-    const startDetails = JSON.parse(events[0].details);
+    const startedEvent = events[0];
+    const stoppedEvent = events[1];
+    assert.ok(startedEvent);
+    assert.ok(stoppedEvent);
+
+    assert.strictEqual(startedEvent.event_type, 'IMPERSONATION_STARTED');
+    assert.strictEqual(startedEvent.user_id, adminUserId);
+    const startDetails = JSON.parse(startedEvent.details);
     assert.strictEqual(startDetails.targetUserId, borrower.userId);
     assert.strictEqual(startDetails.impersonationId, started.body.impersonation.id);
 
-    assert.strictEqual(events[1].event_type, 'IMPERSONATION_STOPPED');
-    const stopDetails = JSON.parse(events[1].details);
+    assert.strictEqual(stoppedEvent.event_type, 'IMPERSONATION_STOPPED');
+    const stopDetails = JSON.parse(stoppedEvent.details);
     assert.strictEqual(stopDetails.impersonationId, started.body.impersonation.id);
   });
 

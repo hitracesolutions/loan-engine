@@ -92,7 +92,7 @@ export async function listImpersonatableUsers(ctx: RouteContext): Promise<Respon
   const actor = await requireRole(ctx, 'agency_admin');
   requireNotImpersonating(actor, 'list users');
 
-  const users = await ctx.env.DB.prepare(
+  const rows = await ctx.env.DB.prepare(
     `SELECT id, email, role, full_name, is_active
      FROM users
      WHERE agency_id = ? AND role <> 'agency_admin'
@@ -100,7 +100,15 @@ export async function listImpersonatableUsers(ctx: RouteContext): Promise<Respon
      LIMIT 200`,
   )
     .bind(actor.agencyId)
-    .all();
+    .all<{ id: string; email: string; role: string; full_name: string; is_active: number }>();
 
-  return json({ users: users.results });
+  return json({
+    users: rows.results.map((row) => ({
+      id: row.id,
+      email: row.email,
+      role: row.role,
+      fullName: row.full_name,
+      isActive: row.is_active,
+    })),
+  });
 }

@@ -94,6 +94,7 @@ parallel; everything else is sequential.
 | S-07 | Cashier reconciliation control | ADR-0010 | AUTHORISED |
 | S-08 | Test and CI hardening | — | AUTHORISED |
 | S-09 | Documentation and runbook sync | — | AUTHORISED (continuous) |
+| S-10 | Administrator impersonation ("view as") | ADR-0015 | DONE |
 
 ### S-00 — Restore green worker typecheck
 
@@ -211,6 +212,23 @@ parallel; everything else is sequential.
 - Continuous per the documentation protocol, plus a final pass that reconciles
   the API list, the resource map, the ADR statuses and the progress log.
 
+### S-10 — Administrator impersonation ("view as") — DONE 2026-10-30
+
+- **Delivered:** `POST /admin/impersonate`, `POST /admin/impersonate/stop`,
+  `GET /admin/users`; request guard that makes impersonated sessions read-only;
+  start/stop events in `security_audit_logs`; server-side revocation; admin panel
+  and persistent banner in the frontend; Pages Function entrypoint so the routes
+  work same-origin in production.
+- **Boundaries:** recorded as [ADR-0015](./ADR/0015-administrator-impersonation.md)
+  — read-only, 15-minute TTL, no admin-on-admin, no nested impersonation, no
+  self-impersonation.
+- **Acceptance met:** `tests/impersonation.test.ts` (9 tests) covers token claims,
+  read-only enforcement, privilege rules, revocation and auditing; full suite
+  81 pass; frontend build passes.
+- **Note for S-01:** `frontend/functions/admin/[[path]].ts` closes the parity gap
+  for these three routes only; the lender/servicing/document routes are still
+  unrouted through Pages.
+
 ## Blocked steps — do not start
 
 | ID | Work | Blocked by | What must exist first |
@@ -244,6 +262,7 @@ result, not a judgement.
 | S-07 | PENDING | — | — | baseline: no reconciliation endpoint |
 | S-08 | PENDING | — | — | baseline: no CI, stale frontend test path |
 | S-09 | CONTINUOUS | — | — | — |
+| S-10 | DONE | 2026-10-30 | — | `npm test`: 81 pass / 0 fail (14 suites); `npm run build`: exit 0; typecheck unchanged at 33 pre-existing errors |
 
 ## Changing this plan
 

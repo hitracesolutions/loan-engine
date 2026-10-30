@@ -37,6 +37,15 @@ accepted. Read the relevant ADR before changing behaviour that depends on it.
 | [0013](./0013-data-protection-act-843.md) | O-13 | Data protection (Act 843) | Provisional | Live borrower PII processing |
 | [0014](./0014-lending-regulatory-licensing.md) | O-14 | Lending & credit licensing | Provisional | Commercial launch, live disbursement |
 
+## Operational decisions
+
+Not owner gates, but decisions with security consequences that future code must
+honour.
+
+| ADR | Subject | Status |
+| --- | --- | --- |
+| [0015](./0015-administrator-impersonation.md) | Administrator impersonation ("view as") — read-only, audited, revocable | Accepted |
+
 ## Closing a record
 
 1. Obtain the written decision from the owner named in the record.
