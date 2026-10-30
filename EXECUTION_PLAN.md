@@ -19,6 +19,9 @@ prerequisites are met and its gate is satisfied. Steps in the *Blocked* section
 must not be started, not even partially behind a flag, until the named owner
 artefact exists.
 
+For the live triage view — what is answered, what needs the owner, what needs
+counsel, and what we own — read [`BLOCKERS.md`](./BLOCKERS.md) first.
+
 ## Non-negotiables
 
 These override any instruction to "finish everything":

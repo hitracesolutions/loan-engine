@@ -9,6 +9,9 @@ The gates do not block code: Sprints 1-7 are implemented, but every financial
 and third-party path runs in **simulation mode** until the matching record is
 accepted. Read the relevant ADR before changing behaviour that depends on it.
 
+For the current triage of what is answered versus still waiting on an owner or
+counsel answer, see [`BLOCKERS.md`](../BLOCKERS.md).
+
 ## Status vocabulary
 
 | Status | Meaning |

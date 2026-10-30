@@ -622,3 +622,13 @@ The current production baseline is Cloudflare Pages + Pages Functions, D1 and KV
   read-only rule is a decision, not an implementation accident.
 - Verified: `npm test` 81 pass (9 new), frontend build passes, typecheck
   unchanged at its 33 pre-existing errors.
+
+### 2026-10-30 — Blocker triage sheet
+
+- Added `BLOCKERS.md` so a second development team can start without waiting:
+  answered decisions, owner questions with safe interim behaviour, counsel
+  artefacts, and the engineering blockers we own.
+- Recorded the migration traps explicitly: next free number `0008_`, applied
+  migrations are never renamed, and migrations run from `frontend/`.
+- Added a closed-list of prohibited shortcuts and the procedure for closing a
+  blocker (ADR accepted → index → plan §3.1 → execution plan → simulation flags).

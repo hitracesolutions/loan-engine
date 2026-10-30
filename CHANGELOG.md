@@ -1,5 +1,19 @@
 # Gidfine Changelog
 
+## 2026-10-30 — Blocker triage sheet
+
+- Added `BLOCKERS.md`: one place listing what is already decided (A1-A12), the
+  eleven small questions still waiting on the owner (B-1 to B-11) with a safe
+  interim behaviour for each, the four counsel artefacts (C-1 to C-4), and the
+  six engineering blockers we own (E-1 to E-6).
+- Recorded the migration rules that trip people up: next free number is `0008_`,
+  applied migrations are never renamed (the two `0002_*` files are intentional),
+  and migrations run from `frontend/` with `--config wrangler.toml`.
+- Added a closed-list of things not to do (no live money, no constraint drop, no
+  R2, no writing while impersonating, no invented legal position) and the
+  five-step procedure for closing a blocker.
+- Linked from `EXECUTION_PLAN.md`, `QUICK_START.md` and the ADR index.
+
 ## 2026-10-30 — Administrator impersonation ("view as")
 
 - Added `POST /admin/impersonate`, `POST /admin/impersonate/stop` and
