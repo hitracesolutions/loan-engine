@@ -702,3 +702,17 @@ The current production baseline is Cloudflare Pages + Pages Functions, D1 and KV
   lacks.
 - Verified with `npm run build` (exit 0) and `git diff --check`; the UI itself was
   not opened in a browser this session.
+
+### 2026-10-30 — Development guide reconciled
+
+- Replaced the guide's open-questions section with a decisions register that maps
+  each of the fourteen questions to its answer and ADR.
+- Resolved five guide-versus-decision contradictions (competitive matching, SaaS
+  role, pricing/rounding/early settlement, notification budget, money types and
+  tenancy column).
+- Added a shipped-vs-conceptual data model split and a §17 traceability table
+  linking plan sprints to guide sections, ADRs, code modules and test files.
+- Recorded the MFA fixed-code defect, DPC registration, licence status and the
+  impersonation read-only rule in the security baseline.
+- No code changed. Guide content was aligned to the code and ADRs, not the reverse:
+  where they disagreed, the guide was corrected in the same change.

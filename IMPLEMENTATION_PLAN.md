@@ -11,7 +11,7 @@
 
 ## 1. Purpose
 
-This plan translates the product requirements in [`Gidfine_Dev_Guide.md`](./Gidfine_Dev_Guide.md) into a concrete, dependency-ordered delivery programme. It establishes an accurate record of what is working today, isolates requirements blocked by owner decisions (O-01 through O-14), prevents conceptual designs from masquerading as completed features, and defines the exact technical path from origination through ledger servicing and launch.
+This plan translates the product requirements in [`Gidfine_Dev_Guide.md`](./Gidfine_Dev_Guide.md) into a concrete, dependency-ordered delivery programme. It establishes an accurate record of what is working today, isolates requirements blocked by owner decisions (O-01 through O-14), prevents conceptual designs from masquerading as completed features, and defines the exact technical path from origination through ledger servicing and launch. Requirement-to-plan traceability is maintained in the guide's §17.
 
 ---
 

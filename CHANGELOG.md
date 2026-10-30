@@ -1,5 +1,31 @@
 # Gidfine Changelog
 
+## 2026-10-30 — Development guide reconciled with the implementation plan
+
+- Rewrote §15 from fourteen open questions into a **decisions register**: each
+  question, its gate, the owner's answer, the ADR that records it, and whether it
+  is Accepted or Provisional.
+- Fixed five contradictions between the guide and the recorded decisions:
+  "marketplace bidding" was excluded while ADR-0008 makes competitive 1-to-many
+  matching the launch model; the role table kept a SaaS "platform administrator"
+  after the single-agency decision; §6 left margin, rounding and early settlement
+  open after ADR-0003/0004/0005 fixed them; §8 still called email and SMS
+  "pending budget" after ADR-0011 decided them; `tenant_id` and `NUMERIC/DECIMAL`
+  money columns contradicted ADR-0001 and the integer-pesewa convention.
+- Corrected §11 to list the **33 shipped tables** from migrations `0001`-`0007`
+  separately from the conceptual entities that were never built, and labelled the
+  money-type rule correctly.
+- §12 now states the MFA defect plainly (fixed codes `123456`/`654321`), records
+  DPC registration and the licence, and adds the impersonation rule.
+- §9 was already accurate: the documented status list matches
+  `APPLICATION_STATUSES` in `domain/stateMachine.ts` exactly.
+- Added **§17 traceability**: every plan sprint mapped to guide sections, the ADR
+  that governs it, the code modules and the test files that evidence it, plus a
+  table of requirements with no implementation yet and their blocker.
+- Replaced the acceptance criterion that tested cross-tenant isolation, which no
+  longer applies, with an impersonation-write test.
+- Version 1.3 → 1.4. Verified: 179 relative links, 0 broken.
+
 ## 2026-10-30 — Landing page claims corrected
 
 - Replaced unverifiable marketing claims with product facts the code supports.
