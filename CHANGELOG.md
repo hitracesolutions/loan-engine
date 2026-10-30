@@ -1,5 +1,21 @@
 # Gidfine Changelog
 
+## 2026-10-30 — Workflow library review and protected decisions
+
+- Reviewed the shared workflow library: catalogued which skills apply to this
+  repository and which are missing.
+- Added a **Protected decisions** section to `AGENTS.md` so deliberate choices
+  (read-only impersonation, forward-only migrations, maker-checker retention,
+  simulation flags, fail-closed disclosure, `agency_id` filters, server-side
+  authorization) cannot be reverted as incidental cleanup.
+- Recorded that the library entry point named in `AGENTS.md` is wrong for this
+  repository (`support-training-hub` is a Laravel/Filament platform) as blocker
+  E-8; the owner deferred repointing it.
+- Recorded that the impersonation UI is **configured, not verified**: it builds
+  and type-checks but has never been opened in a browser.
+- The `library-contribution` check was run; no library files were written because
+  the owner asked for the review only.
+
 ## 2026-10-30 — Blocker answers recorded
 
 - Owner answered B-1 to B-11 from `BLOCKERS.md`. Recorded in the ADRs and the

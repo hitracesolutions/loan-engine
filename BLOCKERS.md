@@ -109,6 +109,7 @@ placeholder copy marked as such, and never present it as approved.
 | E-5 | **Simulated MFA accepts fixed codes `123456` and `654321`.** Security defect, not a gate. | `workers/api/src/domain/hardeningMfa.ts` | S-06 |
 | E-6 | **No CI** — typecheck, tests and build never run automatically. Stale `frontend/tests/*` read a non-existent `../../migrations/0001_initial_d1_schema.sql`. | only `.github/workflows/db-migrate.yml` exists | S-08 |
 | E-7 | **Relaxing `check_maker_checker_distinct`** is now authorised in principle (B-3 answered) but is **sequenced last**: build the daily disbursement reconciliation report (S-07) first, prove it on fixtures, then migrate. | `0005_sprint4_consent_disbursement.sql` | S-07 → migration |
+| E-8 | **`AGENTS.md` points agents at the wrong skill.** It names `skills/support-training-hub/SKILL.md`, which is a Laravel 13 + Filament training platform. The closest library match is `ledger-vue-cloudflare`; the backend is the same, the React frontend is not. Owner chose to leave it for now — agents reading `AGENTS.md` will load the wrong skill until it is repointed. | `AGENTS.md`, "Workflow and skills library" | — |
 
 ### Migration discipline (read before adding a migration)
 

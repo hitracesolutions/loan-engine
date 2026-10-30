@@ -477,6 +477,29 @@ surfaced something worth saving — a stack-specific trap, a corrected step, a
 newly discovered convention. Update the matching workflow (and its changelog)
 when a used skill was inaccurate.
 
+**Known defect in the paragraph above:** `support-training-hub` is a Laravel 13 +
+Filament training platform and does not describe this repository. The closest
+library match is `ledger-vue-cloudflare` (Cloudflare Pages Functions + D1 + KV +
+Wrangler), which shares this project's backend but not its React frontend. The
+pointer is left unchanged pending an owner decision; see `BLOCKERS.md` E-8.
+
+## Protected decisions
+
+These were decided deliberately and must not be reverted as part of unrelated
+work. Each is enforced or evidenced somewhere in the code; read that before
+changing behaviour. **If you disagree with one, raise it with the owner — do not
+revert it silently.**
+
+| Decision | Recorded in | Undoing it breaks |
+| --- | --- | --- |
+| Impersonated sessions are **read-only**; never add a route to the guard allowlist | [ADR-0015](./ADR/0015-administrator-impersonation.md) | Consent evidence: a support session could sign as a borrower |
+| **Migrations are forward-only and never renamed**, including the two `0002_*` files | `BLOCKERS.md` §4 | Data: a rename re-executes an applied migration |
+| `check_maker_checker_distinct` **stays** until the daily disbursement reconciliation exists and passes on fixtures | [ADR-0009](./ADR/0009-maker-checker-and-approvals.md) | The only detective control on disbursement |
+| **Simulation flags stay** (`is_simulation`, `simulation_mode = 1`, `PROVISIONAL`) until the matching ADR is Accepted | `BLOCKERS.md` §5 | Simulated money becomes real money |
+| Lender disclosure **fails closed** — no profile means no data | [ADR-0006](./ADR/0006-lender-kyc-disclosures.md) | Unlawful borrower data reaching a lender |
+| `agency_id` filters stay in every query even though the agency is single-tenant | [ADR-0001](./ADR/0001-tenancy-model.md) | Defence in depth; re-adding them later is a large change |
+| Authorization is enforced **server-side before the router returns data**, never by frontend guards alone | `BLOCKERS.md`, `docs` skill rule | Any user with devtools can bypass a UI check |
+
 
 ---
 
@@ -644,3 +667,19 @@ The current production baseline is Cloudflare Pages + Pages Functions, D1 and KV
 - Outstanding after this round: ten residual owner questions (R-1 to R-12) and
   four counsel artefacts (C-1 to C-4).
 - No code changed in this step; tests, build and typecheck are unaffected.
+
+### 2026-10-30 — Workflow library review
+
+- Reviewed the shared library (`README.md` index, `AGENT-INSTRUCTIONS.md`, and the
+  characterization-testing, code-review-and-quality,
+  documentation-impact-assessment, task-completion-checklist,
+  project-context-management, e2e-testing, writing-quality and
+  agent-instructions-reconciliation skills).
+- Mapped applicable skills to execution steps and added a **Protected decisions**
+  section to this file, which was the one gap the library review exposed.
+- Found that the library entry point named above points at a Laravel/Filament
+  project; recorded as `BLOCKERS.md` E-8. Owner deferred the repoint, so agents
+  will keep loading the wrong skill until it is fixed.
+- Recorded the impersonation UI as configured-but-unverified (never opened in a
+  browser) in `EXECUTION_PLAN.md` S-10.
+- `library-contribution` check run, no library writes (owner requested review only).

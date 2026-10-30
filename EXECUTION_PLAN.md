@@ -228,6 +228,10 @@ parallel; everything else is sequential.
 - **Acceptance met:** `tests/impersonation.test.ts` (9 tests) covers token claims,
   read-only enforcement, privilege rules, revocation and auditing; full suite
   81 pass; frontend build passes.
+- **Not verified:** the panel and banner have **never been opened in a browser**.
+  They type-check and build; the confirm prompt, token swap, banner rendering and
+  post-exit reload are untested until someone runs `npm run dev:pages` and clicks
+  through. Treat the UI half as configured, not verified.
 - **Note for S-01:** `frontend/functions/admin/[[path]].ts` closes the parity gap
   for these three routes only; the lender/servicing/document routes are still
   unrouted through Pages.
