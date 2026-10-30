@@ -1,0 +1,61 @@
+name: D1 migrations
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'workers/api/migrations/**'
+      - 'frontend/wrangler.toml'
+      - '.github/workflows/db-migrate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# D1 does not serialise concurrent migration runs, so only one may exist at a time.
+concurrency:
+  group: d1-migrations-production
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    name: Apply pending D1 migrations
+    runs-on: ubuntu-latest
+    # The `production` environment must have required reviewers configured so a
+    # schema change against the live database is always an explicit approval.
+    environment: production
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CI: 'true'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify Cloudflare credentials
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::error::CLOUDFLARE_API_TOKEN is empty. Add it as a secret on the 'production' environment, scoped to Account > D1 > Edit."
+            exit 1
+          fi
+          if [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::error::CLOUDFLARE_ACCOUNT_ID is empty. Add it as a variable or secret on the 'production' environment."
+            exit 1
+          fi
+
+      - name: List migration status
+        run: npm run db:migrations:list
+
+      - name: Apply migrations
+        run: npm run db:migrate:remote

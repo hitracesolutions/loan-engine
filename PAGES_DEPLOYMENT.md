@@ -30,6 +30,13 @@ In Cloudflare Dashboard → Workers & Pages → `loan-engine`:
    - `ADMIN_PASSWORD`
 5. Do not set `VITE_API_BASE` or `VITE_API_URL` for production builds. The
    frontend intentionally falls back to the Pages origin.
+6. Keep the build command as `npm run build`. Never chain
+   `wrangler d1 migrations apply` into it: Pages build containers carry no
+   Cloudflare credentials, so the step fails with
+   `In a non-interactive environment, it's necessary to set a CLOUDFLARE_API_TOKEN`,
+   and because it is chained with `&&` the frontend build never runs. Schema
+   changes are applied by the workflow in
+   [Database migrations](#database-migrations).
 
 R2 is not bound because the current API does not upload or serve documents.
 Provision it only when the owner-approved document requirements in
@@ -48,9 +55,11 @@ committed to TOML or `.env` files.
 cd frontend
 npm install
 Copy-Item .dev.vars.example .dev.vars
-npm.cmd run build
-npx wrangler pages dev dist
+npm.cmd run dev:pages
 ```
+
+`dev:pages` builds `dist`, applies pending local D1 migrations through its
+`predev:pages` script, then starts `wrangler pages dev dist`.
 
 Set local values in `frontend/.dev.vars`:
 
@@ -79,17 +88,57 @@ from a committed branch before release.
 
 ## Database migrations
 
-Migrations live in `workers/api/migrations/` and are applied forward-only:
+Migrations live in `workers/api/migrations/` and are applied forward-only.
+`wrangler d1 migrations apply` records applied files in a `d1_migrations` table,
+so it is idempotent per file and safe to run on every deploy.
+
+### Automated (production)
+
+[`.github/workflows/db-migrate.yml`](./.github/workflows/db-migrate.yml) applies
+pending migrations when `workers/api/migrations/**` changes on `main`, or when
+started manually with `workflow_dispatch`. It runs `db:migrations:list` first so
+the run log shows exactly what will change, then `db:migrate:remote`.
+
+Prerequisites, set once in GitHub:
+
+1. Create an environment named `production` and add required reviewers, so every
+   schema change against the live database is an explicit approval.
+2. Add environment secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
+   The token needs only **Account → D1 → Edit**, scoped to this account.
+3. Branch protection on `main` stays as-is. The workflow uses a `concurrency`
+   group because D1 does not serialise two migration runs against one database.
+
+Deploy order is migration first, then code: Pages builds from the same commit,
+so the new code only reaches the edge after the schema it expects already
+exists. Keep migrations additive and backward-compatible so the currently live
+deployment keeps working during that window. Never use a destructive schema
+replacement against production.
+
+### Manual
+
+Run from `frontend/`, because [frontend/wrangler.toml](./frontend/wrangler.toml)
+points `migrations_dir` at `../workers/api/migrations`:
 
 ```powershell
 cd frontend
-npx wrangler d1 migrations apply gidfine-db --remote --config wrangler.toml
+npm.cmd run db:migrations:list   # what is pending
+npm.cmd run db:migrate:remote    # apply pending migrations
+npm.cmd run db:migrate:local     # apply to the local D1 database
 ```
 
-Review the target account and database before applying a migration. Never use a
-destructive schema replacement against production. Record any required backup,
-data backfill or rollback procedure in the implementation plan and release
-notes.
+`npm run dev:pages` applies local migrations automatically through the
+`predev:pages` script.
+
+Export a backup before any migration that is not purely additive, for example:
+
+```powershell
+cd frontend
+npx wrangler d1 export gidfine-db --remote --config wrangler.toml --output backup-<date>.sql
+```
+
+Do not commit or upload that export; it contains live financial data. Record any
+required backup, data backfill or rollback procedure in the implementation plan
+and release notes.
 
 ## Smoke tests
 

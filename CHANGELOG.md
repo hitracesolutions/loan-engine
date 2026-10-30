@@ -1,5 +1,18 @@
 # Gidfine Changelog
 
+## 2026-10-30 — Automated D1 migrations
+
+- Added a GitHub Actions workflow that applies pending D1 migrations on `main`
+  when `workers/api/migrations/**` changes, gated behind a `production`
+  environment and a `concurrency` group so two runs cannot race the database.
+- Pinned `wrangler` as a `frontend` devDependency so migration steps run a
+  reviewed version instead of whatever `npx` resolves to at build time.
+- Added `db:migrations:list`, `db:migrate:local` and `db:migrate:remote` scripts,
+  and made `npm run dev:pages` apply local migrations through `predev:pages`.
+- Documented that the Pages build command must stay `npm run build`; chaining
+  `wrangler d1 migrations apply` into it fails in the unauthenticated build
+  container and blocks the frontend build.
+
 ## 2026-10-29 — Application disclosure boundary
 
 - Centralized application response redaction by role on the Worker API.

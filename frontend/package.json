@@ -6,9 +6,13 @@
   "scripts": {
     "dev": "vite",
     "dev:pages": "npm run build && wrangler pages dev dist",
+    "predev:pages": "npm run db:migrate:local",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "db:migrations:list": "wrangler d1 migrations list gidfine-db --remote --config wrangler.toml",
+    "db:migrate:local": "wrangler d1 migrations apply gidfine-db --local --config wrangler.toml",
+    "db:migrate:remote": "wrangler d1 migrations apply gidfine-db --remote --config wrangler.toml",
     "convex:dev": "convex dev",
     "convex:codegen": "convex codegen"
   },
@@ -52,6 +56,7 @@
     "tailwindcss": "^3.4.19",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.57.0",
-    "vite": "^5.4.21"
+    "vite": "^5.4.21",
+    "wrangler": "^4.42.0"
   }
 }

@@ -570,3 +570,24 @@ The current production baseline is Cloudflare Pages + Pages Functions, D1 and KV
   review evidence endpoints, with auditors restricted to read-only access.
 - Applied the migration locally; Worker typecheck, 51 API tests and the
   frontend production build pass.
+
+### 2026-10-30 — Automated D1 migrations
+
+- Added `.github/workflows/db-migrate.yml`: applies pending D1 migrations on
+  `main` when `workers/api/migrations/**` changes, behind a `production`
+  environment for approval and a `concurrency` group so two runs cannot race
+  the database. It lists status before applying so the run log records exactly
+  what changed.
+- Pinned `wrangler@^4.42.0` as a `frontend` devDependency so migration steps run
+  a reviewed version rather than whatever `npx` resolves at build time. No
+  existing dependency version changed in the lockfile.
+- Added `db:migrations:list`, `db:migrate:local` and `db:migrate:remote` scripts
+  to `frontend`; `npm run dev:pages` now applies local migrations automatically
+  through `predev:pages`.
+- Documented that the Pages build command must stay `npm run build`. Chaining
+  `wrangler d1 migrations apply` into it fails in the unauthenticated Pages
+  build container and, because it is joined with `&&`, blocks the frontend
+  build entirely.
+- Verified locally: all eight migration files apply through
+  `db:migrate:local`, the workflow YAML parses, `npm ci` is in sync with the
+  lockfile, and the frontend production build passes.

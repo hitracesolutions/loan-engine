@@ -13,6 +13,14 @@ For local Pages Functions, copy `frontend/.dev.vars.example` to
 `frontend/.dev.vars` and set local values for `JWT_SIGNING_KEY`, `ADMIN_EMAIL`
 and `ADMIN_PASSWORD`.
 
+Local D1 migrations are applied automatically by `npm run dev:pages` through the
+`predev:pages` script. To run them explicitly use `npm.cmd run db:migrate:local`.
+Production migrations run from
+[`.github/workflows/db-migrate.yml`](./.github/workflows/db-migrate.yml); the
+manual equivalent is documented in
+[`PAGES_DEPLOYMENT.md`](./PAGES_DEPLOYMENT.md#database-migrations). The Pages
+build command must stay `npm run build` — it cannot apply migrations.
+
 Start the frontend and Pages Functions in separate terminals:
 
 ```powershell
@@ -20,10 +28,9 @@ Start the frontend and Pages Functions in separate terminals:
 cd frontend
 npm.cmd run dev
 
-# Terminal 2, after the frontend build exists
+# Terminal 2, builds dist and applies local migrations first
 cd frontend
-npm.cmd run build
-npx wrangler pages dev dist
+npm.cmd run dev:pages
 ```
 
 The Vite UI is normally available at `http://localhost:5173`. The Pages
