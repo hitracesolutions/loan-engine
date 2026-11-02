@@ -477,6 +477,29 @@ surfaced something worth saving — a stack-specific trap, a corrected step, a
 newly discovered convention. Update the matching workflow (and its changelog)
 when a used skill was inaccurate.
 
+**Known defect in the paragraph above:** `support-training-hub` is a Laravel 13 +
+Filament training platform and does not describe this repository. The closest
+library match is `ledger-vue-cloudflare` (Cloudflare Pages Functions + D1 + KV +
+Wrangler), which shares this project's backend but not its React frontend. The
+pointer is left unchanged pending an owner decision; see `BLOCKERS.md` E-8.
+
+## Protected decisions
+
+These were decided deliberately and must not be reverted as part of unrelated
+work. Each is enforced or evidenced somewhere in the code; read that before
+changing behaviour. **If you disagree with one, raise it with the owner — do not
+revert it silently.**
+
+| Decision | Recorded in | Undoing it breaks |
+| --- | --- | --- |
+| Impersonated sessions are **read-only**; never add a route to the guard allowlist | [ADR-0015](./ADR/0015-administrator-impersonation.md) | Consent evidence: a support session could sign as a borrower |
+| **Migrations are forward-only and never renamed**, including the two `0002_*` files | `BLOCKERS.md` §4 | Data: a rename re-executes an applied migration |
+| `check_maker_checker_distinct` **stays** until the daily disbursement reconciliation exists and passes on fixtures | [ADR-0009](./ADR/0009-maker-checker-and-approvals.md) | The only detective control on disbursement |
+| **Simulation flags stay** (`is_simulation`, `simulation_mode = 1`, `PROVISIONAL`) until the matching ADR is Accepted | `BLOCKERS.md` §5 | Simulated money becomes real money |
+| Lender disclosure **fails closed** — no profile means no data | [ADR-0006](./ADR/0006-lender-kyc-disclosures.md) | Unlawful borrower data reaching a lender |
+| `agency_id` filters stay in every query even though the agency is single-tenant | [ADR-0001](./ADR/0001-tenancy-model.md) | Defence in depth; re-adding them later is a large change |
+| Authorization is enforced **server-side before the router returns data**, never by frontend guards alone | `BLOCKERS.md`, `docs` skill rule | Any user with devtools can bypass a UI check |
+
 
 ---
 
@@ -591,3 +614,116 @@ The current production baseline is Cloudflare Pages + Pages Functions, D1 and KV
 - Verified locally: all eight migration files apply through
   `db:migrate:local`, the workflow YAML parses, `npm ci` is in sync with the
   lockfile, and the frontend production build passes.
+
+### 2026-10-30 — Owner decision records
+
+- Added `ADR/` with a record per owner gate (O-01 to O-14) and an index defining
+  the status vocabulary (Open / Provisional / Accepted / Superseded) and how to
+  close a gate.
+- Recorded owner answers for all fourteen gates; O-01 (single agency) is
+  accepted, the rest are provisional pending the artefacts listed in each record.
+- Recorded that single-approver disbursement (O-09) contradicts the deployed
+  `check_maker_checker_distinct` constraint, so the decision is not in force and
+  dual control remains enforced until a forward migration relaxes it.
+- Recorded that simulated MFA accepts fixed codes `123456`/`654321` and must be
+  replaced before any privileged flow goes live.
+- Added the reconciled status table at `IMPLEMENTATION_PLAN.md` §3.1 without
+  altering the original §3 assessment.
+
+### 2026-10-30 — Administrator impersonation
+
+- Added read-only "view as" sessions for `agency_admin`: start, stop and user
+  list endpoints, a pre-router guard that blocks every state-changing request
+  from an impersonated token, and start/stop audit events in
+  `security_audit_logs`.
+- Added server-side revocation so a stopped session cannot be reused inside its
+  TTL, plus privilege guards (no admin-on-admin, no nested impersonation, no
+  self-impersonation).
+- Added the admin panel, the persistent banner and the Pages Function entrypoint
+  the routes need in production.
+- Recorded boundaries in `ADR/0015-administrator-impersonation.md`; the
+  read-only rule is a decision, not an implementation accident.
+- Verified: `npm test` 81 pass (9 new), frontend build passes, typecheck
+  unchanged at its 33 pre-existing errors.
+
+### 2026-10-30 — Blocker triage sheet
+
+- Added `BLOCKERS.md` so a second development team can start without waiting:
+  answered decisions, owner questions with safe interim behaviour, counsel
+  artefacts, and the engineering blockers we own.
+- Recorded the migration traps explicitly: next free number `0008_`, applied
+  migrations are never renamed, and migrations run from `frontend/`.
+- Added a closed-list of prohibited shortcuts and the procedure for closing a
+  blocker (ADR accepted → index → plan §3.1 → execution plan → simulation flags).
+
+### 2026-10-30 — Blocker answers
+
+- Recorded owner answers for B-1 to B-11 into the corresponding ADRs and the
+  `IMPLEMENTATION_PLAN.md` §3.1 status table.
+- Superseded ADR-0002: launch model is arranger-for-all-products; the earlier
+  mixed-per-product direction is preserved as superseded, not deleted.
+- Rewrote `BLOCKERS.md` so answered questions stay visible with their answer and
+  residual, instead of being removed.
+- Outstanding after this round: ten residual owner questions (R-1 to R-12) and
+  four counsel artefacts (C-1 to C-4).
+- No code changed in this step; tests, build and typecheck are unaffected.
+
+### 2026-10-30 — Workflow library review
+
+- Reviewed the shared library (`README.md` index, `AGENT-INSTRUCTIONS.md`, and the
+  characterization-testing, code-review-and-quality,
+  documentation-impact-assessment, task-completion-checklist,
+  project-context-management, e2e-testing, writing-quality and
+  agent-instructions-reconciliation skills).
+- Mapped applicable skills to execution steps and added a **Protected decisions**
+  section to this file, which was the one gap the library review exposed.
+- Found that the library entry point named above points at a Laravel/Filament
+  project; recorded as `BLOCKERS.md` E-8. Owner deferred the repoint, so agents
+  will keep loading the wrong skill until it is fixed.
+- Recorded the impersonation UI as configured-but-unverified (never opened in a
+  browser) in `EXECUTION_PLAN.md` S-10.
+- `library-contribution` check run, no library writes (owner requested review only).
+
+### 2026-10-30 — Landing page claims corrected
+
+- Rewrote `LandingPage.tsx` copy so every statement matches a shipped capability.
+  Removed fabricated statistics, "AI-powered evaluation", OTP verification,
+  document upload, 24-hour disbursement, named bank integrations and the
+  placeholder phone number; added the arranger model, dual rate display, DPC
+  registration and daily reconciliation as verifiable claims.
+- Removed the third-party noise asset; background is CSS-only.
+- Fixed navigation: the `#benefits` target now exists, dead footer `#` links and
+  the no-op "Learn more" button were replaced with real targets.
+- Accessibility pass: skip link, nav labelling, `aria-hidden` decorative icons,
+  explicit button types, stronger focus rings, no skipped heading levels.
+- Added `prefers-reduced-motion` rules; entrance-animated elements start at
+  `opacity-0`, so reduced motion previously hid content outright.
+- Added a BLOCKERS rule: landing copy must not promise capabilities the platform
+  lacks.
+- Verified with `npm run build` (exit 0) and `git diff --check`; the UI itself was
+  not opened in a browser this session.
+
+### 2026-10-30 — Development guide reconciled
+
+- Replaced the guide's open-questions section with a decisions register that maps
+  each of the fourteen questions to its answer and ADR.
+- Resolved five guide-versus-decision contradictions (competitive matching, SaaS
+  role, pricing/rounding/early settlement, notification budget, money types and
+  tenancy column).
+- Added a shipped-vs-conceptual data model split and a §17 traceability table
+  linking plan sprints to guide sections, ADRs, code modules and test files.
+- Recorded the MFA fixed-code defect, DPC registration, licence status and the
+  impersonation read-only rule in the security baseline.
+- No code changed. Guide content was aligned to the code and ADRs, not the reverse:
+  where they disagreed, the guide was corrected in the same change.
+
+### 2026-10-30 — Full programme authorised
+
+- Owner approved all remaining work; `EXECUTION_PLAN.md` now defines 25 steps
+  (S-00 to S-24) with acceptance criteria, dependencies and a measured baseline.
+- Recorded the safety floor: live PII, live disbursement, signable contracts and
+  per-lender disclosure enablement stay closed until their counsel artefacts
+  exist. Approval covers building toward them, not switching them on.
+- Added a release gate checklist (reconciliation proof, accountant confirmation,
+  security review, restore drill, UAT, owner sign-off).
+- S-10 (impersonation) remains the only completed step; S-00 typecheck is next.

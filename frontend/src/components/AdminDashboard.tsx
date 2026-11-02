@@ -11,8 +11,9 @@ import ReportsPanel from './ReportsPanel';
 import AgencyReviewQueue from './AgencyReviewQueue';
 import { LenderPortal } from './LenderPortal';
 import { CashierLedgerPortal } from './CashierLedgerPortal';
+import { ImpersonationPanel } from './ImpersonationPanel';
 
-type AdminView = 'dashboard' | 'agency-queue' | 'lender-portal' | 'cashier-ledger' | 'analytics' | 'lenders' | 'performance' | 'reports' | 'settings';
+type AdminView = 'dashboard' | 'agency-queue' | 'lender-portal' | 'cashier-ledger' | 'analytics' | 'lenders' | 'performance' | 'reports' | 'users' | 'settings';
 
 interface AdminDashboardProps {
   userName?: string;
@@ -51,6 +52,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     { id: 'lenders', label: 'Lenders', icon: '🏦', requires: ['admin'] },
     { id: 'performance', label: 'Performance', icon: '⭐', requires: ['admin', 'analyst'] },
     { id: 'reports', label: 'Reports', icon: '📄', requires: ['admin', 'analyst'] },
+    { id: 'users', label: 'View as user', icon: '👁️', requires: ['admin'] },
     { id: 'settings', label: 'Settings', icon: '⚙️', requires: ['admin'] },
   ];
 
@@ -175,6 +177,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             )}
             {activeView === 'reports' && canAccessView('reports') && (
               <ReportsPanel />
+            )}
+            {activeView === 'users' && canAccessView('users') && (
+              <ImpersonationPanel />
             )}
             {activeView === 'settings' && canAccessView('settings') && (
               <SettingsView />

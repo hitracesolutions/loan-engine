@@ -1,5 +1,175 @@
 # Gidfine Changelog
 
+## 2026-10-30 — Full programme authorised (S-00 to S-24)
+
+- Replaced the partial step authorisation with approval of the **complete
+  programme**: 25 steps covering typecheck, Pages route parity, dead endpoints,
+  Convex retirement, negotiated-term migration, pricing, real MFA, reconciliation
+  reports, CI, margin revenue, matching, per-lender disclosure machinery,
+  catalogue validation, the approval-model switch, discrepancy escalation, R2
+  storage, document rendering, notification adapters, portal completion, token
+  alignment, observability, security review and UAT.
+- Added an explicit **safety floor**: four items that approval cannot unlock
+  because they are legal rather than engineering — live PII (C-2), live
+  disbursement (C-3), signable contracts (C-4) and per-lender disclosure
+  enablement (C-1). Building toward them is authorised; turning them on is not.
+- Added a **release gate** listing everything that must be true before real money
+  or real PII, including the reconciliation proof, accountant confirmation, signed
+  security review and a recorded backup/restore drill.
+- Fixed dependencies rather than leaving them implicit: S-15 (relax maker-checker)
+  requires S-07 proven first; S-18 requires S-13 and S-17; S-03 requires S-01 and
+  S-02.
+- Extended the progress log to all 25 steps with the measured baseline for each.
+- `BLOCKERS.md` now points at the authorisation and at S-15 for the constraint
+  sequence.
+
+## 2026-10-30 — Development guide reconciled with the implementation plan
+
+- Rewrote §15 from fourteen open questions into a **decisions register**: each
+  question, its gate, the owner's answer, the ADR that records it, and whether it
+  is Accepted or Provisional.
+- Fixed five contradictions between the guide and the recorded decisions:
+  "marketplace bidding" was excluded while ADR-0008 makes competitive 1-to-many
+  matching the launch model; the role table kept a SaaS "platform administrator"
+  after the single-agency decision; §6 left margin, rounding and early settlement
+  open after ADR-0003/0004/0005 fixed them; §8 still called email and SMS
+  "pending budget" after ADR-0011 decided them; `tenant_id` and `NUMERIC/DECIMAL`
+  money columns contradicted ADR-0001 and the integer-pesewa convention.
+- Corrected §11 to list the **33 shipped tables** from migrations `0001`-`0007`
+  separately from the conceptual entities that were never built, and labelled the
+  money-type rule correctly.
+- §12 now states the MFA defect plainly (fixed codes `123456`/`654321`), records
+  DPC registration and the licence, and adds the impersonation rule.
+- §9 was already accurate: the documented status list matches
+  `APPLICATION_STATUSES` in `domain/stateMachine.ts` exactly.
+- Added **§17 traceability**: every plan sprint mapped to guide sections, the ADR
+  that governs it, the code modules and the test files that evidence it, plus a
+  table of requirements with no implementation yet and their blocker.
+- Replaced the acceptance criterion that tested cross-tenant isolation, which no
+  longer applies, with an impersonation-write test.
+- Version 1.3 → 1.4. Verified: 179 relative links, 0 broken.
+
+## 2026-10-30 — Landing page claims corrected
+
+- Replaced unverifiable marketing claims with product facts the code supports.
+  Removed: "50K+ borrowers", "₵500M+ disbursed", "2 minutes approval",
+  "AI-powered evaluation", "instant approval", OTP verification, ID upload,
+  "funds in 24 hours", "trusted by major Ghanaian banks", named bank
+  integrations (GCB, Access, Fidelity, Zenith, Ecobank), "thousands of
+  Ghanaians", a placeholder phone number and a `2024` copyright.
+- Hero now states the actual proposition: one application, several partner
+  lender offers, monthly and annual rate shown side by side. Supporting facts
+  cover cedis pricing, competing offers and human credit review.
+- "Built for Ghana" now lists verifiable positions: GHS throughout, DPC
+  registration under Act 843, credit-intermediary status, and daily
+  cashier reconciliation.
+- Removed the remote `grainy-gradients.vercel.app` noise asset; the background is
+  CSS-only now, so the page loads nothing from a third party.
+- Accessibility: skip-to-content link, `aria-label` on navigation, decorative
+  icons marked `aria-hidden`, real `<button type="button">` controls, stronger
+  dark-surface focus rings, heading levels no longer skip from `h2` to `h4`.
+- Fixed dead navigation: the `#benefits` anchor now exists, "Learn more" scrolls
+  instead of doing nothing, and footer placeholder `#` links were replaced.
+- Added `prefers-reduced-motion` handling in `index.css`. Several components start
+  at `opacity-0` and relied on an entrance animation, so reduced motion previously
+  left real content invisible; animations are now disabled and the end state forced.
+- Verified: `npm run build` exit 0, `git diff --check` clean, no remaining claim or
+  external-asset matches. **Not browser-verified** — no browser tooling available
+  in this session.
+
+## 2026-10-30 — Workflow library review and protected decisions
+
+- Reviewed the shared workflow library: catalogued which skills apply to this
+  repository and which are missing.
+- Added a **Protected decisions** section to `AGENTS.md` so deliberate choices
+  (read-only impersonation, forward-only migrations, maker-checker retention,
+  simulation flags, fail-closed disclosure, `agency_id` filters, server-side
+  authorization) cannot be reverted as incidental cleanup.
+- Recorded that the library entry point named in `AGENTS.md` is wrong for this
+  repository (`support-training-hub` is a Laravel/Filament platform) as blocker
+  E-8; the owner deferred repointing it.
+- Recorded that the impersonation UI is **configured, not verified**: it builds
+  and type-checks but has never been opened in a browser.
+- The `library-contribution` check was run; no library files were written because
+  the owner asked for the review only.
+
+## 2026-10-30 — Blocker answers recorded
+
+- Owner answered B-1 to B-11 from `BLOCKERS.md`. Recorded in the ADRs and the
+  plan status table; no code changed.
+- **B-2 superseded ADR-0002:** launch model is now *arranger for every product*,
+  not mixed-per-product. Mixed is deferred to a future ADR rather than rejected.
+  Consequence: no per-product legal attribute, no trust/receivable accounts.
+- Other answers: 5-year KYC retention readable by staff, auditors and the
+  borrower (a lender may never open a document); daily supervisor reconciliation
+  as the control replacing dual authorisation; no hard notification cap
+  (alerting instead); round-half-up pesewa rounding; any margin combination with
+  VAT-exempt treatment pending accountant confirmation; tenure uncapped and early
+  settlement not allowed; all eligible lenders see a competitive round with a
+  48-hour timeout; click-to-accept plus terms hash is sufficient acceptance;
+  `agency_admin` or `loan_officer` as single approver; daily cashier-supervisor
+  reconciliation.
+- Ten residual questions and the four counsel artefacts remain; both are listed
+  in `BLOCKERS.md` §3.
+
+## 2026-10-30 — Blocker triage sheet
+
+- Added `BLOCKERS.md`: one place listing what is already decided (A1-A12), the
+  eleven small questions still waiting on the owner (B-1 to B-11) with a safe
+  interim behaviour for each, the four counsel artefacts (C-1 to C-4), and the
+  six engineering blockers we own (E-1 to E-6).
+- Recorded the migration rules that trip people up: next free number is `0008_`,
+  applied migrations are never renamed (the two `0002_*` files are intentional),
+  and migrations run from `frontend/` with `--config wrangler.toml`.
+- Added a closed-list of things not to do (no live money, no constraint drop, no
+  R2, no writing while impersonating, no invented legal position) and the
+  five-step procedure for closing a blocker.
+- Linked from `EXECUTION_PLAN.md`, `QUICK_START.md` and the ADR index.
+
+## 2026-10-30 — Administrator impersonation ("view as")
+
+- Added `POST /admin/impersonate`, `POST /admin/impersonate/stop` and
+  `GET /admin/users`. An administrator can start a 15-minute session as another
+  non-admin account in the same agency.
+- Impersonated sessions are **read-only**: a request guard that runs before the
+  router rejects every state-changing request except ending the session, so no
+  consent, offer, disbursement, payment or reversal can be performed while
+  impersonating.
+- Blocked privilege paths: only `agency_admin` may start a session, an
+  impersonated session may not start another, self-impersonation is rejected and
+  administrators cannot impersonate other administrators.
+- Every start and stop writes `IMPERSONATION_STARTED` / `IMPERSONATION_STOPPED`
+  to `security_audit_logs` with administrator, target, session id, IP and user
+  agent. Stopping revokes the token server-side while it is still inside its TTL.
+- Added the admin "View as user" panel and a persistent read-only banner, plus
+  `frontend/functions/admin/[[path]].ts` so the routes resolve same-origin in
+  production.
+- Recorded the boundaries as
+  [`ADR/0015-administrator-impersonation.md`](./ADR/0015-administrator-impersonation.md).
+- Verified: 9 new tests (81 total pass), frontend build exit 0, Worker typecheck
+  unchanged at its 33 pre-existing errors.
+
+## 2026-10-30 — Owner decision records
+
+- Added `ADR/` with one decision record per owner gate O-01 to O-14, plus an
+  index that defines the status vocabulary and the procedure for closing a gate.
+- Recorded the owner's answers for all fourteen gates: single-agency tenancy
+  (accepted), mixed legal model designated per product, monthly and annual rates
+  quoted side by side with the method negotiated per deal, margin from either
+  side recognised on collection, flexible product frequencies with negotiated
+  grace/penalty/settlement, per-lender disclosure agreements, regulator-driven
+  retention, hybrid lender routing, single-approver disbursement with
+  supervisor-approved cashier reversals, manual-only payment collection,
+  in-app/email/SMS notifications funded by Gidfine, the full generated document
+  set, DPC registration held and a credit/moneylending licence held.
+- Flagged that single-approver disbursement contradicts the deployed
+  `check_maker_checker_distinct` constraint, so dual control stays enforced until
+  a forward migration relaxes it.
+- Flagged that the simulated MFA accepts fixed codes and must be replaced before
+  any privileged flow goes live.
+- Added the reconciled decision status table to `IMPLEMENTATION_PLAN.md` §3.1;
+  the original §3 assessment is preserved.
+
 ## 2026-10-30 — Automated D1 migrations
 
 - Added a GitHub Actions workflow that applies pending D1 migrations on `main`

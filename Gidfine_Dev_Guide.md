@@ -1,15 +1,22 @@
 # Gidfine Loan Agency Management Platform
 
-**Product Requirements Document (PRD) & Development Guide | Draft v1.3**
+**Product Requirements Document (PRD) & Development Guide | v1.4**
 
-**Prepared for:** Gidfine / HiTrace Solutions delivery team  
-**Date:** 13 October 2026 · **Revision:** 29 October 2026 (Pages Functions baseline)
-**Status:** Working draft — business decisions in Section 15 must be approved before implementation.  
+**Prepared for:** Gidfine / HiTrace Solutions delivery team
+
+**Date:** 13 October 2026 · **Revision:** 30 October 2026 (owner decisions recorded)
+
+**Status:** Requirements baseline. The business decisions previously listed in §15 are now recorded as owner decisions in [`ADR/`](./ADR/README.md); this guide describes the requirements, and each decision points at the record that fixed it.
+
+**Implementation state:** Sprints 1-7 are implemented and every financial or third-party path runs in **simulation mode** pending the gate closures listed in [`BLOCKERS.md`](./BLOCKERS.md).
+
 **Current platform baseline:** Cloudflare Pages + Pages Functions, React + Vite, D1 and KV. The Pages Functions reuse the TypeScript router in `workers/api/src`; there is no Python runtime. R2, Queues/Cron and Durable Objects are deferred capabilities, not current production dependencies.
+
+**Companion documents:** [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md) (phases, sprints, migration roadmap, definition of done) · [`EXECUTION_PLAN.md`](./EXECUTION_PLAN.md) (authorised steps and progress) · [`BLOCKERS.md`](./BLOCKERS.md) (what is answered, what is still open) · [`ADR/README.md`](./ADR/README.md) (decision records)
 
 ## 1. Executive summary
 
-Gidfine is an intermediary between borrowers seeking loans and lenders supplying funds. Lenders state their pricing; Gidfine adds a margin and presents borrower-facing terms. Gidfine controls lender matching, permitted disclosures, lender response, final agency approval, recording of disbursement and repayments, and event notifications. Lenders and borrowers must not receive restricted identity or contact information through any channel.
+Gidfine is an intermediary between borrowers seeking loans and lenders supplying funds. Lenders state their pricing, and Gidfine applies its margin under whichever formula the deal uses — a spread, a markup on either side, a share of interest, or a combination (ADR-0004) — then presents borrower-facing terms. Gidfine controls lender matching, permitted disclosures, lender response, final agency approval, recording of disbursement and repayments, and event notifications. Lenders and borrowers must not receive restricted identity or contact information through any channel.
 
 ## 2. Objectives and boundaries
 
@@ -21,19 +28,23 @@ Gidfine is an intermediary between borrowers seeking loans and lenders supplying
 - Record disbursements and repayments with auditable history and notifications.
 - Provide dashboards, statuses, audit trails and basic reporting.
 
-**Not assumed in MVP:** direct lender-borrower messaging, automated credit scoring, payment gateway integration, automated collection/disbursement, mobile apps, guarantor handling, collections litigation, multi-currency lending, or marketplace bidding. These require explicit approval.
+**Not assumed in MVP:** direct lender-borrower messaging, automated credit scoring, payment gateway integration, automated collection/disbursement, mobile apps, guarantor handling, collections litigation or multi-currency lending. These require explicit approval.
+
+**Reconciled with the recorded decisions:** Gidfine is a single-agency operator (ADR-0001) and an arranger, not a lender of record (ADR-0002). Competitive 1-to-many lender matching **is** in scope at launch (ADR-0008) — an earlier draft excluded "marketplace bidding", which contradicted that decision and has been removed.
 
 ## 3. User roles and authority
 
 | Role | Primary actions | Restrictions |
 | --- | --- | --- |
-| Platform administrator (if SaaS) | Manages tenant subscriptions and technical operations | No routine access to borrower private data without a justified, audited support process |
-| Agency administrator | Configures lender access, margins, users, approvals, loan products and disclosures | All sensitive actions audited |
-| Agency loan officer | Reviews applications, proposes lenders, manages assigned cases | Approval and policy changes only if specifically delegated |
-| Lender | Receives assigned proposals, reviews permitted information, accepts/declines or counters | No direct borrower contacts or unapproved personal data |
-| Borrower | Registers, applies, accepts terms, monitors repayment status and receipts | Cannot view lender identities, costs or information unless agency enables it |
-| Finance / cashier | Records and reconciles disbursements and repayments | Cannot change approved loan terms without authorised workflow |
-| Auditor / compliance | Views approved audit and reconciliation evidence | Read-only, strictly scoped access |
+| Agency administrator (`agency_admin`) | Configures lender access, margins, users, approvals, loan products and disclosures; may view another account read-only through the audited impersonation flow | All sensitive actions audited; impersonated sessions cannot write (ADR-0015) |
+| Agency loan officer (`loan_officer`) | Reviews applications, proposes lenders, manages assigned cases, may approve disbursement under the single-approver model | Approval and policy changes only as delegated (ADR-0009) |
+| Underwriter (`underwriter`) | Assesses eligibility against lender product criteria | No payment, approval or policy authority |
+| Lender (`lender`) | Receives proposals, reviews permitted information, accepts/declines | No direct borrower contacts, no KYC documents, no unapproved personal data |
+| Borrower (`borrower`) | Registers, applies, accepts terms, monitors repayment status and receipts | Cannot view lender identities, costs or information unless disclosure policy enables it |
+| Finance / cashier (`cashier`) | Records and reconciles disbursements and repayments; reconciles daily | Reversals need supervisor approval; cannot change approved loan terms (ADR-0009, ADR-0010) |
+| Auditor / compliance (`auditor`) | Views approved audit and reconciliation evidence; may read KYC documents | Read-only, strictly scoped access (ADR-0007) |
+
+Role identifiers in brackets are the values in the `users.role` column and the JWT `role` claim. There is no separate "platform administrator" role: the single-agency decision (ADR-0001) removed the SaaS layer, and any future multi-agency onboarding requires a superseding ADR.
 
 ## 4. End-to-end loan lifecycle
 
@@ -59,7 +70,7 @@ Gidfine is an intermediary between borrowers seeking loans and lenders supplying
 | FR-06 | Agency margin policy, quote versioning and repayment schedule calculator | Must |
 | FR-07 | Separate lender acceptance, agency approval and borrower final consent | Must |
 | FR-08 | Field-level disclosure policies independently configured for lender and borrower views | Must |
-| FR-09 | Disbursement confirmation with reference, dates, value and maker-checker option | Must |
+| FR-09 | Disbursement confirmation with reference, dates, value; **single authorised approver plus a daily reconciliation report** (ADR-0009) | Must |
 | FR-10 | Repayment entry, allocation, receipts, reversal and reconciliation | Must |
 | FR-11 | Event notifications with templates, delivery log and retries | Must |
 | FR-12 | Immutable financial event log and access/approval audit history | Must |
@@ -92,7 +103,11 @@ Rate conversion and irregular periods must be explicitly defined. Use decimal ar
 
 - Quote shows principal, lender pricing (agency-only), agency margin (agency-only by default), borrower rate, method, instalments, total repayable, fees and schedule.
 - Offer and schedule retain a snapshot of all terms, consent version, rate bases and computation algorithm version.
-- System supports configurable due dates, grace days, weekends, early settlement, partial payments, overpayments, late charges and restructured loans only after policy decisions.
+- **Rounding (decided, ADR-0003):** round half up to the nearest pesewa, for both methods and every figure shown to a borrower or lender. Instalment schedules adjust the final instalment so the total matches exactly.
+- **Margin (decided, ADR-0004):** any combination is allowed on one deal — a share of interest and/or a markup, on the lender side and/or the borrower side, flat or percentage. Revenue is recognised when cash is collected, not at disbursement. The margin is treated as VAT-exempt pending written accountant confirmation.
+- **Early settlement (decided, ADR-0005):** not permitted before maturity. No rebate or penalty formula is implemented; the schedule runs to term.
+- **Grace and late penalties (decided, ADR-0005):** configured per product, never globally. A null grace or penalty means none, never a hidden default. The maximum penalty rate is still open (BLOCKERS R-1).
+- System supports configurable due dates, weekends, partial payments, overpayments and restructured loans only after the corresponding policy decision; none of these is live yet.
 - All financial changes use ledger entries or compensating/reversal transactions; deleting payment history is prohibited.
 
 ## 7. Confidentiality and visibility controls
@@ -113,6 +128,10 @@ Agency defines disclosure policies independently for lenders and borrowers. Both
 
 **Policy hierarchy:** legal and regulatory disclosure obligations override a configurable concealment setting. Deny by default. Agency changes to permissions require elevated approval, reason and immutable audit log. A lender must never be able to change policy themselves.
 
+**Per-lender disclosure (decided, ADR-0006):** the attributes a lender may see come from that lender's own signed agreement, not from one global mask. A lender with no configured profile sees nothing — the filter fails closed. The lender-facing proposal feed returns a masked summary only, and notification payloads and generated documents must apply the same profile.
+
+**KYC documents (decided, ADR-0007):** readable by agency staff, auditors and the borrower themselves; **never** by a lender. Retention is five years after the loan closes. Storage is not yet live — no document store is bound (BLOCKERS R-6).
+
 ## 8. Notifications and communication
 
 | Event | Recipients | Trigger |
@@ -127,7 +146,7 @@ Agency defines disclosure policies independently for lenders and borrowers. Both
 | Upcoming / missed instalment | Borrower + agency (lender if permitted) | Scheduled job with consent and policy |
 | Loan closed | Borrower + agency + permitted lender | Balance reconciled and closure approved |
 
-In-app notification is core; email and SMS are configurable channels pending budget, consent and integration decisions. Use an asynchronous outbox/queue with idempotency, retries, non-sensitive message templates, event timestamps and delivery status. Never place hidden contact or identity data in a lender notification.
+**Channels (decided, ADR-0011):** in-app is the source of truth, with **email and SMS** as notification channels funded by Gidfine. WhatsApp is out of scope. There is no hard spend cap; send volume is monitored and abnormal spend triggers an alert. Use an asynchronous outbox with idempotency, a retry ceiling, non-sensitive message templates, event timestamps and delivery status. Never place hidden contact or identity data in a lender notification. Real provider adapters are not built yet (BLOCKERS R-5), so dispatch remains simulated.
 
 ## 9. Loan state model and control rules
 
@@ -159,21 +178,30 @@ Alternate transitions include `MORE_INFO_REQUIRED`, `LENDER_DECLINED`, `AGENCY_R
 | Disbursement / payment ledger | Notifications | Notifications |
 | Visibility policy editor and audit log | Account settings | Profile and support |
 
-## 11. Conceptual data model
+## 11. Data model — shipped schema and remaining concepts
 
-Core entities: `agencies/tenants`; `users`; `agency_memberships`; `roles/permissions`; `borrower_profiles`; `lender_profiles`; `lender_products`; `applications`; `application_documents`; `lender_assignments`; `lender_proposals`; `proposal_versions`; `interest_pricing_policies`; `borrower_offers`; `consents`; `loans`; `disbursements`; `repayment_schedules`; `repayment_installments`; `payment_transactions`; `payment_allocations`; `ledger_entries`; `notification_events`; `notification_deliveries`; `disclosure_policies`; `audit_events`.
+**Conceptual entities (original design):** `agencies/tenants`; `users`; `agency_memberships`; `roles/permissions`; `borrower_profiles`; `lender_profiles`; `lender_products`; `applications`; `application_documents`; `lender_assignments`; `lender_proposals`; `proposal_versions`; `interest_pricing_policies`; `borrower_offers`; `consents`; `loans`; `disbursements`; `repayment_schedules`; `repayment_installments`; `payment_transactions`; `payment_allocations`; `ledger_entries`; `notification_events`; `notification_deliveries`; `disclosure_policies`; `audit_events`.
 
-All agency-owned records must carry `tenant_id` if implemented as SaaS. Enforce tenant scoping in queries, policies, background jobs, document storage and exports; use database constraints, indexes and tenancy isolation tests. Loan amounts, fees, rates and monetary ledger values must use appropriately sized `NUMERIC/DECIMAL` types. Associate every financial event with creator, approver (where necessary), source reference, event time and reversal linkage.
+**Shipped schema (migrations `0001`-`0007`):** `agencies`, `users`, `loan_applications`, `application_status_history`, `application_review_notes`, `application_notes`, `borrower_profiles`, `borrower_responses`, `lenders`, `lender_users`, `lender_products`, `product_eligibility_criteria`, `matching_runs`, `lender_proposals`, `proposal_versions`, `quote_snapshots`, `borrower_offers`, `borrower_consents`, `disbursement_records`, `accounts`, `journal_entries`, `journal_lines`, `loans`, `repayment_schedules`, `repayment_installments`, `cashier_payments`, `payment_reversals`, `document_records`, `outbox_events`, `mfa_configurations`, `idempotency_keys`, `audit_events`, `security_audit_logs`.
+
+**Conceptual entities not yet shipped:** `application_documents` (metadata exists as `document_records`), `lender_assignments` (proposal rows carry the assignment), separate `pricing_policies` (terms live on products and quotes), `payment_allocations` (allocation is written into journal lines), `disclosure_policies` (per-lender profiles are a BLOCKERS R-item), `notifications` (delivery is `outbox_events`), `ledger_entries`/`journal_transactions` (superseded by `journal_entries` + `journal_lines`).
+
+**Scoping:** every agency-owned record carries `agency_id`. Because the platform is single-agency (ADR-0001), there is no `tenant_id`; `agency_id` remains as defence in depth and as the migration path if a second agency is ever onboarded.
+
+**Money types:** store amounts as `INTEGER` **pesewas** and rates as `INTEGER` **basis points**. Do not use `NUMERIC`/`DECIMAL` or floating point — an earlier draft of this section said otherwise and was wrong.
+
+Associate every financial event with creator, approver (where necessary), source reference, event time and reversal linkage.
 
 ## 12. Security and compliance baselines
 
-- Authenticate all actors; enable multi-factor authentication for financial approvals and privileged accounts.
+- Authenticate all actors; enable multi-factor authentication for financial approvals and privileged accounts. **Current state:** MFA enrolment and verification exist but the verifier still accepts fixed test codes (`123456`, `654321`). That is a defect to fix before any privileged flow goes live (EXECUTION_PLAN S-06); do not enable MFA-dependent controls on top of it.
 - Enforce least privilege, field redaction and agency-controlled information disclosure on backend APIs.
-- Encrypt transport and sensitive information at rest; secure backups; use short-lived credentials and secret management.
+- Encrypt transport and sensitive information at rest; secure backups; use short-lived credentials and secret management. National ID values are stored AES-256-GCM encrypted with ciphertext, IV, tag and version; no plaintext column exists.
 - Maintain immutable or append-only audit evidence for rate changes, approvals, access policies and payment postings.
-- Test object ID enumeration, tenant escape, cross-role leakage, export leakage and unauthorised bulk lookups.
-- Apply incident response, retention, consent, data minimisation and subject-rights processes consistent with Ghana’s Data Protection Act, 2012 (Act 843).
-- Before launch, obtain Ghana-qualified advice on licensing, lending/credit intermediation, required borrower disclosures, pricing transparency, collections and the permitted role of the agency.
+- Test object ID enumeration, cross-role leakage, export leakage and unauthorised bulk lookups. Tenant-escape testing is not applicable while single-agency (ADR-0001); cross-role leakage is covered by the disclosure tests.
+- Apply incident response, retention, consent, data minimisation and subject-rights processes consistent with Ghana's Data Protection Act, 2012 (Act 843). Registration with the Data Protection Commission is held; the approved privacy notice text and consent wording are still outstanding (BLOCKERS C-2).
+- Before launch, confirm in writing that each operating model sits inside the licence Gidfine holds, and record any interest or disclosure ceilings it imposes (ADR-0014, BLOCKERS C-3).
+- Administrator impersonation is a read-only, audited, 15-minute session and never a path to write financial data (ADR-0015).
 
 ## 13. Technical architecture — current baseline and target
 
@@ -185,13 +213,17 @@ R2 is intentionally not required by the current routes. It becomes a delivery de
 
 The target product still requires server-enforced roles, field-level disclosure, versioned pricing, guarded state transitions, append-only financial history, idempotent financial writes, audit evidence and automated security tests. The implementation order is defined in [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md).
 
+**Simulation gating.** Origination, matching, pricing, consent, disbursement, servicing and document metadata are implemented, but the financial and third-party edges are simulated and labelled as such: quotes carry `is_simulation = 1` and `status = 'PROVISIONAL'`, disbursements write `simulation_mode = 1`, payments accept only a manual cashier entry path, and outbox dispatch does not call any provider. A simulation flag may only be removed as part of closing the matching decision record — see [`BLOCKERS.md`](./BLOCKERS.md) and the per-record "Evidence in the codebase" sections in [`ADR/`](./ADR/README.md).
+
 A shared-database multi-tenant model is appropriate only if Gidfine is intended to serve multiple independent agency businesses; if Gidfine alone is the agency, an agency-scoped single-tenant implementation may be simpler. Confirm commercial tenancy before schema design.
 
 ## 14. MVP delivery plan and acceptance tests
 
+Phase numbering here is product-facing; [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md) §4 and §6 hold the binding phase and sprint breakdown, and [`EXECUTION_PLAN.md`](./EXECUTION_PLAN.md) holds what is authorised to be built next. Where the two disagree, the implementation plan wins.
+
 | Phase | Key output | Acceptance evidence |
 | --- | --- | --- |
-| 0. Discovery | Approved policies, calculator examples, tenancy and legal decisions | Stakeholder sign-off |
+| 0. Discovery | Approved policies, calculator examples, tenancy and legal decisions | Recorded in `ADR/` — done 2026-10-30, four counsel artefacts still outstanding |
 | 1. Foundation | Accounts, roles, privacy rules, audit, tests | Unauthorised users denied API/exports |
 | 2. Origination | Application submission and agency review | Borrower submits; agency sees queue |
 | 3. Matching/pricing | Lender offer, margin, quote/versioning | Correct schedule and masked proposal |
@@ -199,30 +231,90 @@ A shared-database multi-tenant model is appropriate only if Gidfine is intended 
 | 5. Servicing | Ledger, payments, notifications and dashboards | Partial/late/reversed payments reconcile |
 | 6. Hardening | Threat tests, UAT, training, backup/restore | Signed UAT and production checklist |
 
-Representative acceptance criteria: (1) a lender cannot retrieve borrower phone number even by direct API request or export; (2) loan remains unapproved after lender acceptance; (3) the agency’s approved final terms match the borrower’s consent; (4) all instalments sum exactly to approved total under rounding policy; (5) duplicate payment webhook cannot create duplicate credit; (6) an edited payment produces a reversal and new auditable entry; (7) an agency cannot access a different tenant’s loans; (8) notification recipient data respects current and event-specific disclosure rules.
+Representative acceptance criteria: (1) a lender cannot retrieve borrower phone number even by direct API request or export; (2) loan remains unapproved after lender acceptance; (3) the agency's approved final terms match the borrower's consent; (4) all instalments sum exactly to approved total under rounding policy; (5) duplicate payment submission cannot create duplicate credit; (6) an edited payment produces a reversal and new auditable entry; (7) an impersonated administrator cannot perform any state-changing request; (8) notification recipient data respects current and event-specific disclosure rules.
 
-## 15. Decisions required from Gidfine before build
+Criterion 7 replaces the former "an agency cannot access a different tenant's loans" test, which does not apply under the single-agency decision (ADR-0001). Cross-role leakage replaces cross-tenant leakage as the isolation test that matters.
 
-1. Is this application for Gidfine as one agency, or a SaaS used by multiple independent loan agencies?
-2. Does Gidfine legally arrange loans only, or disburse/collect funds itself? Who is the contractual creditor and payee?
-3. Are lender rates monthly or annual; flat, reducing-balance, effective annual or other?
-4. Is the agency margin a percentage-point spread, fee, share of interest or a combination? Who receives which cashflows?
-5. Are terms offered as exact instalment amounts, or can they vary with actual disbursement date and payment timing?
-6. What durations, payment frequencies, grace rules, penalties and early repayment terms are allowed?
-7. What borrower identity/credit information must lenders legally receive despite privacy preferences?
-8. Must Gidfine collect, verify or store KYC documents? Who can access them?
-9. Will lenders accept/decline only or also counteroffer; may Gidfine send one application to several lenders?
-10. Who can approve a loan, change a rate, record a repayment and reverse a payment? Is dual authorisation required?
-11. Will payments be manually recorded in MVP or integrated with mobile money, bank transfer or payment processor?
-12. Which events use in-app, email, SMS or WhatsApp? Who pays notification costs?
-13. What documents must be generated: disclosure, loan contract, amortisation schedule, receipt or statement?
-14. What regulatory review and licensing approvals are needed for the intended Ghanaian operating model?
+## 15. Decisions register (closed 2026-10-30)
+
+The fourteen questions this section previously listed are answered. Each answer
+is recorded with its consequences in the referenced ADR; the residual items that
+remain open are tracked in [`BLOCKERS.md`](./BLOCKERS.md) §3.
+
+| # | Question | Gate | Answer | Record | Status |
+| --- | --- | --- | --- | --- | --- |
+| 1 | One agency or multi-agency SaaS? | O-01 | **Single agency.** Gidfine operates for itself. | [0001](./ADR/0001-tenancy-model.md) | Accepted |
+| 2 | Arrange only, or disburse/collect? Who is creditor and payee? | O-02 | **Arranger for every product at launch.** Contract is lender ↔ borrower; the lender is payee. | [0002](./ADR/0002-legal-operating-model.md) | Provisional (C-4) |
+| 3 | Rates monthly or annual; flat, reducing or effective? | O-03 | **Both bases quoted side by side**; method chosen per deal; **round half up** to the pesewa. | [0003](./ADR/0003-interest-calculation-method.md) | Provisional (R-9) |
+| 4 | Agency margin: spread, fee, interest share or combination? | O-04 | **Any combination**, on either side, flat or percentage; **recognised when cash is collected**; VAT-exempt. | [0004](./ADR/0004-agency-margin-and-revenue.md) | Provisional (R-8) |
+| 5 | Exact instalments, or can they vary with funding and payment timing? | O-03/O-05 | Instalment amounts are **frozen in the quote and consent snapshot**; the schedule activates on the **confirmed funding value date**. | [0003](./ADR/0003-interest-calculation-method.md) | Provisional |
+| 6 | Durations, frequencies, grace, penalties, early repayment? | O-05 | **Frequencies flexible; tenure uncapped; grace and penalties per product; early settlement not allowed.** | [0005](./ADR/0005-loan-product-parameters.md) | Provisional (R-1) |
+| 7 | What borrower information must lenders lawfully receive? | O-06 | **Per-lender signed disclosure agreements**; no profile means no data. | [0006](./ADR/0006-lender-kyc-disclosures.md) | Provisional (C-1) |
+| 8 | Must Gidfine collect and store KYC documents? Who may access them? | O-07 | **Five-year retention**; readable by agency staff, auditors and the borrower; **never a lender**. | [0007](./ADR/0007-document-retention-policy.md) | Provisional (R-6) |
+| 9 | Accept/decline only or counter? One application to several lenders? | O-08 | **Hybrid**: competitive 1-to-many to all eligible lenders, 48-hour round, then sequential fallback. | [0008](./ADR/0008-lender-matching-workflow.md) | Provisional (R-2) |
+| 10 | Who approves, changes a rate, records and reverses a payment? Dual authorisation? | O-09 | **Single approver** (`agency_admin` or `loan_officer`); cashier reversals need supervisor approval; **daily disbursement reconciliation is the compensating control**. | [0009](./ADR/0009-maker-checker-and-approvals.md) | Provisional (R-10 + migration) |
+| 11 | Manual payment recording or provider integration? | O-10 | **Manual cashier entry only** at launch; daily supervisor reconciliation. | [0010](./ADR/0010-payment-collection-scope.md) | Provisional (R-7) |
+| 12 | Which notification channels, and who pays? | O-11 | **In-app + email + SMS**, funded by Gidfine, **no hard cap (alerting instead)**; WhatsApp out. | [0011](./ADR/0011-notification-channels-and-budget.md) | Provisional (R-4, R-5) |
+| 13 | Which documents must be generated? | O-12 | **Full set**: offer, credit agreement, schedule, receipts, statements; **click-to-accept plus terms hash is sufficient acceptance**. | [0012](./ADR/0012-generated-financial-documents.md) | Provisional (R-3) |
+| 14 | What regulatory and licensing approvals are needed? | O-13, O-14 | **Data Protection Commission registration held**; **credit intermediation / moneylending licence held**. | [0013](./ADR/0013-data-protection-act-843.md), [0014](./ADR/0014-lending-regulatory-licensing.md) | Provisional (C-2, C-3) |
+
+A "Provisional" record means the direction is decided and may be built to, but a
+named artefact is still missing before it can be treated as final. Nothing in
+this table authorises live money movement or live borrower PII at scale.
 
 ## 16. Change control
 
-All assumptions in this v1.3 guide remain proposed until approved. Product decisions must be recorded with owner/date. Maintain change log, feature backlog, architectural decision records (ADRs), API contracts and sample financial computation fixtures. Do not implement a new subsystem to bypass defects in the existing application; investigate and fix the underlying issue.
+Product decisions are recorded as immutable decision records under [`ADR/`](./ADR/README.md), each with status, owner, date and rationale. A decision is never edited once accepted — it is superseded by a new record. The change process is:
+
+1. Write the decision into its ADR (`Decision`, `Rationale`, `Decided by`, date) and set the status.
+2. Update the index in [`ADR/README.md`](./ADR/README.md) and the status table in [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md) §3.1.
+3. Update §15 of this guide so the requirement and the record stay aligned.
+4. Remove the corresponding simulation flags only once the record is Accepted.
+5. Record each delivered step in `CHANGELOG.md` and the `AGENTS.md` work log.
+
+Maintain the change log, feature backlog, API contracts and sample financial computation fixtures. Decisions that must not be reverted as incidental cleanup are listed under "Protected decisions" in [`AGENTS.md`](./AGENTS.md). Do not implement a new subsystem to bypass defects in the existing application; investigate and fix the underlying issue.
+
+Where this guide and the implementation disagree, the code plus the ADR wins, and this guide is corrected in the same change.
 
 ---
+
+## 17. Traceability — implementation plan to this guide
+
+Every plan phase maps to a requirement section here and a decision record. If a
+row's evidence is missing, the plan item is not done, whatever the sprint table
+says.
+
+| Plan item | Guide coverage | Decision record | Code | Test evidence |
+| --- | --- | --- | --- | --- |
+| Sprint 1 — identity, roles, audit | §3, §5 FR-01, FR-12, §12 | [0001](./ADR/0001-tenancy-model.md) | `workers/api/src/routes/auth.ts`, `lib/auth.ts`, `lib/encryption.ts`, `lib/audit.ts` | `tests/auth.test.ts`, `tests/releaseCandidate.test.ts` |
+| Sprint 2 — origination and agency review | §4, §5 FR-02/FR-03, §9 | [0002](./ADR/0002-legal-operating-model.md) | `routes/applications.ts`, `routes/profile.ts`, `domain/stateMachine.ts`, migrations `0002`, `0003` | `tests/reviewWorkflow.test.ts`, `tests/stateMachine.test.ts`, `tests/integration.test.ts` |
+| Sprint 3 — lenders, matching, pricing | §5 FR-04/FR-05/FR-06, §6 | [0003](./ADR/0003-interest-calculation-method.md), [0004](./ADR/0004-agency-margin-and-revenue.md), [0005](./ADR/0005-loan-product-parameters.md), [0006](./ADR/0006-lender-kyc-disclosures.md), [0008](./ADR/0008-lender-matching-workflow.md) | `domain/pricingEngine.ts`, `domain/matchingEngine.ts`, `routes/lenders.ts`, migration `0004` | `tests/sprints3to7.test.ts`, `tests/money.test.ts` |
+| Sprint 4 — consent, approval, disbursement | §5 FR-07/FR-09, §9 | [0002](./ADR/0002-legal-operating-model.md), [0009](./ADR/0009-maker-checker-and-approvals.md) | `domain/consentWorkflow.ts`, `domain/makerCheckerDisbursement.ts`, `routes/offersAndDisbursements.ts`, migration `0005` | `tests/sprints3to7.test.ts` |
+| Sprint 5 — servicing and double-entry ledger | §5 FR-10/FR-12, §6 | [0004](./ADR/0004-agency-margin-and-revenue.md), [0010](./ADR/0010-payment-collection-scope.md) | `domain/financialLedger.ts`, `routes/servicing.ts`, migration `0006` | `tests/sprints3to7.test.ts`, `tests/idempotency.test.ts` |
+| Sprint 6 — documents and notifications | §5 FR-11, §8 | [0007](./ADR/0007-document-retention-policy.md), [0011](./ADR/0011-notification-channels-and-budget.md), [0012](./ADR/0012-generated-financial-documents.md) | `domain/documentsAndOutbox.ts`, `routes/documentsAndOutbox.ts`, migration `0007` | `tests/sprints3to7.test.ts` |
+| Sprint 7 — hardening and governance | §12 | [0009](./ADR/0009-maker-checker-and-approvals.md), [0013](./ADR/0013-data-protection-act-843.md), [0015](./ADR/0015-administrator-impersonation.md) | `domain/hardeningMfa.ts`, `routes/hardening.ts`, `routes/impersonation.ts`, `lib/impersonationGuard.ts` | `tests/impersonation.test.ts`, `tests/sprints3to7.test.ts` |
+| Plan §8 — Convex retirement | §13 conventions | — | not started (BLOCKERS E-4) | — |
+| Plan §9 #5 — suite passes in CI | §12 | — | `.github/workflows/db-migrate.yml` only (E-6) | none |
+
+### Requirements with no implementation yet
+
+| Requirement | Source | Why it is not built | Owner of the fix |
+| --- | --- | --- | --- |
+| Real MFA (currently fixed codes `123456`/`654321`) | §5 FR-01, §12 | Security defect, not a gate | Engineering, S-06 |
+| Attachment handling on applications | §5 FR-02 | No document store bound | BLOCKERS R-6 |
+| Real email/SMS delivery and retry telemetry | §5 FR-11, §8 | Providers and budget owner not chosen | BLOCKERS R-4, R-5 |
+| PDF generation: offer, agreement, schedule, receipts, statements | §5, §13 | Templates and numbering scheme not approved | BLOCKERS R-3 |
+| Server-side export with redaction, aging report | §5 FR-13 | Not started | Engineering, unscheduled |
+| Scheduled reminders and overdue sweep | §8, §13.1 B.12 | Cron/Queues deferred; no consumer exists | BLOCKERS R-5 |
+| Visibility-policy editor screen | §7, §10 | Per-lender profiles are data, not a screen | BLOCKERS C-1 |
+| Penetration audit and signed UAT | §14 phase 6 | Not performed | Owner, pre-launch |
+| Cross-agency isolation tests | §11 (former wording) | Not applicable while single-agency | Superseded by ADR-0001 |
+
+### Guide requirements deliberately out of scope
+
+Direct lender-borrower messaging, automated credit scoring, guarantee handling,
+collections litigation, multi-currency lending, mobile apps, provider payment
+integration and WhatsApp remain excluded by §2 and are not scheduled in the plan.
 
 ### Technology Stack — Cloudflare (React + Vite + Pages Functions)
 
@@ -391,7 +483,8 @@ Before introducing any new schema, route, component or subsystem, the developmen
 - Preserve existing functionality unless a change has been explicitly approved.
 - Document important architectural decisions and business-rule changes.
 - The retired Python implementation and its historical migration notes are removed from the active repository. Do not reintroduce a second backend runtime; extend the shared TypeScript router and Pages Functions boundary.
+- The Convex prototype (`frontend/convex/*`, `frontend/src/services/loanService.ts`) is retired per [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md) §8. Removing it is EXECUTION_PLAN S-03; it must not be extended in the meantime, and no new feature may read from it.
 
 **Critical Requirement:** the Cloudflare Worker is the authoritative backend for all Gidfine business operations. Financial calculations, approval workflows, access-control decisions and audit records must be validated and enforced server-side. React must never be the source of truth for financial or security-critical business logic.
 
-*Internal working specification • Version 1.3 • 29 October 2026*
+*Internal working specification • Version 1.4 • 30 October 2026*

@@ -121,6 +121,20 @@ export interface AccessTokenClaims {
   role: UserRole;
   iat: number;
   exp: number;
+  /** Administrator id when this token is an impersonation session (`act` = actor). */
+  act?: string;
+  /** Impersonation session id, always paired with `act`. */
+  imp?: string;
+}
+
+/** Verified principal for a request, including impersonation context when present. */
+export interface ActorContext {
+  userId: string;
+  agencyId: string;
+  role: UserRole;
+  /** Administrator who started the impersonation session. */
+  impersonatedBy?: string;
+  impersonationId?: string;
 }
 
 function signingKey(secret: string): Uint8Array {
@@ -168,21 +182,30 @@ async function signHmac(input: string, secret: string): Promise<Uint8Array> {
 }
 
 export async function signAccessToken(
-  claims: { userId: string; agencyId: string; role: UserRole },
+  claims: {
+    userId: string;
+    agencyId: string;
+    role: UserRole;
+    impersonatedBy?: string;
+    impersonationId?: string;
+  },
   secret: string,
   ttlSeconds: number,
 ): Promise<string> {
   const issuedAt = Math.floor(Date.now() / 1000);
   const header = base64UrlEncode(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
-  const payload = base64UrlEncode(
-    JSON.stringify({
-      sub: claims.userId,
-      agencyId: claims.agencyId,
-      role: claims.role,
-      iat: issuedAt,
-      exp: issuedAt + ttlSeconds,
-    }),
-  );
+  const payloadClaims: Record<string, unknown> = {
+    sub: claims.userId,
+    agencyId: claims.agencyId,
+    role: claims.role,
+    iat: issuedAt,
+    exp: issuedAt + ttlSeconds,
+  };
+  if (claims.impersonatedBy && claims.impersonationId) {
+    payloadClaims.act = claims.impersonatedBy;
+    payloadClaims.imp = claims.impersonationId;
+  }
+  const payload = base64UrlEncode(JSON.stringify(payloadClaims));
   const signingInput = `${header}.${payload}`;
   return `${signingInput}.${base64UrlEncode(await signHmac(signingInput, secret))}`;
 }
@@ -221,6 +244,18 @@ export async function verifyAccessToken(token: string, secret: string): Promise<
       throw new Error('Token is missing required claims or has expired');
     }
 
+    const hasActor = payload.act !== undefined;
+    const hasSession = payload.imp !== undefined;
+    if (hasActor !== hasSession) {
+      throw new Error('Impersonation claims must appear together');
+    }
+    if (hasActor && (typeof payload.act !== 'string' || typeof payload.imp !== 'string')) {
+      throw new Error('Malformed impersonation claims');
+    }
+    if (hasActor && (!payload.act || !payload.imp)) {
+      throw new Error('Empty impersonation claims');
+    }
+
     return payload as AccessTokenClaims;
   } catch (error) {
     if (error instanceof Error && error.name === 'HttpError') throw error;
@@ -232,7 +267,7 @@ export async function verifyAccessToken(token: string, secret: string): Promise<
 export async function requireActor(
   reqOrCtx: Request | { request: Request; env: AppEnv },
   secret?: string,
-): Promise<{ userId: string; agencyId: string; role: UserRole }> {
+): Promise<ActorContext> {
   const request = 'request' in reqOrCtx ? reqOrCtx.request : reqOrCtx;
   const signingKey = secret ?? ('env' in reqOrCtx ? reqOrCtx.env.JWT_SIGNING_KEY : '');
   const header = request.headers.get('authorization') ?? '';
@@ -246,16 +281,40 @@ export async function requireActor(
     throw unauthorized('Token carries an unknown role');
   }
 
-  return { userId: claims.sub, agencyId: claims.agencyId, role: claims.role };
+  const actor: ActorContext = {
+    userId: claims.sub,
+    agencyId: claims.agencyId,
+    role: claims.role,
+  };
+  if (claims.imp && claims.act) {
+    actor.impersonationId = claims.imp;
+    actor.impersonatedBy = claims.act;
+  }
+  return actor;
 }
 
 export async function requireRole(
   ctx: { request: Request; env: AppEnv },
   ...allowedRoles: UserRole[]
-): Promise<{ userId: string; agencyId: string; role: UserRole }> {
+): Promise<ActorContext> {
   const actor = await requireActor(ctx);
   if (!allowedRoles.includes(actor.role)) {
     throw forbidden(`Forbidden: required role in [${allowedRoles.join(', ')}]`);
   }
   return actor;
+}
+
+/** True when an administrator is viewing the platform as another user. */
+export function isImpersonating(actor: ActorContext): boolean {
+  return actor.impersonationId !== undefined;
+}
+
+/**
+ * Blocks actions an impersonated session must never perform, even when the
+ * impersonated user's own role would normally allow them.
+ */
+export function requireNotImpersonating(actor: ActorContext, action: string): void {
+  if (isImpersonating(actor)) {
+    throw forbidden(`Impersonated sessions are read-only; exit impersonation to ${action}`);
+  }
 }

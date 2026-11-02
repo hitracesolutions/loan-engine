@@ -14,19 +14,26 @@ export function isPositiveInteger(value: unknown): value is number {
   return typeof value === 'number' && Number.isSafeInteger(value) && value > 0;
 }
 
-export function assertPositivePesewas(value: unknown, field: string): number {
-  if (!isPositiveInteger(value)) {
+export function assertPositivePesewas(value: unknown, field: string, max?: number): number {
+  if (!isPositiveInteger(value) || (max !== undefined && value > max)) {
     throw badRequest(
       'INVALID_AMOUNT',
-      `${field} must be a positive integer amount in pesewas`,
+      max !== undefined
+        ? `${field} must be a positive integer amount in pesewas not exceeding ${max}`
+        : `${field} must be a positive integer amount in pesewas`,
     );
   }
   return value;
 }
 
-export function assertPositiveInteger(value: unknown, field: string, max: number): number {
-  if (!isPositiveInteger(value) || value > max) {
-    throw badRequest('INVALID_INTEGER', `${field} must be an integer between 1 and ${max}`);
+export function assertPositiveInteger(value: unknown, field: string, max?: number): number {
+  if (!isPositiveInteger(value) || (max !== undefined && value > max)) {
+    throw badRequest(
+      'INVALID_INTEGER',
+      max !== undefined
+        ? `${field} must be an integer between 1 and ${max}`
+        : `${field} must be a positive integer`,
+    );
   }
   return value;
 }

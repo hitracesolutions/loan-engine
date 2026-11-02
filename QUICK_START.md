@@ -76,6 +76,9 @@ Production Pages bindings and secrets are documented in
 | GET | `/auth/me` | Read the authenticated user |
 | POST | `/applications` | Create an application |
 | GET | `/applications` | List the authenticated borrower’s applications |
+| POST | `/admin/impersonate` | Admin: start a read-only session as another user |
+| POST | `/admin/impersonate/stop` | Admin: end the current impersonation session |
+| GET | `/admin/users` | Admin: accounts available for impersonation |
 
 The `/borrower/applications` aliases remain for compatibility with the current
 frontend while the API client is consolidated.
@@ -95,6 +98,8 @@ npm.cmd run build
 
 - Product requirements and current stack: [`Gidfine_Dev_Guide.md`](./Gidfine_Dev_Guide.md)
 - Owner decisions and delivery phases: [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md)
+- Owner decision records (ADR-0001 to ADR-0015): [`ADR/README.md`](./ADR/README.md)
+- Blockers and answers (read before starting work): [`BLOCKERS.md`](./BLOCKERS.md)
 - Pages deployment and bindings: [`PAGES_DEPLOYMENT.md`](./PAGES_DEPLOYMENT.md)
 - Pages Functions migration notes: [`PAGES_FUNCTIONS_MIGRATION.md`](./PAGES_FUNCTIONS_MIGRATION.md)
 - Change history: [`CHANGELOG.md`](./CHANGELOG.md)
