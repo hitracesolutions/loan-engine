@@ -8,7 +8,7 @@ is not in force.
 (S-00 to S-24) on 2026-10-30 — see [`EXECUTION_PLAN.md`](./EXECUTION_PLAN.md).
 The four counsel artefacts, the accountant confirmation and the "safety floor"
 listed there are the only remaining external gates.
-**Sources of truth:** [`ADR/`](./ADR/README.md) (decisions),
+**Sources of truth:** [`ADR/`](./ADR/DECISIONS.md) (decisions),
 [`EXECUTION_PLAN.md`](./EXECUTION_PLAN.md) (authorised steps),
 [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md) §3.1 (gate status).
 
@@ -29,18 +29,18 @@ Do not re-litigate these, and do not add a feature flag "just in case".
 
 | # | Decision | ADR |
 | --- | --- | --- |
-| A1 | **Single agency.** Gidfine operates for itself. Keep `agency_id` filters as defence in depth. | [0001](./ADR/0001-tenancy-model.md) |
-| A2 | **Monthly and annual rates quoted side by side**; method chosen per deal. | [0003](./ADR/0003-interest-calculation-method.md) |
-| A3 | **Margin may be a share of interest or a markup on either side**, flat or percentage. *Refined by B-6: any combination is allowed.* | [0004](./ADR/0004-agency-margin-and-revenue.md) |
-| A4 | **Revenue is recognised when cash is collected** — never at disbursement, never accrued. | [0004](./ADR/0004-agency-margin-and-revenue.md) |
-| A5 | **Hybrid matching:** competitive 1-to-many, then sequential fallback. *Refined by B-8.* | [0008](./ADR/0008-lender-matching-workflow.md) |
-| A6 | **Manual cashier payments only at launch.** No provider webhooks; `SIMULATED_MOMO`/`SIMULATED_BANK` are test-only. | [0010](./ADR/0010-payment-collection-scope.md) |
-| A7 | **Negotiated terms must be typed, constrained fields** — never free text. A null grace or penalty means *none*, never a hidden default. | [0005](./ADR/0005-loan-product-parameters.md) |
-| A8 | **In-app + email + SMS notifications**, funded by Gidfine. WhatsApp is out. | [0011](./ADR/0011-notification-channels-and-budget.md) |
-| A9 | **Full document set at launch**: offer, agreement, schedule, receipts, statements — rendered from the stored immutable snapshots. | [0012](./ADR/0012-generated-financial-documents.md) |
-| A10 | **Per-lender disclosure profiles, fail closed.** A lender with no profile sees nothing. | [0006](./ADR/0006-lender-kyc-disclosures.md) |
-| A11 | **Impersonation is read-only, 15 minutes, audited, revocable.** Never add routes to the allowlist. | [0015](./ADR/0015-administrator-impersonation.md) |
-| A12 | **DPC registration held; credit/moneylending licence held.** | [0013](./ADR/0013-data-protection-act-843.md), [0014](./ADR/0014-lending-regulatory-licensing.md) |
+| A1 | **Single agency.** Gidfine operates for itself. Keep `agency_id` filters as defence in depth. | [0001](./ADR/DECISIONS.md#adr-0001) |
+| A2 | **Monthly and annual rates quoted side by side**; method chosen per deal. | [0003](./ADR/DECISIONS.md#adr-0003) |
+| A3 | **Margin may be a share of interest or a markup on either side**, flat or percentage. *Refined by B-6: any combination is allowed.* | [0004](./ADR/DECISIONS.md#adr-0004) |
+| A4 | **Revenue is recognised when cash is collected** — never at disbursement, never accrued. | [0004](./ADR/DECISIONS.md#adr-0004) |
+| A5 | **Hybrid matching:** competitive 1-to-many, then sequential fallback. *Refined by B-8.* | [0008](./ADR/DECISIONS.md#adr-0008) |
+| A6 | **Manual cashier payments only at launch.** No provider webhooks; `SIMULATED_MOMO`/`SIMULATED_BANK` are test-only. | [0010](./ADR/DECISIONS.md#adr-0010) |
+| A7 | **Negotiated terms must be typed, constrained fields** — never free text. A null grace or penalty means *none*, never a hidden default. | [0005](./ADR/DECISIONS.md#adr-0005) |
+| A8 | **In-app + email + SMS notifications**, funded by Gidfine. WhatsApp is out. | [0011](./ADR/DECISIONS.md#adr-0011) |
+| A9 | **Full document set at launch**: offer, agreement, schedule, receipts, statements — rendered from the stored immutable snapshots. | [0012](./ADR/DECISIONS.md#adr-0012) |
+| A10 | **Per-lender disclosure profiles, fail closed.** A lender with no profile sees nothing. | [0006](./ADR/DECISIONS.md#adr-0006) |
+| A11 | **Impersonation is read-only, 15 minutes, audited, revocable.** Never add routes to the allowlist. | [0015](./ADR/DECISIONS.md#adr-0015) |
+| A12 | **DPC registration held; credit/moneylending licence held.** | [0013](./ADR/DECISIONS.md#adr-0013), [0014](./ADR/DECISIONS.md#adr-0014) |
 
 ---
 
@@ -77,25 +77,25 @@ Two consequences worth stating plainly:
 
 | # | Question | Affects |
 | --- | --- | --- |
-| R-1 | Maximum late-penalty rate, and minimum/maximum loan amount | [0005](./ADR/0005-loan-product-parameters.md) |
-| R-2 | May lenders counter-offer, and who approves a counter? | [0008](./ADR/0008-lender-matching-workflow.md) |
-| R-3 | Document numbering scheme (auditable, gap-free) | [0012](./ADR/0012-generated-financial-documents.md) |
-| R-4 | Alerting threshold and route for notification spend, plus the retry ceiling | [0011](./ADR/0011-notification-channels-and-budget.md) |
-| R-5 | Email/SMS provider selection, who holds the accounts, SMS consent/opt-out, message templates | [0011](./ADR/0011-notification-channels-and-budget.md) |
-| R-6 | Encryption/key custody for stored documents, and the deletion/anonymisation procedure at 5 years | [0007](./ADR/0007-document-retention-policy.md) |
-| R-7 | Escalation path when the daily cashier total does not match the ledger | [0010](./ADR/0010-payment-collection-scope.md) |
-| R-8 | Written accountant confirmation that the agency margin is VAT-exempt | [0004](./ADR/0004-agency-margin-and-revenue.md) |
-| R-9 | Which methods each product may use, plus worked fixtures at round-half-up | [0003](./ADR/0003-interest-calculation-method.md) |
-| R-10 | Remaining permission-matrix cells: rate override, who records vs reverses a payment | [0009](./ADR/0009-maker-checker-and-approvals.md) |
+| R-1 | Maximum late-penalty rate, and minimum/maximum loan amount | [0005](./ADR/DECISIONS.md#adr-0005) |
+| R-2 | May lenders counter-offer, and who approves a counter? | [0008](./ADR/DECISIONS.md#adr-0008) |
+| R-3 | Document numbering scheme (auditable, gap-free) | [0012](./ADR/DECISIONS.md#adr-0012) |
+| R-4 | Alerting threshold and route for notification spend, plus the retry ceiling | [0011](./ADR/DECISIONS.md#adr-0011) |
+| R-5 | Email/SMS provider selection, who holds the accounts, SMS consent/opt-out, message templates | [0011](./ADR/DECISIONS.md#adr-0011) |
+| R-6 | Encryption/key custody for stored documents, and the deletion/anonymisation procedure at 5 years | [0007](./ADR/DECISIONS.md#adr-0007) |
+| R-7 | Escalation path when the daily cashier total does not match the ledger | [0010](./ADR/DECISIONS.md#adr-0010) |
+| R-8 | Written accountant confirmation that the agency margin is VAT-exempt | [0004](./ADR/DECISIONS.md#adr-0004) |
+| R-9 | Which methods each product may use, plus worked fixtures at round-half-up | [0003](./ADR/DECISIONS.md#adr-0003) |
+| R-10 | Remaining permission-matrix cells: rate override, who records vs reverses a payment | [0009](./ADR/DECISIONS.md#adr-0009) |
 
 ### 3.2 Counsel artefacts
 
 | # | Artefact | Blocks |
 | --- | --- | --- |
-| C-1 | **Signed disclosure matrix per lender** — attribute list and legal basis | Enforcing per-lender profiles in production ([0006](./ADR/0006-lender-kyc-disclosures.md)) |
-| C-2 | **Privacy notice text (versioned) and consent wording**, processing register, data-subject request procedure | Live borrower PII at commercial scale ([0013](./ADR/0013-data-protection-act-843.md)) |
-| C-3 | **Licence reference, class, dates**, and confirmation each model sits inside the licensed scope, plus any interest/fee ceilings | Live disbursement ([0014](./ADR/0014-lending-regulatory-licensing.md)) |
-| C-4 | **Signed legal operating-model annex** confirming the arranger model and the lender as payee | Contract generation ([0002](./ADR/0002-legal-operating-model.md)) |
+| C-1 | **Signed disclosure matrix per lender** — attribute list and legal basis | Enforcing per-lender profiles in production ([0006](./ADR/DECISIONS.md#adr-0006)) |
+| C-2 | **Privacy notice text (versioned) and consent wording**, processing register, data-subject request procedure | Live borrower PII at commercial scale ([0013](./ADR/DECISIONS.md#adr-0013)) |
+| C-3 | **Licence reference, class, dates**, and confirmation each model sits inside the licensed scope, plus any interest/fee ceilings | Live disbursement ([0014](./ADR/DECISIONS.md#adr-0014)) |
+| C-4 | **Signed legal operating-model annex** confirming the arranger model and the lender as payee | Contract generation ([0002](./ADR/DECISIONS.md#adr-0002)) |
 
 A developer must not draft these. Where wording is needed mid-build, use neutral
 placeholder copy marked as such, and never present it as approved.
@@ -156,7 +156,7 @@ placeholder copy marked as such, and never present it as approved.
 1. The answer is written into the relevant ADR (`Decision`, `Rationale`, `Decided
    by`, `Accepted` date).
 2. ADR status changes to **Accepted**, and the index in
-   [`ADR/README.md`](./ADR/README.md) matches.
+   [`ADR/DECISIONS.md`](./ADR/DECISIONS.md) matches.
 3. [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md) §3.1 row updated.
 4. If it was a *Blocked* step, it moves to *Authorised* in
    [`EXECUTION_PLAN.md`](./EXECUTION_PLAN.md).

@@ -9,7 +9,7 @@
 - **Scope:** finish every remaining item in this plan. Nothing here needs a
   further engineering decision from the owner; the only things still required
   from the owner or counsel are listed under *Externally gated*.
-- **Companion records:** [`ADR/`](./ADR/README.md) (decisions),
+- **Companion records:** [`ADR/`](./ADR/DECISIONS.md) (decisions),
   [`BLOCKERS.md`](./BLOCKERS.md) (triage), [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md)
   (phases and gates), [`Gidfine_Dev_Guide.md`](./Gidfine_Dev_Guide.md) §17
   (requirement traceability).
@@ -155,7 +155,7 @@ Smaller owner answers still open are listed in [`BLOCKERS.md`](./BLOCKERS.md) §
 - [ ] S-23 security review signed, nothing critical open
 - [ ] S-22 backup/restore drill recorded
 - [ ] S-24 UAT evidence attached per acceptance criterion
-- [ ] Owner sign-off recorded in [`ADR/README.md`](./ADR/README.md)
+- [ ] Owner sign-off recorded in [`ADR/DECISIONS.md`](./ADR/DECISIONS.md)
 - [ ] Simulation flags removed only as part of the matching gate closure
 
 ## Progress log

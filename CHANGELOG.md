@@ -145,7 +145,7 @@
   `frontend/functions/admin/[[path]].ts` so the routes resolve same-origin in
   production.
 - Recorded the boundaries as
-  [`ADR/0015-administrator-impersonation.md`](./ADR/0015-administrator-impersonation.md).
+  [ADR-0015 in `ADR/DECISIONS.md`](./ADR/DECISIONS.md#adr-0015).
 - Verified: 9 new tests (81 total pass), frontend build exit 0, Worker typecheck
   unchanged at its 33 pre-existing errors.
 

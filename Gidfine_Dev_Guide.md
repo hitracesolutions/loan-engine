@@ -6,13 +6,13 @@
 
 **Date:** 13 October 2026 · **Revision:** 30 October 2026 (owner decisions recorded)
 
-**Status:** Requirements baseline. The business decisions previously listed in §15 are now recorded as owner decisions in [`ADR/`](./ADR/README.md); this guide describes the requirements, and each decision points at the record that fixed it.
+**Status:** Requirements baseline. The business decisions previously listed in §15 are now recorded as owner decisions in [`ADR/`](./ADR/DECISIONS.md); this guide describes the requirements, and each decision points at the record that fixed it.
 
 **Implementation state:** Sprints 1-7 are implemented and every financial or third-party path runs in **simulation mode** pending the gate closures listed in [`BLOCKERS.md`](./BLOCKERS.md).
 
 **Current platform baseline:** Cloudflare Pages + Pages Functions, React + Vite, D1 and KV. The Pages Functions reuse the TypeScript router in `workers/api/src`; there is no Python runtime. R2, Queues/Cron and Durable Objects are deferred capabilities, not current production dependencies.
 
-**Companion documents:** [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md) (phases, sprints, migration roadmap, definition of done) · [`EXECUTION_PLAN.md`](./EXECUTION_PLAN.md) (authorised steps and progress) · [`BLOCKERS.md`](./BLOCKERS.md) (what is answered, what is still open) · [`ADR/README.md`](./ADR/README.md) (decision records)
+**Companion documents:** [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md) (phases, sprints, migration roadmap, definition of done) · [`EXECUTION_PLAN.md`](./EXECUTION_PLAN.md) (authorised steps and progress) · [`BLOCKERS.md`](./BLOCKERS.md) (what is answered, what is still open) · [`ADR/DECISIONS.md`](./ADR/DECISIONS.md) (decision records)
 
 ## 1. Executive summary
 
@@ -213,7 +213,7 @@ R2 is intentionally not required by the current routes. It becomes a delivery de
 
 The target product still requires server-enforced roles, field-level disclosure, versioned pricing, guarded state transitions, append-only financial history, idempotent financial writes, audit evidence and automated security tests. The implementation order is defined in [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md).
 
-**Simulation gating.** Origination, matching, pricing, consent, disbursement, servicing and document metadata are implemented, but the financial and third-party edges are simulated and labelled as such: quotes carry `is_simulation = 1` and `status = 'PROVISIONAL'`, disbursements write `simulation_mode = 1`, payments accept only a manual cashier entry path, and outbox dispatch does not call any provider. A simulation flag may only be removed as part of closing the matching decision record — see [`BLOCKERS.md`](./BLOCKERS.md) and the per-record "Evidence in the codebase" sections in [`ADR/`](./ADR/README.md).
+**Simulation gating.** Origination, matching, pricing, consent, disbursement, servicing and document metadata are implemented, but the financial and third-party edges are simulated and labelled as such: quotes carry `is_simulation = 1` and `status = 'PROVISIONAL'`, disbursements write `simulation_mode = 1`, payments accept only a manual cashier entry path, and outbox dispatch does not call any provider. A simulation flag may only be removed as part of closing the matching decision record — see [`BLOCKERS.md`](./BLOCKERS.md) and the per-record "Evidence in the codebase" sections in [`ADR/`](./ADR/DECISIONS.md).
 
 A shared-database multi-tenant model is appropriate only if Gidfine is intended to serve multiple independent agency businesses; if Gidfine alone is the agency, an agency-scoped single-tenant implementation may be simpler. Confirm commercial tenancy before schema design.
 
@@ -243,20 +243,20 @@ remain open are tracked in [`BLOCKERS.md`](./BLOCKERS.md) §3.
 
 | # | Question | Gate | Answer | Record | Status |
 | --- | --- | --- | --- | --- | --- |
-| 1 | One agency or multi-agency SaaS? | O-01 | **Single agency.** Gidfine operates for itself. | [0001](./ADR/0001-tenancy-model.md) | Accepted |
-| 2 | Arrange only, or disburse/collect? Who is creditor and payee? | O-02 | **Arranger for every product at launch.** Contract is lender ↔ borrower; the lender is payee. | [0002](./ADR/0002-legal-operating-model.md) | Provisional (C-4) |
-| 3 | Rates monthly or annual; flat, reducing or effective? | O-03 | **Both bases quoted side by side**; method chosen per deal; **round half up** to the pesewa. | [0003](./ADR/0003-interest-calculation-method.md) | Provisional (R-9) |
-| 4 | Agency margin: spread, fee, interest share or combination? | O-04 | **Any combination**, on either side, flat or percentage; **recognised when cash is collected**; VAT-exempt. | [0004](./ADR/0004-agency-margin-and-revenue.md) | Provisional (R-8) |
-| 5 | Exact instalments, or can they vary with funding and payment timing? | O-03/O-05 | Instalment amounts are **frozen in the quote and consent snapshot**; the schedule activates on the **confirmed funding value date**. | [0003](./ADR/0003-interest-calculation-method.md) | Provisional |
-| 6 | Durations, frequencies, grace, penalties, early repayment? | O-05 | **Frequencies flexible; tenure uncapped; grace and penalties per product; early settlement not allowed.** | [0005](./ADR/0005-loan-product-parameters.md) | Provisional (R-1) |
-| 7 | What borrower information must lenders lawfully receive? | O-06 | **Per-lender signed disclosure agreements**; no profile means no data. | [0006](./ADR/0006-lender-kyc-disclosures.md) | Provisional (C-1) |
-| 8 | Must Gidfine collect and store KYC documents? Who may access them? | O-07 | **Five-year retention**; readable by agency staff, auditors and the borrower; **never a lender**. | [0007](./ADR/0007-document-retention-policy.md) | Provisional (R-6) |
-| 9 | Accept/decline only or counter? One application to several lenders? | O-08 | **Hybrid**: competitive 1-to-many to all eligible lenders, 48-hour round, then sequential fallback. | [0008](./ADR/0008-lender-matching-workflow.md) | Provisional (R-2) |
-| 10 | Who approves, changes a rate, records and reverses a payment? Dual authorisation? | O-09 | **Single approver** (`agency_admin` or `loan_officer`); cashier reversals need supervisor approval; **daily disbursement reconciliation is the compensating control**. | [0009](./ADR/0009-maker-checker-and-approvals.md) | Provisional (R-10 + migration) |
-| 11 | Manual payment recording or provider integration? | O-10 | **Manual cashier entry only** at launch; daily supervisor reconciliation. | [0010](./ADR/0010-payment-collection-scope.md) | Provisional (R-7) |
-| 12 | Which notification channels, and who pays? | O-11 | **In-app + email + SMS**, funded by Gidfine, **no hard cap (alerting instead)**; WhatsApp out. | [0011](./ADR/0011-notification-channels-and-budget.md) | Provisional (R-4, R-5) |
-| 13 | Which documents must be generated? | O-12 | **Full set**: offer, credit agreement, schedule, receipts, statements; **click-to-accept plus terms hash is sufficient acceptance**. | [0012](./ADR/0012-generated-financial-documents.md) | Provisional (R-3) |
-| 14 | What regulatory and licensing approvals are needed? | O-13, O-14 | **Data Protection Commission registration held**; **credit intermediation / moneylending licence held**. | [0013](./ADR/0013-data-protection-act-843.md), [0014](./ADR/0014-lending-regulatory-licensing.md) | Provisional (C-2, C-3) |
+| 1 | One agency or multi-agency SaaS? | O-01 | **Single agency.** Gidfine operates for itself. | [0001](./ADR/DECISIONS.md#adr-0001) | Accepted |
+| 2 | Arrange only, or disburse/collect? Who is creditor and payee? | O-02 | **Arranger for every product at launch.** Contract is lender ↔ borrower; the lender is payee. | [0002](./ADR/DECISIONS.md#adr-0002) | Provisional (C-4) |
+| 3 | Rates monthly or annual; flat, reducing or effective? | O-03 | **Both bases quoted side by side**; method chosen per deal; **round half up** to the pesewa. | [0003](./ADR/DECISIONS.md#adr-0003) | Provisional (R-9) |
+| 4 | Agency margin: spread, fee, interest share or combination? | O-04 | **Any combination**, on either side, flat or percentage; **recognised when cash is collected**; VAT-exempt. | [0004](./ADR/DECISIONS.md#adr-0004) | Provisional (R-8) |
+| 5 | Exact instalments, or can they vary with funding and payment timing? | O-03/O-05 | Instalment amounts are **frozen in the quote and consent snapshot**; the schedule activates on the **confirmed funding value date**. | [0003](./ADR/DECISIONS.md#adr-0003) | Provisional |
+| 6 | Durations, frequencies, grace, penalties, early repayment? | O-05 | **Frequencies flexible; tenure uncapped; grace and penalties per product; early settlement not allowed.** | [0005](./ADR/DECISIONS.md#adr-0005) | Provisional (R-1) |
+| 7 | What borrower information must lenders lawfully receive? | O-06 | **Per-lender signed disclosure agreements**; no profile means no data. | [0006](./ADR/DECISIONS.md#adr-0006) | Provisional (C-1) |
+| 8 | Must Gidfine collect and store KYC documents? Who may access them? | O-07 | **Five-year retention**; readable by agency staff, auditors and the borrower; **never a lender**. | [0007](./ADR/DECISIONS.md#adr-0007) | Provisional (R-6) |
+| 9 | Accept/decline only or counter? One application to several lenders? | O-08 | **Hybrid**: competitive 1-to-many to all eligible lenders, 48-hour round, then sequential fallback. | [0008](./ADR/DECISIONS.md#adr-0008) | Provisional (R-2) |
+| 10 | Who approves, changes a rate, records and reverses a payment? Dual authorisation? | O-09 | **Single approver** (`agency_admin` or `loan_officer`); cashier reversals need supervisor approval; **daily disbursement reconciliation is the compensating control**. | [0009](./ADR/DECISIONS.md#adr-0009) | Provisional (R-10 + migration) |
+| 11 | Manual payment recording or provider integration? | O-10 | **Manual cashier entry only** at launch; daily supervisor reconciliation. | [0010](./ADR/DECISIONS.md#adr-0010) | Provisional (R-7) |
+| 12 | Which notification channels, and who pays? | O-11 | **In-app + email + SMS**, funded by Gidfine, **no hard cap (alerting instead)**; WhatsApp out. | [0011](./ADR/DECISIONS.md#adr-0011) | Provisional (R-4, R-5) |
+| 13 | Which documents must be generated? | O-12 | **Full set**: offer, credit agreement, schedule, receipts, statements; **click-to-accept plus terms hash is sufficient acceptance**. | [0012](./ADR/DECISIONS.md#adr-0012) | Provisional (R-3) |
+| 14 | What regulatory and licensing approvals are needed? | O-13, O-14 | **Data Protection Commission registration held**; **credit intermediation / moneylending licence held**. | [0013](./ADR/DECISIONS.md#adr-0013), [0014](./ADR/DECISIONS.md#adr-0014) | Provisional (C-2, C-3) |
 
 A "Provisional" record means the direction is decided and may be built to, but a
 named artefact is still missing before it can be treated as final. Nothing in
@@ -264,10 +264,10 @@ this table authorises live money movement or live borrower PII at scale.
 
 ## 16. Change control
 
-Product decisions are recorded as immutable decision records under [`ADR/`](./ADR/README.md), each with status, owner, date and rationale. A decision is never edited once accepted — it is superseded by a new record. The change process is:
+Product decisions are recorded as immutable decision records under [`ADR/`](./ADR/DECISIONS.md), each with status, owner, date and rationale. A decision is never edited once accepted — it is superseded by a new record. The change process is:
 
 1. Write the decision into its ADR (`Decision`, `Rationale`, `Decided by`, date) and set the status.
-2. Update the index in [`ADR/README.md`](./ADR/README.md) and the status table in [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md) §3.1.
+2. Update the index in [`ADR/DECISIONS.md`](./ADR/DECISIONS.md) and the status table in [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md) §3.1.
 3. Update §15 of this guide so the requirement and the record stay aligned.
 4. Remove the corresponding simulation flags only once the record is Accepted.
 5. Record each delivered step in `CHANGELOG.md` and the `AGENTS.md` work log.
@@ -286,13 +286,13 @@ says.
 
 | Plan item | Guide coverage | Decision record | Code | Test evidence |
 | --- | --- | --- | --- | --- |
-| Sprint 1 — identity, roles, audit | §3, §5 FR-01, FR-12, §12 | [0001](./ADR/0001-tenancy-model.md) | `workers/api/src/routes/auth.ts`, `lib/auth.ts`, `lib/encryption.ts`, `lib/audit.ts` | `tests/auth.test.ts`, `tests/releaseCandidate.test.ts` |
-| Sprint 2 — origination and agency review | §4, §5 FR-02/FR-03, §9 | [0002](./ADR/0002-legal-operating-model.md) | `routes/applications.ts`, `routes/profile.ts`, `domain/stateMachine.ts`, migrations `0002`, `0003` | `tests/reviewWorkflow.test.ts`, `tests/stateMachine.test.ts`, `tests/integration.test.ts` |
-| Sprint 3 — lenders, matching, pricing | §5 FR-04/FR-05/FR-06, §6 | [0003](./ADR/0003-interest-calculation-method.md), [0004](./ADR/0004-agency-margin-and-revenue.md), [0005](./ADR/0005-loan-product-parameters.md), [0006](./ADR/0006-lender-kyc-disclosures.md), [0008](./ADR/0008-lender-matching-workflow.md) | `domain/pricingEngine.ts`, `domain/matchingEngine.ts`, `routes/lenders.ts`, migration `0004` | `tests/sprints3to7.test.ts`, `tests/money.test.ts` |
-| Sprint 4 — consent, approval, disbursement | §5 FR-07/FR-09, §9 | [0002](./ADR/0002-legal-operating-model.md), [0009](./ADR/0009-maker-checker-and-approvals.md) | `domain/consentWorkflow.ts`, `domain/makerCheckerDisbursement.ts`, `routes/offersAndDisbursements.ts`, migration `0005` | `tests/sprints3to7.test.ts` |
-| Sprint 5 — servicing and double-entry ledger | §5 FR-10/FR-12, §6 | [0004](./ADR/0004-agency-margin-and-revenue.md), [0010](./ADR/0010-payment-collection-scope.md) | `domain/financialLedger.ts`, `routes/servicing.ts`, migration `0006` | `tests/sprints3to7.test.ts`, `tests/idempotency.test.ts` |
-| Sprint 6 — documents and notifications | §5 FR-11, §8 | [0007](./ADR/0007-document-retention-policy.md), [0011](./ADR/0011-notification-channels-and-budget.md), [0012](./ADR/0012-generated-financial-documents.md) | `domain/documentsAndOutbox.ts`, `routes/documentsAndOutbox.ts`, migration `0007` | `tests/sprints3to7.test.ts` |
-| Sprint 7 — hardening and governance | §12 | [0009](./ADR/0009-maker-checker-and-approvals.md), [0013](./ADR/0013-data-protection-act-843.md), [0015](./ADR/0015-administrator-impersonation.md) | `domain/hardeningMfa.ts`, `routes/hardening.ts`, `routes/impersonation.ts`, `lib/impersonationGuard.ts` | `tests/impersonation.test.ts`, `tests/sprints3to7.test.ts` |
+| Sprint 1 — identity, roles, audit | §3, §5 FR-01, FR-12, §12 | [0001](./ADR/DECISIONS.md#adr-0001) | `workers/api/src/routes/auth.ts`, `lib/auth.ts`, `lib/encryption.ts`, `lib/audit.ts` | `tests/auth.test.ts`, `tests/releaseCandidate.test.ts` |
+| Sprint 2 — origination and agency review | §4, §5 FR-02/FR-03, §9 | [0002](./ADR/DECISIONS.md#adr-0002) | `routes/applications.ts`, `routes/profile.ts`, `domain/stateMachine.ts`, migrations `0002`, `0003` | `tests/reviewWorkflow.test.ts`, `tests/stateMachine.test.ts`, `tests/integration.test.ts` |
+| Sprint 3 — lenders, matching, pricing | §5 FR-04/FR-05/FR-06, §6 | [0003](./ADR/DECISIONS.md#adr-0003), [0004](./ADR/DECISIONS.md#adr-0004), [0005](./ADR/DECISIONS.md#adr-0005), [0006](./ADR/DECISIONS.md#adr-0006), [0008](./ADR/DECISIONS.md#adr-0008) | `domain/pricingEngine.ts`, `domain/matchingEngine.ts`, `routes/lenders.ts`, migration `0004` | `tests/sprints3to7.test.ts`, `tests/money.test.ts` |
+| Sprint 4 — consent, approval, disbursement | §5 FR-07/FR-09, §9 | [0002](./ADR/DECISIONS.md#adr-0002), [0009](./ADR/DECISIONS.md#adr-0009) | `domain/consentWorkflow.ts`, `domain/makerCheckerDisbursement.ts`, `routes/offersAndDisbursements.ts`, migration `0005` | `tests/sprints3to7.test.ts` |
+| Sprint 5 — servicing and double-entry ledger | §5 FR-10/FR-12, §6 | [0004](./ADR/DECISIONS.md#adr-0004), [0010](./ADR/DECISIONS.md#adr-0010) | `domain/financialLedger.ts`, `routes/servicing.ts`, migration `0006` | `tests/sprints3to7.test.ts`, `tests/idempotency.test.ts` |
+| Sprint 6 — documents and notifications | §5 FR-11, §8 | [0007](./ADR/DECISIONS.md#adr-0007), [0011](./ADR/DECISIONS.md#adr-0011), [0012](./ADR/DECISIONS.md#adr-0012) | `domain/documentsAndOutbox.ts`, `routes/documentsAndOutbox.ts`, migration `0007` | `tests/sprints3to7.test.ts` |
+| Sprint 7 — hardening and governance | §12 | [0009](./ADR/DECISIONS.md#adr-0009), [0013](./ADR/DECISIONS.md#adr-0013), [0015](./ADR/DECISIONS.md#adr-0015) | `domain/hardeningMfa.ts`, `routes/hardening.ts`, `routes/impersonation.ts`, `lib/impersonationGuard.ts` | `tests/impersonation.test.ts`, `tests/sprints3to7.test.ts` |
 | Plan §8 — Convex retirement | §13 conventions | — | not started (BLOCKERS E-4) | — |
 | Plan §9 #5 — suite passes in CI | §12 | — | `.github/workflows/db-migrate.yml` only (E-6) | none |
 

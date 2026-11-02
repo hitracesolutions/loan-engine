@@ -492,12 +492,12 @@ revert it silently.**
 
 | Decision | Recorded in | Undoing it breaks |
 | --- | --- | --- |
-| Impersonated sessions are **read-only**; never add a route to the guard allowlist | [ADR-0015](./ADR/0015-administrator-impersonation.md) | Consent evidence: a support session could sign as a borrower |
+| Impersonated sessions are **read-only**; never add a route to the guard allowlist | [ADR-0015](./ADR/DECISIONS.md#adr-0015) | Consent evidence: a support session could sign as a borrower |
 | **Migrations are forward-only and never renamed**, including the two `0002_*` files | `BLOCKERS.md` §4 | Data: a rename re-executes an applied migration |
-| `check_maker_checker_distinct` **stays** until the daily disbursement reconciliation exists and passes on fixtures | [ADR-0009](./ADR/0009-maker-checker-and-approvals.md) | The only detective control on disbursement |
+| `check_maker_checker_distinct` **stays** until the daily disbursement reconciliation exists and passes on fixtures | [ADR-0009](./ADR/DECISIONS.md#adr-0009) | The only detective control on disbursement |
 | **Simulation flags stay** (`is_simulation`, `simulation_mode = 1`, `PROVISIONAL`) until the matching ADR is Accepted | `BLOCKERS.md` §5 | Simulated money becomes real money |
-| Lender disclosure **fails closed** — no profile means no data | [ADR-0006](./ADR/0006-lender-kyc-disclosures.md) | Unlawful borrower data reaching a lender |
-| `agency_id` filters stay in every query even though the agency is single-tenant | [ADR-0001](./ADR/0001-tenancy-model.md) | Defence in depth; re-adding them later is a large change |
+| Lender disclosure **fails closed** — no profile means no data | [ADR-0006](./ADR/DECISIONS.md#adr-0006) | Unlawful borrower data reaching a lender |
+| `agency_id` filters stay in every query even though the agency is single-tenant | [ADR-0001](./ADR/DECISIONS.md#adr-0001) | Defence in depth; re-adding them later is a large change |
 | Authorization is enforced **server-side before the router returns data**, never by frontend guards alone | `BLOCKERS.md`, `docs` skill rule | Any user with devtools can bypass a UI check |
 
 
@@ -641,7 +641,7 @@ The current production baseline is Cloudflare Pages + Pages Functions, D1 and KV
   self-impersonation).
 - Added the admin panel, the persistent banner and the Pages Function entrypoint
   the routes need in production.
-- Recorded boundaries in `ADR/0015-administrator-impersonation.md`; the
+- Recorded boundaries in `ADR/DECISIONS.md` (ADR-0015); the
   read-only rule is a decision, not an implementation accident.
 - Verified: `npm test` 81 pass (9 new), frontend build passes, typecheck
   unchanged at its 33 pre-existing errors.
