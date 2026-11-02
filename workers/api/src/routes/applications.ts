@@ -1,6 +1,6 @@
 import { auditStatement } from '../lib/audit.ts';
 import { requireActor } from '../lib/auth.ts';
-import { badRequest, forbidden, jsonResponse, notFound, readJsonObject } from '../lib/http.ts';
+import { HttpError, badRequest, forbidden, jsonResponse, notFound, readJsonObject } from '../lib/http.ts';
 import { assertKeyScope, findIdempotentResponse, idempotencyStatement } from '../lib/idempotency.ts';
 import { ulid } from '../lib/ids.ts';
 import { assertPositiveInteger, assertPositivePesewas } from '../lib/money.ts';
@@ -15,8 +15,6 @@ import {
   type UserRole,
 } from '../domain/stateMachine.ts';
 
-const MAX_TENURE_MONTHS = 480;
-const MAX_PRINCIPAL_PESEWAS = 10_000_000_00; // GH₵ 10,000,000.00
 const CREATION_SCOPE = 'applications.create';
 
 const REVIEW_READ_ROLES = ['agency_admin', 'loan_officer', 'underwriter', 'auditor'] as const;
@@ -163,12 +161,10 @@ export async function createApplication({ request, env, requestId }: RouteContex
 
   const requestedAmountPesewas = assertPositivePesewas(
     requestedAmountPesewasRaw,
-    MAX_PRINCIPAL_PESEWAS,
     'requestedAmountPesewas',
   );
   const tenureMonths = assertPositiveInteger(
     tenureMonthsRaw,
-    MAX_TENURE_MONTHS,
     'tenureMonths',
   );
   const purpose = optionalString(body, 'purpose', 500);
@@ -238,7 +234,25 @@ export async function createApplication({ request, env, requestId }: RouteContex
   const idempotency = idempotencyStatement(env.DB, actor.agencyId, idempotencyKey, CREATION_SCOPE, payload);
   if (idempotency) statements.push(idempotency);
 
-  await env.DB.batch(statements);
+  try {
+    await env.DB.batch(statements);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(
+      JSON.stringify({
+        level: 'error',
+        event: 'APPLICATION_CREATION_FAILED',
+        actorId: actor.userId,
+        agencyId: actor.agencyId,
+        error: message,
+      }),
+    );
+    throw new HttpError(
+      500,
+      'APPLICATION_CREATION_FAILED',
+      'Failed to create loan application due to a database error',
+    );
+  }
 
   return jsonResponse(payload, requestId, 201);
 }
