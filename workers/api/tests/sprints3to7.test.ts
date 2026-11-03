@@ -416,6 +416,22 @@ describe('Gidfine Sprints 3-7 Comprehensive Verification', () => {
     // Verify application status is now ACTIVE
     const activeApp = sqlite.prepare(`SELECT status FROM loan_applications WHERE id = ?`).get(appId) as any;
     assert.equal(activeApp.status, 'ACTIVE');
+
+    // Daily disbursement reconciliation (ADR-0018 compensating control):
+    // operational disbursed total must equal the ledger's Loans-Receivable debits.
+    const today = new Date().toISOString().slice(0, 10);
+    const reconRes = await worker.fetch(
+      new Request(`http://localhost/reports/disbursement-reconciliation?date=${today}`, {
+        headers: { Authorization: `Bearer ${admin.token}` },
+      }),
+      env,
+    );
+    assert.equal(reconRes.status, 200);
+    const reconData = await reconRes.json() as any;
+    assert.equal(reconData.data.balanced, true);
+    assert.equal(reconData.data.disbursementCount, 1);
+    assert.ok(reconData.data.operationalTotalPesewas > 0);
+    assert.equal(reconData.data.operationalTotalPesewas, reconData.data.ledgerTotalPesewas);
   });
 
   // SPRINT 5: SERVICING, WATERFALL PAYMENTS & COMPENSATING REVERSALS

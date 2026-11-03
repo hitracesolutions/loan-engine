@@ -1275,7 +1275,7 @@ Owner, 2026-11-03:
 
 - [ ] "Supervisor" definition and exact role names mapped to the role enum.
 - [ ] Settings UI for **T**, making the "no threshold ⇒ single approver" effect explicit.
-- [ ] Build the daily disbursement reconciliation report (the named control).
+- [x] Daily disbursement reconciliation report — **built** (`GET /reports/disbursement-reconciliation`, read-only, supervisors only; reconciles disbursed totals against the ledger; test in `sprints3to7.test.ts`).
 - [ ] Replace the simulated MFA with real MFA.
 
 ### On acceptance

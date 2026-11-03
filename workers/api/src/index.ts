@@ -56,6 +56,7 @@ import {
   submitBorrowerConsent,
 } from './routes/offersAndDisbursements.ts';
 import { getBorrowerProfile, updateBorrowerProfile } from './routes/profile.ts';
+import { disbursementReconciliation } from './routes/reports.ts';
 import {
   getLoanDetails,
   listJournalEntries,
@@ -111,6 +112,8 @@ const router = new Router()
   .post('/loans/:id/payments', recordPayment)
   .post('/payments/:id/reverse', reversePayment)
   .get('/ledger/entries', listJournalEntries)
+  // Supervisor reconciliation (ADR-0018 / ADR-0009 compensating control)
+  .get('/reports/disbursement-reconciliation', disbursementReconciliation)
   // Documents & Outbox
   .post('/documents', createDocumentRecord)
   .get('/documents', listDocuments)

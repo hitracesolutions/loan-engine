@@ -31,11 +31,11 @@ items, then Accepted, then built** (see each ADR in `ADR/DECISIONS.md`):
   sign-off (ADR-0013). Then build matching exclusion for no-rights lenders and
   stamp the rights in force on each shared application/document.
 - **ADR-0018 — value-tiered approval.** Needs: "supervisor" + role-enum names;
-  the per-account **T** settings UI (surfacing "no T ⇒ single approver"); the
-  daily disbursement reconciliation report; real MFA replacing the
-  `hardeningMfa.ts` fixed codes; migration `0009` making
+  the per-account **T** settings UI (surfacing "no T ⇒ single approver"); real
+  MFA replacing the `hardeningMfa.ts` fixed codes; migration `0009` making
   `check_maker_checker_distinct` conditional on amount. Then mark ADR-0009
-  Superseded. (Reversal segregation already shipped.)
+  Superseded. (Reversal segregation **and** the daily disbursement
+  reconciliation report are already shipped.)
 
 **Phase 3 — deferred:** T9 margin reversal invariant, built when margin/revenue
 recognition (ADR-0004) is implemented.
@@ -161,7 +161,8 @@ created.
   - [ ] Settings UI for **T** (surfacing the no-threshold ⇒ single-approver effect); define "supervisor" and role-enum names.
   - [ ] Add migration `0009` making `check_maker_checker_distinct` **conditional on amount** (enforced when amount ≥ T), not dropped; build the daily disbursement reconciliation report first (the named compensating control).
   - [x] **Reversal segregation shipped** (safe tightening, no gate): `reverseCashierPayment` rejects a reversal whose approver is the payment's recorder (`cashier_id === approver` → 403); test in `releaseCandidate.test.ts`.
-  - [ ] Still gated on full acceptance: enforce the amount tier in `confirmDisbursement`, add migration `0009` for the conditional `check_maker_checker_distinct`, ship the daily reconciliation report, and replace the simulated MFA (`hardeningMfa.ts`) before go-live. Then mark ADR-0009 Superseded.
+  - [x] **Daily disbursement reconciliation report shipped** (read-only, `GET /reports/disbursement-reconciliation`, supervisors only) — the named compensating control; reconciles disbursed totals against the ledger. Test in `sprints3to7.test.ts`.
+  - [ ] Still gated on full acceptance: enforce the amount tier in `confirmDisbursement`, add migration `0009` for the conditional `check_maker_checker_distinct`, and replace the simulated MFA (`hardeningMfa.ts`) before go-live. Then mark ADR-0009 Superseded.
 - [ ] **T7 — Combinatorial re-identification policy (finding 6).**
   - [ ] Extend ADR-0006's acceptance criteria to require each lender profile be assessed for *combined* re-identification risk, not field-by-field.
   - [ ] Review `createMaskedBorrowerSummary` output against that criterion.
