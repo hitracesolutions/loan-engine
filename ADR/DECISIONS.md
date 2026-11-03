@@ -51,6 +51,32 @@ honour.
 | --- | --- | --- |
 | [0015](#adr-0015) | Administrator impersonation ("view as") — read-only, audited, revocable | Accepted |
 
+## Open items at a glance
+
+Every task still blocking a decision, in one place. Each ADR's own *Outstanding
+before acceptance* list is authoritative; this table is a convenience index and
+links each item to its [`BLOCKERS.md`](../BLOCKERS.md) triage ID. Accepted
+records (0001, 0015) carry no open items.
+
+| ADR | Status | Still needed before acceptance | Triage |
+| --- | --- | --- | --- |
+| [0002](#adr-0002) | Provisional | Signed legal operating-model annex naming the lender as payee; contract templates | C-4 |
+| [0003](#adr-0003) | Provisional | Allowed methods per product; worked flat/reducing fixtures at round-half-up | R-9 |
+| [0004](#adr-0004) | Provisional | Written accountant confirmation of VAT exemption; revenue accounts provisioned | R-8 |
+| [0005](#adr-0005) | Provisional | Max late-penalty rate; min/max loan amount; launch product catalogue | R-1 |
+| [0006](#adr-0006) | Provisional | Signed per-lender disclosure matrix; default fail-closed profile; field reconciliation | C-1 |
+| [0007](#adr-0007) | Provisional | Key-custody/encryption model; deletion & anonymisation procedure at 5 years | R-6 |
+| [0008](#adr-0008) | Provisional | Counter-offer rules; eligibility audited against disclosure profiles; "who saw it" audit | R-2 |
+| [0009](#adr-0009) | Provisional | Permission matrix; build the daily reconciliation report, **then** migrate to relax `check_maker_checker_distinct`; replace simulated MFA | R-10 |
+| [0010](#adr-0010) | Provisional | Written launch sign-off; discrepancy escalation path | R-7 |
+| [0011](#adr-0011) | Provisional | Email/SMS providers & account holders; alert threshold; per-message retry ceiling; SMS consent/opt-out; templates | R-4, R-5 |
+| [0012](#adr-0012) | Provisional | Approved templates; gap-free numbering scheme; storage decision once 0007 closes | R-3 |
+| [0013](#adr-0013) | Provisional | Certificate reference & expiry; privacy notice text/version; consent wording; processing register; DSAR procedure | C-2 |
+| [0014](#adr-0014) | Provisional | Licence reference/class/dates; per-model scope confirmation; any interest/fee ceilings; reporting cadence | C-3 |
+
+ADR-0001 is accepted but carries one follow-up: note in the implementation plan
+that SaaS onboarding requires a new, superseding ADR.
+
 ## Closing a record
 
 1. Obtain the written decision from the owner named in the record.
