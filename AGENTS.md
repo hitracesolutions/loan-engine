@@ -5,6 +5,42 @@ This document describes the AI agents and automated skills used to build the Gid
 
 ---
 
+## Active work — start here (all agents)
+
+If you are an agent (or developer) picking up this repo, read these two files
+**before touching financial code**, and follow them:
+
+1. **[`DECISION_REVIEW.md`](./DECISION_REVIEW.md)** — the authoritative
+   remediation doc. Its **"Continue here"** section is the resume point; its
+   **"Remediation tasks"** list (T1–T9) is the work; its **"Process rule"**
+   (R1–R6) is how you close each task.
+2. **[`ADR/DECISIONS.md`](./ADR/DECISIONS.md)** — all owner decisions in one
+   file. Decisions are **superseded, never edited**.
+
+Non-negotiable rules for any agent doing this work:
+
+- **R3 — decision before code.** Do not build a Phase 2 behaviour until its ADR
+  (0016/0017/0018) is **Accepted**. They are currently **Provisional**
+  (direction decided, outstanding items open) — build only what a decided
+  direction plus no open gate allows (as the reversal-segregation change did).
+- **R5 — never silently revert a Protected decision** (see the table below);
+  disagree in a superseding ADR, not in a quiet code change.
+- **R6 — go-live gate.** No real disbursement / PII / signable contracts until
+  real MFA, the daily disbursement reconciliation report, and counsel artefacts
+  (`BLOCKERS.md` C-1…C-4) exist. Never relax `check_maker_checker_distinct`
+  before the reconciliation report and real MFA are in place.
+- **Verify, don't assume.** `cd workers/api && npm test` (88 pass); worker
+  `typecheck` has a known pre-existing error baseline — compare, don't aim for 0.
+  Migrations are forward-only; next free number is **0009**. This environment may
+  auto-commit — check `git status`/`git log` before and after.
+
+State in one line: **Phase 1 shipped** (atomic writes, reference-unique migration
+`0008`, no fabricated lender) **+ reversal segregation**; **Phase 2 directions
+decided, Provisional**; `0008` not yet applied to remote D1. Details and the
+per-ADR outstanding items are in the two files above.
+
+---
+
 ## Agents Used
 
 ### 1. Claude Code (Primary Agent)

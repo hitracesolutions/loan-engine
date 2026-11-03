@@ -10,7 +10,8 @@ The four counsel artefacts, the accountant confirmation and the "safety floor"
 listed there are the only remaining external gates.
 **Sources of truth:** [`ADR/`](./ADR/DECISIONS.md) (decisions),
 [`EXECUTION_PLAN.md`](./EXECUTION_PLAN.md) (authorised steps),
-[`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md) §3.1 (gate status).
+[`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md) §3.1 (gate status),
+[`DECISION_REVIEW.md`](./DECISION_REVIEW.md) (review findings, remediation tasks, process rule).
 
 **Status key**
 

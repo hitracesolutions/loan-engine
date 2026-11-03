@@ -12,7 +12,7 @@
 
 **Current platform baseline:** Cloudflare Pages + Pages Functions, React + Vite, D1 and KV. The Pages Functions reuse the TypeScript router in `workers/api/src`; there is no Python runtime. R2, Queues/Cron and Durable Objects are deferred capabilities, not current production dependencies.
 
-**Companion documents:** [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md) (phases, sprints, migration roadmap, definition of done) · [`EXECUTION_PLAN.md`](./EXECUTION_PLAN.md) (authorised steps and progress) · [`BLOCKERS.md`](./BLOCKERS.md) (what is answered, what is still open) · [`ADR/DECISIONS.md`](./ADR/DECISIONS.md) (decision records)
+**Companion documents:** [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md) (phases, sprints, migration roadmap, definition of done) · [`EXECUTION_PLAN.md`](./EXECUTION_PLAN.md) (authorised steps and progress) · [`BLOCKERS.md`](./BLOCKERS.md) (what is answered, what is still open) · [`ADR/DECISIONS.md`](./ADR/DECISIONS.md) (decision records) · [`DECISION_REVIEW.md`](./DECISION_REVIEW.md) (review findings, remediation tasks, agent process rule)
 
 ## 1. Executive summary
 
