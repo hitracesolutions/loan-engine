@@ -7,6 +7,44 @@
 
 Each finding says whether it was **confirmed against code** or is **decision-level** (argued from the records, not the implementation).
 
+## Continue here (resume point — 2026-11-03)
+
+Where to pick the work up. Full detail is in **Remediation tasks** and the
+**Process rule** below; this is the short version.
+
+**Done and on `development`** (88 tests pass): Phase 1 — T1 atomic financial
+writes, T2 payment-reference `UNIQUE` (migration `0008`), T3 no fabricated
+lender — plus the reversal-segregation half of T6 (recorder ≠ reversal approver).
+
+**Apply before any deploy:** migration `0008` is committed but **not applied to
+remote D1**. Run `npm run db:migrate:remote` (from `frontend/`) at release time.
+
+**Phase 2 — directions decided (Provisional); each is blocked on its outstanding
+items, then Accepted, then built** (see each ADR in `ADR/DECISIONS.md`):
+- **ADR-0016 — Gidfine holds client funds.** Needs: segregated trust/escrow
+  account + daily reconciliation; a trust-liability account in the ledger
+  (ADR-0004); written ADR-0014 licence-scope confirmation; funds-held receipt /
+  statement wording (ADR-0012). Then mark ADR-0002 Superseded.
+- **ADR-0017 — per-lender assignable disclosure rights, default-deny, audited.**
+  Needs: the catalogue of grantable rights (masked summary = one right) + its
+  schema; combined re-identification check (finding #6); counsel lawful-basis
+  sign-off (ADR-0013). Then build matching exclusion for no-rights lenders and
+  stamp the rights in force on each shared application/document.
+- **ADR-0018 — value-tiered approval.** Needs: "supervisor" + role-enum names;
+  the per-account **T** settings UI (surfacing "no T ⇒ single approver"); the
+  daily disbursement reconciliation report; real MFA replacing the
+  `hardeningMfa.ts` fixed codes; migration `0009` making
+  `check_maker_checker_distinct` conditional on amount. Then mark ADR-0009
+  Superseded. (Reversal segregation already shipped.)
+
+**Phase 3 — deferred:** T9 margin reversal invariant, built when margin/revenue
+recognition (ADR-0004) is implemented.
+
+**Non-negotiable gates:** follow the Process rule (R1–R6). Do not relax the
+maker/checker constraint until the reconciliation report and real MFA exist (R6);
+do not build a Phase 2 behaviour before its ADR is Accepted (R3); never revert a
+Protected decision in a quiet change (R5).
+
 ## Severity summary
 
 | # | Severity | Finding | Type | Refs |
