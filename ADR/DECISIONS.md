@@ -51,18 +51,18 @@ honour.
 | --- | --- | --- |
 | [0015](#adr-0015) | Administrator impersonation ("view as") — read-only, audited, revocable | Accepted |
 
-### Proposed — awaiting owner decision
+### Proposed — direction decided 2026-11-03, acceptance pending
 
-Draft records raised by the [decision & code review](../DECISION_REVIEW.md).
-They are **Open**: no decision is in force, nothing in them is built, and the
-record they would supersede is **not** yet marked superseded. The owner fills in
-the *Decision* and signs; only then does the supersede take effect.
+Records raised by the [decision & code review](../DECISION_REVIEW.md). The owner
+has chosen the direction for each (below); they are now **Provisional** —
+behaviour is not built yet, and the record each supersedes is **not** marked
+superseded until the outstanding items are closed and the record is Accepted.
 
-| ADR | Proposes | Supersedes / extends | Review finding |
+| ADR | Decided direction | Supersedes / extends | Finding |
 | --- | --- | --- | --- |
-| [0016](#adr-0016) | Who holds repayment funds (arranger agent vs fund-holding) | supersedes 0002 | #2 |
-| [0017](#adr-0017) | Disclosure gates lender *matching*, and profiles are versioned | extends 0006, 0008 | #3 |
-| [0018](#adr-0018) | Value-tiered disbursement approval & reversal segregation | supersedes 0009 | #4 |
+| [0016](#adr-0016) | **Gidfine holds client funds** (trust account + licence scope) | supersedes 0002 | #2 |
+| [0017](#adr-0017) | **Per-lender assignable disclosure rights, default-deny, audited** | extends 0006, 0008 | #3 |
+| [0018](#adr-0018) | **Value-tiered approval; T is a per-account setting; single approver if unset** | supersedes 0009 | #4 |
 
 ## Open items at a glance
 
@@ -1142,9 +1142,9 @@ create legally binding evidence (consent), change money, or approve anything.
 ## ADR-0016: Custody of repayment funds (proposed — supersedes 0002)
 
 - **Gate:** O-02 (reopened)
-- **Status:** **Open** — proposed 2026-11-03, awaiting owner decision
+- **Status:** Provisional — **Option B (Gidfine holds funds)** chosen by owner 2026-11-03; trust-account design and licence-scope confirmation outstanding
 - **Owner:** Matthias and the Gidfine executive team (with counsel)
-- **Version:** 0.1 (draft)
+- **Version:** 0.1
 - **Supersedes on acceptance:** ADR-0002
 - **Raised by:** [decision & code review](../DECISION_REVIEW.md) finding #2
 
@@ -1158,24 +1158,21 @@ exposure the arranger model was adopted to avoid.
 
 ### Decision
 
-*Owner to choose one and sign.*
+**Option B — Gidfine holds client funds** (owner, 2026-11-03). Repayments are
+received into Gidfine's custody, so the platform requires a segregated client
+trust/escrow account, a trust-liability account in the chart of accounts
+(ADR-0004), and written confirmation that the ADR-0014 licence covers holding
+client funds.
 
-- **Option A — Collection as the lender's disclosed agent.** The cashier
-  receives repayments strictly on the lender's behalf; receipts name the lender
-  as payee; in law the funds are the lender's, not Gidfine's. Stays inside the
-  ADR-0002 arranger model and the ADR-0014 licence as-is. Requires an agency
-  clause in each lender agreement evidencing the agency relationship.
-- **Option B — Gidfine holds client funds.** Requires a segregated client
-  trust/escrow account, written confirmation that the ADR-0014 licence covers
-  fund-holding, and a trust-liability account added to the chart of accounts
-  (ADR-0004). Larger scope; do not choose by default.
+Rejected: Option A (collect only as the lender's disclosed agent) — kept here
+for history, not chosen.
 
-### Open questions
+### Outstanding before acceptance
 
-- [ ] Which option.
-- [ ] If A: the exact agency clause and the receipt wording naming the lender
-      (feeds ADR-0012 templates).
-- [ ] If B: trust-account control, reconciliation, and licence-scope confirmation.
+- [ ] Segregated client trust/escrow account and its daily reconciliation control.
+- [ ] Trust-liability account added to the chart of accounts (ADR-0004).
+- [ ] Written confirmation the ADR-0014 licence covers holding client funds.
+- [ ] Receipt and statement wording for funds held by Gidfine (ADR-0012).
 
 ### On acceptance
 
@@ -1189,9 +1186,9 @@ exposure the arranger model was adopted to avoid.
 ## ADR-0017: Disclosure gates matching, and profiles are versioned (proposed — extends 0006 & 0008)
 
 - **Gate:** O-06 / O-08 (binding criteria)
-- **Status:** **Open** — proposed 2026-11-03, awaiting owner/counsel confirmation
+- **Status:** Provisional — model decided by owner 2026-11-03 (per-lender assignable disclosure rights, default-deny, audited); field catalogue and counsel sign-off outstanding
 - **Owner:** Matthias and the Gidfine executive team (with legal counsel)
-- **Version:** 0.1 (draft)
+- **Version:** 0.1
 - **Extends on acceptance:** ADR-0006, ADR-0008 (adds binding acceptance criteria)
 - **Raised by:** [decision & code review](../DECISION_REVIEW.md) finding #3 (and #5)
 
@@ -1206,21 +1203,25 @@ leaves past disclosures unauditable because no version is stamped.
 
 ### Decision
 
-*Owner/counsel to confirm.*
+Owner, 2026-11-03:
 
-1. A lender with no **active** disclosure profile is excluded from the match set
-   entirely — both competitive and sequential routing — not merely field-masked.
-2. Disclosure profiles are **versioned**; the version in force is stamped on each
-   issued proposal and on every generated document (ADR-0012), mirroring the
-   consent terms-hash pattern.
-3. (From finding #5) Each profile is assessed for **combined** re-identification
-   risk, not field-by-field.
+1. **Disclosure is a set of rights Gidfine assigns to each lender** in settings —
+   a per-lender permission model, not a signed-agreement gate.
+2. **Default-deny.** A lender with no assigned rights sees **nothing** — not even
+   the masked summary. The masked summary is itself a grantable right. This keeps
+   the ADR-0006 fail-closed guarantee; the rights model layers on top of it.
+3. **Matching respects rights.** A lender with no rights for an application is
+   not shown it and cannot be matched to it — exclusion, not field-masking.
+4. **Audited.** The rights in force for a lender are recorded each time an
+   application is shared with them, and stamped on every generated document
+   (ADR-0012), so a past disclosure is always provable.
 
-### Open questions
+### Outstanding before acceptance
 
-- [ ] Default profile for a newly onboarded lender (recommended: none ⇒ excluded).
-- [ ] Whether the re-identification assessment lives here or as an ADR-0006 criterion.
-- [ ] Audit requirement: record which lenders saw an application, and when.
+- [ ] The catalogue of grantable disclosure rights (which borrower field each
+      right exposes), with the masked summary defined as one named right.
+- [ ] Combined re-identification assessment per granted right-set (finding #6).
+- [ ] Counsel sign-off that each right-set has a lawful basis (ADR-0013).
 
 ### On acceptance
 
@@ -1236,9 +1237,9 @@ leaves past disclosures unauditable because no version is stamped.
 ## ADR-0018: Value-tiered disbursement approval & reversal segregation (proposed — supersedes 0009)
 
 - **Gate:** O-09 (reopened)
-- **Status:** **Open** — proposed 2026-11-03, awaiting owner decision
+- **Status:** Provisional — value-tiered model decided by owner 2026-11-03 (threshold is a per-account setting; single approver when unset); role names, reconciliation report and real MFA outstanding
 - **Owner:** Matthias and the Gidfine executive team
-- **Version:** 0.1 (draft)
+- **Version:** 0.1
 - **Supersedes on acceptance:** ADR-0009
 - **Raised by:** [decision & code review](../DECISION_REVIEW.md) finding #4
 
@@ -1252,28 +1253,30 @@ both record a payment and reverse it (`servicing.ts`).
 
 ### Decision
 
-*Owner to set the values and sign.*
+Owner, 2026-11-03:
 
-1. **Approval tier:** disbursements below a threshold **T** need one authorised
-   approver (`agency_admin` or `loan_officer`); disbursements of **T** or above
-   need two distinct approvers.
-2. **Constraint, not dropped:** the maker/checker migration makes
-   `check_maker_checker_distinct` **conditional on amount** (enforced when
-   amount ≥ T), rather than removing it — so dual control stays available for
-   large loans.
-3. **Reversal segregation:** the user who recorded a payment may not approve its
+1. **Value-tiered approval.** Below a threshold **T**, one authorised approver
+   (`agency_admin` or `loan_officer`); at or above **T**, two distinct approvers.
+2. **T is a per-account setting** Gidfine configures. **If no threshold is set,
+   none applies — a single approver may release any amount.** Residual risk
+   accepted: an unconfigured account has no dual-control floor, so the settings
+   UI must surface T prominently (see outstanding items).
+3. **Constraint made conditional, not dropped.** The maker/checker migration
+   enforces `check_maker_checker_distinct` when amount ≥ T, rather than removing
+   it, so dual control stays available for large loans.
+4. **Reversal segregation.** The user who recorded a payment may not approve its
    reversal; cashier reversals need supervisor approval; admin reversals need a
    second admin or supervisor sign-off.
-4. **Compensating control:** the daily disbursement reconciliation report must
-   exist and pass on fixtures **before** the constraint is relaxed.
-5. **Real MFA** replaces the simulated fixed codes (`hardeningMfa.ts`) before any
-   of this reaches production.
+5. **Preconditions to go-live:** the daily disbursement reconciliation report
+   exists and passes on fixtures, and real MFA replaces the simulated fixed
+   codes (`hardeningMfa.ts`), before the constraint is relaxed in production.
 
-### Open questions
+### Outstanding before acceptance
 
-- [ ] The threshold **T** (amount in pesewas).
-- [ ] Who is a "supervisor"; exact role names mapped to the role enum.
-- [ ] Sign-off: build the reconciliation report first (it is the named control).
+- [ ] "Supervisor" definition and exact role names mapped to the role enum.
+- [ ] Settings UI for **T**, making the "no threshold ⇒ single approver" effect explicit.
+- [ ] Build the daily disbursement reconciliation report (the named control).
+- [ ] Replace the simulated MFA with real MFA.
 
 ### On acceptance
 

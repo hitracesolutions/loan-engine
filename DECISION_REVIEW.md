@@ -110,19 +110,19 @@ created.
 
 ### Phase 2 — decisions first, then implementation (owner/counsel)
 
-- [ ] **T4 — Resolve who holds funds (finding 2).**
-  - [ ] Owner/counsel decision: cashier collects strictly as the lender's disclosed agent, **or** Gidfine handles client funds.
-  - [ ] Supersede ADR-0002 (new section, next free number) recording the choice; if funds are held, reconcile ADR-0014 licensed scope and add a trust-account control.
-  - [ ] If agent model: make the receipt name the lender as payee (ties into ADR-0012 templates).
-- [ ] **T5 — Gate matching on the disclosure profile (finding 3).**
-  - [ ] Supersede/extend ADR-0006 and ADR-0008 to state that a lender with no profile is excluded from the match set (not merely field-masked), and that profiles are versioned.
-  - [ ] Exclude no-profile lenders in `matchingEngine.ts` before eligibility is returned.
-  - [ ] Stamp the disclosure-profile version on each issued proposal (mirror the consent terms-hash pattern) so past disclosures stay auditable.
-- [ ] **T6 — Value-tiered approval and reversal segregation (finding 4).**
-  - [ ] Supersede ADR-0009 to define the approval threshold (single approver below, dual above) and to require a second actor for reversals (apply the cashier rule to admins too).
-  - [ ] Add migration `0009` making `check_maker_checker_distinct` **conditional on amount** rather than dropping it; build the daily disbursement reconciliation report first (it is the named compensating control).
-  - [ ] Enforce the tier in `confirmDisbursement`; ensure the payment record-er cannot also approve its reversal (`servicing.ts:96,133`).
-  - [ ] Replace the simulated MFA (`hardeningMfa.ts` fixed codes) before any of this goes live.
+- [ ] **T4 — Gidfine holds client funds (finding 2).** *Direction decided 2026-11-03 → ADR-0016 (Provisional, Option B). Implement once Accepted.*
+  - [x] Owner decision: **Gidfine holds client funds** (not the agent model).
+  - [ ] Close ADR-0016's outstanding items (trust/escrow account + reconciliation, trust-liability account in the ledger per ADR-0004, written ADR-0014 licence-scope confirmation), then mark ADR-0002 Superseded.
+  - [ ] Implement the trust-account control and the funds-held receipt/statement wording (ADR-0012).
+- [ ] **T5 — Per-lender assignable disclosure rights (finding 3).** *Direction decided 2026-11-03 → ADR-0017 (Provisional). Implement once Accepted.*
+  - [x] Owner decision: disclosure is **rights Gidfine assigns per lender**, **default-deny** (a lender with no rights sees nothing — keeps ADR-0006 fail-closed), **audited**.
+  - [ ] Define the catalogue of grantable rights (the masked summary is one named right); counsel sign-off on lawful basis (ADR-0013); combined re-identification check (finding #6).
+  - [ ] In `matchingEngine.ts`, exclude lenders with no rights for an application; stamp the rights in force on each issued proposal and generated document.
+- [ ] **T6 — Value-tiered approval and reversal segregation (finding 4).** *Direction decided 2026-11-03 → ADR-0018 (Provisional). Implement once Accepted.*
+  - [x] Owner decision: **value-tiered**; threshold **T** is a per-account setting; **single approver when T is unset**; reversal record-er ≠ approver.
+  - [ ] Settings UI for **T** (surfacing the no-threshold ⇒ single-approver effect); define "supervisor" and role-enum names.
+  - [ ] Add migration `0009` making `check_maker_checker_distinct` **conditional on amount** (enforced when amount ≥ T), not dropped; build the daily disbursement reconciliation report first (the named compensating control).
+  - [ ] Enforce the tier in `confirmDisbursement`; ensure the payment record-er cannot also approve its reversal (`servicing.ts:96,133`); replace the simulated MFA (`hardeningMfa.ts`) before go-live. Then mark ADR-0009 Superseded.
 - [ ] **T7 — Combinatorial re-identification policy (finding 6).**
   - [ ] Extend ADR-0006's acceptance criteria to require each lender profile be assessed for *combined* re-identification risk, not field-by-field.
   - [ ] Review `createMaskedBorrowerSummary` output against that criterion.

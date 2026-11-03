@@ -743,11 +743,14 @@ The current production baseline is Cloudflare Pages + Pages Functions, D1 and KV
   `db.batch()`; migration `0008` adds `UNIQUE(agency_id, reference)` on
   `cashier_payments`; disbursement resolves a real lender instead of fabricating
   "Default Partner Bank". `npm test` 88 pass; typecheck baseline unchanged.
-- **Phase 2 is owner-gated.** Draft superseding records are open in
-  `ADR/DECISIONS.md`: **ADR-0016** (funds custody, supersedes 0002), **ADR-0017**
-  (disclosure gates matching, extends 0006/0008), **ADR-0018** (value-tiered
-  approval, supersedes 0009). No behaviour is built against them until the owner
-  signs; the old records are not yet marked superseded.
+- **Phase 2 direction decided 2026-11-03** (owner), recorded in `ADR/DECISIONS.md`,
+  now **Provisional** (not yet built, superseded records not yet marked):
+  **ADR-0016** — Gidfine holds client funds (Option B; needs trust account +
+  licence-scope confirmation; supersedes 0002). **ADR-0017** — disclosure is
+  per-lender rights Gidfine assigns, **default-deny** (keeps ADR-0006 fail-closed)
+  and audited; extends 0006/0008. **ADR-0018** — value-tiered approval, threshold
+  **T** a per-account setting, single approver when T unset; supersedes 0009.
+  Each stays Provisional until its outstanding items close and it is Accepted.
 - Delivery team: start at `DECISION_REVIEW.md` → "Process rule". Do not write
   Phase 2 code before its ADR is Accepted; do not revert a Protected decision in
   a quiet change.
