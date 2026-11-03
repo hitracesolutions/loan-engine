@@ -4,12 +4,15 @@
  * Implements Sprint 4 disbursement dual-control authorization:
  * - Separation of maker and checker identities (strict maker_id != checker_id enforcement).
  * - Gated simulation adapter (simulation_mode = 1) preventing unauthorized real fund transfers.
- * - Atomic activation of loan servicing and double-entry balanced ledger entries.
+ * - Atomic activation of loan servicing and double-entry balanced ledger entries:
+ *   the disbursement record, loan, schedule, installments, journal and audit all
+ *   commit through a single `db.batch([...])` (finding 1, DECISION_REVIEW.md).
+ * - The contractual lender is resolved, never fabricated (finding 8).
  */
 
 import { ulid } from '../lib/ids.ts';
 import { calculateQuote } from './pricingEngine.ts';
-import { postJournalEntry } from './financialLedger.ts';
+import { prepareJournal, commitWithEntryNumber } from './financialLedger.ts';
 
 export interface PrepareDisbursementParams {
   db: D1Database;
@@ -131,7 +134,7 @@ export async function confirmDisbursement(params: ConfirmDisbursementParams) {
       `SELECT d.id, d.agency_id, d.application_id, d.offer_id, d.amount_pesewas, d.maker_id,
               d.checker_id, d.status, d.channel, d.reference,
               bo.nominal_annual_rate_bps, bo.tenure_months, bo.monthly_repayment_pesewas,
-              la.borrower_id
+              la.borrower_id, la.assigned_lender_id
        FROM disbursement_records d
        JOIN borrower_offers bo ON bo.id = d.offer_id
        JOIN loan_applications la ON la.id = d.application_id
@@ -153,6 +156,7 @@ export async function confirmDisbursement(params: ConfirmDisbursementParams) {
       tenure_months: number;
       monthly_repayment_pesewas: number;
       borrower_id: string;
+      assigned_lender_id: string | null;
     }>();
 
   if (!disb) {
@@ -168,156 +172,126 @@ export async function confirmDisbursement(params: ConfirmDisbursementParams) {
     throw new Error('MAKER_CANNOT_BE_CHECKER: A different authorized user must approve this disbursement');
   }
 
-  const now = Date.now();
-
-  // 3. Mark disbursement as DISBURSED (in simulation mode)
-  await db
-    .prepare(
-      `UPDATE disbursement_records
-       SET checker_id = ?, status = 'DISBURSED', checked_at = ?, disbursed_at = ?, notes = coalesce(notes || ' | ' || ?, notes)
-       WHERE id = ? AND agency_id = ?`,
-    )
-    .bind(checkerId, now, now, notes ?? 'Approved by checker', disbursementId, agencyId)
-    .run();
-
-  // 4. Resolve or assign default lender
-  let lenderId = (
-    await db
+  // 3. Resolve the real lender — never fabricate a counterparty (finding 8).
+  //    Prefer the lender assigned to the application; fall back to the agency's
+  //    active lender; fail closed if none is configured.
+  let lenderId = disb.assigned_lender_id ?? null;
+  if (!lenderId) {
+    const active = await db
       .prepare(`SELECT id FROM lenders WHERE agency_id = ? AND status = 'ACTIVE' LIMIT 1`)
       .bind(agencyId)
-      .first<{ id: string }>()
-  )?.id;
-
+      .first<{ id: string }>();
+    lenderId = active?.id ?? null;
+  }
   if (!lenderId) {
-    // Create default partner lender if none exists yet
-    lenderId = ulid();
-    await db
-      .prepare(
-        `INSERT INTO lenders (id, agency_id, name, slug, contact_email, status, created_at, updated_at)
-         VALUES (?, ?, 'Default Partner Bank', 'default-bank', 'partner@gidfine.com', 'ACTIVE', ?, ?)`,
-      )
-      .bind(lenderId, agencyId, now, now)
-      .run();
+    throw new Error('NO_ACTIVE_LENDER: A configured active lender is required before disbursement');
   }
 
-  // 5. Create loan servicing record
+  const now = Date.now();
   const loanId = ulid();
-  // Calculate quote installments for schedule
+  const scheduleId = ulid();
+
+  // 4. Compute the schedule (read-only) before building the write batch.
   const quote = await calculateQuote({
     principalPesewas: disb.amount_pesewas,
     nominalAnnualRateBps: disb.nominal_annual_rate_bps,
     tenureMonths: disb.tenure_months,
   });
 
-  await db
-    .prepare(
-      `INSERT INTO loans (
-         id, agency_id, application_id, borrower_id, lender_id, disbursement_record_id,
-         principal_pesewas, nominal_annual_rate_bps, tenure_months, monthly_repayment_pesewas,
-         outstanding_principal_pesewas, outstanding_interest_pesewas, outstanding_fees_pesewas,
-         status, disbursed_at, created_at, updated_at
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'ACTIVE', ?, ?, ?)`,
-    )
-    .bind(
-      loanId,
-      agencyId,
-      disb.application_id,
-      disb.borrower_id,
-      lenderId,
-      disbursementId,
-      disb.amount_pesewas,
-      disb.nominal_annual_rate_bps,
-      disb.tenure_months,
-      quote.monthlyRepaymentPesewas,
-      disb.amount_pesewas,
-      quote.totalInterestPesewas,
-      now,
-      now,
-      now,
-    )
-    .run();
-
-  // 6. Create initial repayment schedule & installments
-  const scheduleId = ulid();
-  await db
-    .prepare(
-      `INSERT INTO repayment_schedules (id, agency_id, loan_id, version_number, created_at)
-       VALUES (?, ?, ?, 1, ?)`,
-    )
-    .bind(scheduleId, agencyId, loanId, now)
-    .run();
-
-  for (const inst of quote.installments) {
-    const dueDate = now + inst.installmentNumber * 30 * 24 * 60 * 60 * 1000;
-    await db
-      .prepare(
-        `INSERT INTO repayment_installments (
-           id, schedule_id, installment_number, due_date,
-           principal_due_pesewas, interest_due_pesewas, fees_due_pesewas, total_due_pesewas,
-           principal_paid_pesewas, interest_paid_pesewas, fees_paid_pesewas, status
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 'PENDING')`,
-      )
-      .bind(
-        ulid(),
-        scheduleId,
-        inst.installmentNumber,
-        dueDate,
-        inst.principalPesewas,
-        inst.interestPesewas,
-        inst.feesPesewas,
-        inst.totalPesewas,
-      )
-      .run();
-  }
-
-  // 7. Post double-entry disbursement journal entry
-  await postJournalEntry({
-    db,
+  // 5. Resolve the disbursement journal's accounts (read) ahead of the batch.
+  const journal = await prepareJournal(db, {
     agencyId,
     actorId: checkerId,
     description: `Loan disbursement for ${loanId}`,
     reference: `DISB-${disbursementId}`,
+    now,
     lines: [
-      {
-        accountCode: '1200', // Loans Receivable (Asset Debit)
-        debitPesewas: disb.amount_pesewas,
-        creditPesewas: 0,
-        memo: `Loan principal disbursed - ${loanId}`,
-      },
-      {
-        accountCode: '1010', // Cash Clearing (Asset Credit)
-        debitPesewas: 0,
-        creditPesewas: disb.amount_pesewas,
-        memo: `Disbursement clearing payout - ${disbursementId}`,
-      },
+      { accountCode: '1200', debitPesewas: disb.amount_pesewas, creditPesewas: 0, memo: `Loan principal disbursed - ${loanId}` },
+      { accountCode: '1010', debitPesewas: 0, creditPesewas: disb.amount_pesewas, memo: `Disbursement clearing payout - ${disbursementId}` },
     ],
   });
 
-  // 8. Transition application to ACTIVE
-  await db
-    .prepare(
-      `UPDATE loan_applications
-       SET status = 'ACTIVE', updated_at = ?
-       WHERE id = ? AND agency_id = ?`,
-    )
-    .bind(now, disb.application_id, agencyId)
-    .run();
-
-  // 9. Audit event
-  await db
-    .prepare(
-      `INSERT INTO audit_events (id, agency_id, actor_id, action, resource_type, resource_id, details, created_at)
-       VALUES (?, ?, ?, 'DISBURSEMENT_CONFIRMED', 'loan', ?, ?, ?)`,
-    )
-    .bind(
-      ulid(),
-      agencyId,
-      checkerId,
-      loanId,
-      JSON.stringify({ disbursementId, checkerId, makerId: disb.maker_id, amountPesewas: disb.amount_pesewas }),
-      now,
-    )
-    .run();
+  // 6. Apply every write as one atomic transaction.
+  await commitWithEntryNumber(db, agencyId, (entryNumber, journalEntryId) => [
+    db
+      .prepare(
+        `UPDATE disbursement_records
+           SET checker_id = ?, status = 'DISBURSED', checked_at = ?, disbursed_at = ?,
+               notes = coalesce(notes || ' | ' || ?, notes)
+           WHERE id = ? AND agency_id = ?`,
+      )
+      .bind(checkerId, now, now, notes ?? 'Approved by checker', disbursementId, agencyId),
+    db
+      .prepare(
+        `INSERT INTO loans (
+           id, agency_id, application_id, borrower_id, lender_id, disbursement_record_id,
+           principal_pesewas, nominal_annual_rate_bps, tenure_months, monthly_repayment_pesewas,
+           outstanding_principal_pesewas, outstanding_interest_pesewas, outstanding_fees_pesewas,
+           status, disbursed_at, created_at, updated_at
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'ACTIVE', ?, ?, ?)`,
+      )
+      .bind(
+        loanId,
+        agencyId,
+        disb.application_id,
+        disb.borrower_id,
+        lenderId,
+        disbursementId,
+        disb.amount_pesewas,
+        disb.nominal_annual_rate_bps,
+        disb.tenure_months,
+        quote.monthlyRepaymentPesewas,
+        disb.amount_pesewas,
+        quote.totalInterestPesewas,
+        now,
+        now,
+        now,
+      ),
+    db
+      .prepare(
+        `INSERT INTO repayment_schedules (id, agency_id, loan_id, version_number, created_at)
+         VALUES (?, ?, ?, 1, ?)`,
+      )
+      .bind(scheduleId, agencyId, loanId, now),
+    ...quote.installments.map((inst) => {
+      const dueDate = now + inst.installmentNumber * 30 * 24 * 60 * 60 * 1000;
+      return db
+        .prepare(
+          `INSERT INTO repayment_installments (
+             id, schedule_id, installment_number, due_date,
+             principal_due_pesewas, interest_due_pesewas, fees_due_pesewas, total_due_pesewas,
+             principal_paid_pesewas, interest_paid_pesewas, fees_paid_pesewas, status
+           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 'PENDING')`,
+        )
+        .bind(
+          ulid(),
+          scheduleId,
+          inst.installmentNumber,
+          dueDate,
+          inst.principalPesewas,
+          inst.interestPesewas,
+          inst.feesPesewas,
+          inst.totalPesewas,
+        );
+    }),
+    ...journal.build(entryNumber, journalEntryId),
+    db
+      .prepare(`UPDATE loan_applications SET status = 'ACTIVE', updated_at = ? WHERE id = ? AND agency_id = ?`)
+      .bind(now, disb.application_id, agencyId),
+    db
+      .prepare(
+        `INSERT INTO audit_events (id, agency_id, actor_id, action, resource_type, resource_id, details, created_at)
+         VALUES (?, ?, ?, 'DISBURSEMENT_CONFIRMED', 'loan', ?, ?, ?)`,
+      )
+      .bind(
+        ulid(),
+        agencyId,
+        checkerId,
+        loanId,
+        JSON.stringify({ disbursementId, checkerId, makerId: disb.maker_id, amountPesewas: disb.amount_pesewas }),
+        now,
+      ),
+  ]);
 
   return {
     loanId,

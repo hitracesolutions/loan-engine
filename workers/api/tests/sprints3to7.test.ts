@@ -286,6 +286,13 @@ describe('Gidfine Sprints 3-7 Comprehensive Verification', () => {
     const cashier = await createUser('cashier_s4@gidfine.com', 'cashier', 'Cashier Checker');
     const borrower = await createUser('borrower_s4@gidfine.com', 'borrower', 'Ama Serwaa');
 
+    // Seed an active lender: disbursement now resolves a real lender and never
+    // fabricates one (finding 8 / DECISION_REVIEW.md T3).
+    sqlite.prepare(
+      `INSERT INTO lenders (id, agency_id, name, slug, contact_email, status, created_at, updated_at)
+       VALUES (?, 'agency_default', 'Partner Bank S4', 'partner-s4', 's4@lender.com', 'ACTIVE', ?, ?)`,
+    ).run(ulid(), Date.now(), Date.now());
+
     // Create application
     const appId = ulid();
     const now = Date.now();

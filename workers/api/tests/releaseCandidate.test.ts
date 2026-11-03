@@ -331,6 +331,13 @@ describe('Gidfine Release Candidate Critical Invariant Verification', () => {
     const cashier = await createUser('cashier_disb@gidfine.com', 'cashier');
     const borrower = await createUser('borrower_disb@gidfine.com', 'borrower');
 
+    // Seed an active lender: disbursement resolves a real lender, never fabricates
+    // one (finding 8 / DECISION_REVIEW.md T3).
+    sqlite.prepare(
+      `INSERT INTO lenders (id, agency_id, name, slug, contact_email, status, created_at, updated_at)
+       VALUES (?, 'agency_default', 'Partner Bank Disb', 'partner-disb', 'disb@lender.com', 'ACTIVE', ?, ?)`,
+    ).run(ulid(), Date.now(), Date.now());
+
     const appId = ulid();
     const now = Date.now();
 

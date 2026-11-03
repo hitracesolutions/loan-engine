@@ -192,6 +192,9 @@ export async function confirmDisbursementHandler(ctx: RouteContext): Promise<Res
     if (err.message && err.message.includes('DISBURSEMENT_ALREADY_PROCESSED')) {
       throw conflict('ALREADY_PROCESSED', err.message);
     }
+    if (err.message && err.message.includes('NO_ACTIVE_LENDER')) {
+      throw badRequest('NO_ACTIVE_LENDER', 'A configured active lender is required before disbursement');
+    }
     throw err;
   }
 }

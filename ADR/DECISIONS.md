@@ -751,8 +751,10 @@ double-entry control on every payment.
   reconciliation.
 - Cashier authority becomes a security-critical role, which sharpens ADR-0009
   (who may record and reverse a payment).
-- Manual entry makes duplicate-payment prevention depend on the existing
-  idempotency key mechanism, so that path needs explicit testing.
+- Manual entry makes duplicate-payment prevention depend on **payment-reference
+  uniqueness** — a `UNIQUE(agency_id, reference)` index on `cashier_payments`
+  (migration `0008`), enforced inside the payment's atomic batch — not on the
+  client `Idempotency-Key` mechanism, which guards client retries of one request.
 - Future provider integration is additive: webhooks would post through the same
   journal entry path as manual entry.
 

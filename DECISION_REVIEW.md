@@ -1,0 +1,142 @@
+# Decision & code review — financial controls
+
+**Date:** 2026-11-03
+**Reviewer lenses:** backend-design (security-discipline, data-modeling, migration-safety, idempotency-and-side-effects, auth-and-authorization), data-protection/privacy, adversarial fraud/controls.
+**Scope:** the owner decisions in [`ADR/DECISIONS.md`](./ADR/DECISIONS.md), cross-checked against the shipped servicing, ledger and disbursement code.
+**Status:** advisory. No ADR was modified. Per the repo's own rule, changing a decision means **superseding** its record, not editing it. Code-level findings are ordinary defects and can be fixed without an ADR.
+
+Each finding says whether it was **confirmed against code** or is **decision-level** (argued from the records, not the implementation).
+
+## Severity summary
+
+| # | Severity | Finding | Type | Refs |
+| --- | --- | --- | --- | --- |
+| 1 | **High** | Financial writes are not atomic — no transaction/`batch()` around multi-statement money operations | Confirmed | ledger, disbursement |
+| 2 | **High** | ADR-0002 (Gidfine holds no funds; lender is payee) contradicts ADR-0010 (cashier takes `CASH`) | Decision | ADR-0002, ADR-0010 |
+| 3 | **High** | "Fail closed" disclosure must gate *matching*, not just field-masking | Decision | ADR-0006, ADR-0008 |
+| 4 | **Med-High** | Single-approver disbursement removes the only preventive control; an admin can both record and reverse a payment | Confirmed + decision | ADR-0009 |
+| 5 | **Medium** | `cashier_payments.reference` has no DB `UNIQUE` constraint; duplicate guard is app-level check-then-act | Confirmed | ADR-0010 |
+| 6 | **Medium** | Lender disclosure is assessed field-by-field; re-identification is combinatorial | Decision | ADR-0006 |
+| 7 | **Medium** | Document key-custody has a two-sided failure (operator can read PII vs lost keys fail retention) | Decision | ADR-0007 |
+| 8 | **Low-Med** | Disbursement fabricates a "Default Partner Bank" lender inline | Confirmed | ADR-0002 |
+| 9 | **Low (forward)** | When margin/revenue (ADR-0004) is built, reversal must also invert recognised margin | Decision | ADR-0004 |
+
+A note on rounding (originally flagged, now cleared): principal splitting pushes the remainder into the final part (`workers/api/src/lib/money.ts:54-66`) so schedules reconcile, and reversals restore the exact stored component allocations (`workers/api/src/domain/financialLedger.ts:386-453`). Both are correct. The one unverified spot is interest rounding inside `pricingEngine.ts`.
+
+---
+
+## 1. Financial writes are not atomic — High (confirmed)
+
+`processCashierPayment` (`workers/api/src/domain/financialLedger.ts:231-315`), `reverseCashierPayment` (`:411-475`) and `confirmDisbursement` (`workers/api/src/domain/makerCheckerDisbursement.ts:174-320`) each perform many sequential `db.prepare(...).run()` calls — journal entry, journal lines, the payment/loan row, balance updates, schedule + N installments, audit — with **no transaction or `db.batch()`**.
+
+If the worker is evicted or any statement throws mid-sequence, the database is left in a partial state: a loan with no balancing journal entry, a `DISBURSED` record with no loan, or updated balances with no receipt. This is made more likely by the `journal_entries` `UNIQUE(agency_id, entry_number)` constraint (migration `0006:40`): `entry_number` is derived with `SELECT max(entry_number)+1` (`financialLedger.ts:63-79`), so two concurrent postings compute the same number, one `INSERT` fails — and without a transaction the already-executed writes from that path are **not rolled back**.
+
+**Recommendation:** wrap each money operation in a single `db.batch([...])` (D1's atomic unit) so all rows commit or none do. Keep `entry_number` allocation and its dependent writes inside the same batch, and handle the uniqueness collision as a retry.
+
+## 2. Who holds the funds — ADR-0002 vs ADR-0010 — High (decision)
+
+ADR-0002 fixes the arranger model: *"Gidfine does not hold funds, and the legal payee for repayments is the lender."* ADR-0010 has repayments *"recorded by an authorised cashier"* accepting `CASH` (`servicing.ts:95-130`). A cashier taking physical cash means Gidfine **is** handling funds at the point of receipt — the exact trust-account/licensing exposure ADR-0002 adopts the arranger model to avoid, and which ADR-0014 licensing scope would have to cover.
+
+**Recommendation:** resolve the model explicitly. Either the cashier collects strictly as the lender's disclosed agent (document it; the receipt must name the lender as payee), or acknowledge Gidfine handles client funds and bring ADR-0014's licensed scope and a trust-account control into play. This is an owner/counsel decision, not a code change.
+
+## 3. "Fail closed" must gate matching, not just fields — High (decision)
+
+ADR-0006 fails closed on *fields*; ADR-0008 exposes a competitive application to *"every eligible lender."* If eligibility is computed before the disclosure-profile check, a lender with **no profile** can still be matched in and learn the application exists. Field-masking a lender who should not be in the match set at all is the wrong layer.
+
+**Recommendation:** exclude no-profile lenders from the match set entirely (not merely mask their view), and **version the disclosure profile**, stamping the version on each issued proposal the way consent stamps its terms hash — otherwise a later profile edit makes past disclosures unauditable.
+
+## 4. Single-approver disbursement + admin record-and-reverse — Med-High (confirmed + decision)
+
+Today disbursement enforces dual control: `confirmDisbursement` rejects `maker_id === checkerId` (`makerCheckerDisbursement.ts:167`). ADR-0009 would **relax** this to a single approver, leaving only a *next-day* reconciliation report — a detective control that fires after the money has left. Separately, the same person can both create and destroy a payment: `recordPayment` allows `cashier` **or** `agency_admin` (`servicing.ts:96`) and `reversePayment` requires `agency_admin` (`servicing.ts:133`), so an admin can record a receipt and reverse it alone. (Reason text and an audit event are required — `financialLedger.ts:461-475` — which is good, but it is still one actor.)
+
+**Recommendation:** make disbursement approval **value-tiered** (single approver under a threshold, dual above), and when the maker/checker migration lands make `check_maker_checker_distinct` **conditional on amount** rather than dropping it — dropping forfeits the ability to require dual control for large loans later. For reversals, keep them off the record-er's own hands or require supervisor sign-off, per ADR-0009's own cashier rule, applied to admins too.
+
+## 5. No DB uniqueness on payment reference — Medium (confirmed)
+
+`processCashierPayment` guards duplicates with `SELECT id FROM cashier_payments WHERE agency_id=? AND reference=?` then inserts (`financialLedger.ts:134-141`), but `cashier_payments` has **no `UNIQUE(agency_id, reference)`** (migration `0006:117-133` — only a `(agency_id, loan_id)` index). The guard is therefore check-then-act with no database backstop: two concurrent requests with the same reference can both pass the `SELECT`. ADR-0010 also mis-describes this control as *"the existing idempotency key mechanism"* — the idempotency-keys table (`lib/idempotency.ts`) is keyed on a client `Idempotency-Key`, which is a different mechanism from reference-uniqueness, and the code comment labelling the reference check an "Idempotency guard" repeats the confusion.
+
+**Recommendation:** add `UNIQUE(agency_id, reference)` to `cashier_payments` (forward migration) and let the `INSERT` enforce it; correct the ADR-0010 wording to say "payment-reference uniqueness," not "idempotency key."
+
+## 6. Combinatorial re-identification — Medium (decision)
+
+ADR-0006 evaluates masking field-by-field. A masked National ID (last-N) together with city + employer + income band + amount can re-identify an individual even when each field looks safe.
+
+**Recommendation:** assess each lender's disclosure profile for *combined* re-identification risk, not per-field allow/deny.
+
+## 7. Document key-custody two-sided failure — Medium (decision)
+
+ADR-0007 leaves key custody open. The two failure directions must be resolved together: if the operator holds keys, that is a confidentiality surface over KYC PII; if keys are unrecoverable, lost keys mean unreadable records that then **fail** the 5-year retention obligation.
+
+**Recommendation:** envelope encryption with controlled key escrow satisfies both; record who can decrypt in the ADR before R2 is bound.
+
+## 8. Disbursement fabricates a lender — Low-Med (confirmed)
+
+`confirmDisbursement` creates a "Default Partner Bank" lender inline when none exists (`makerCheckerDisbursement.ts:191-201`). On a path that moves money, silently inventing the contractual counterparty conflicts with ADR-0002, where the lender is the real contract party and payee.
+
+**Recommendation:** require an explicit, configured lender on the application before disbursement; fail rather than fabricate.
+
+## 9. Margin reversal is future work — Low / forward (decision)
+
+ADR-0004 recognises margin **on collection**, but revenue accounts are not yet provisioned, so no margin is posted today. The current reversal rebuilds from stored principal/interest/fees allocations only (`financialLedger.ts:386-409`). When margin recognition is added, the reversal must also invert the recognised margin, and the stored allocation snapshot must grow to include it — otherwise a reversed payment will leave recognised revenue behind (the exact risk ADR-0004 flags).
+
+**Recommendation:** when building margin, extend the payment's stored allocation to include margin components and add a property test: `Σ recognised − Σ reversed == margin on currently-collected cash`.
+
+---
+
+## Remediation tasks
+
+Ordered step by step. **Phase 1** is code only and can start now (no owner
+decision required). **Phase 2** needs an owner/counsel decision first, so each
+task begins by superseding or extending an ADR, then implements it. **Phase 3**
+is deferred until the feature it guards is built. Migrations are forward-only;
+the next free number is **0008**, then 0009 in the order the migrations are
+created.
+
+### Phase 1 — code fixes (no ADR needed) — **DONE 2026-11-03** (88 tests pass)
+
+- [x] **T1 — Make financial writes atomic (finding 1).**
+  - [x] `processCashierPayment` now commits the journal entry, lines, `cashier_payments` row, loan-balance update and audit row through one `db.batch([...])`.
+  - [x] `reverseCashierPayment` commits the compensating journal, `is_reversed` flip, `payment_reversals` row, balance restore and audit in one batch.
+  - [x] `confirmDisbursement` commits the disbursement update, loan, schedule, installments, disbursement journal, application transition and audit in one batch.
+  - [x] `entry_number` is allocated via `commitWithEntryNumber`, which retries on the `UNIQUE(agency_id, entry_number)` collision instead of leaving a partial write.
+  - [ ] *Not done:* a true concurrency test. The test harness uses synchronous in-memory `node:sqlite`, which cannot model two simultaneous writers; a real test needs `wrangler dev`/Miniflare. Deferred.
+- [x] **T2 — Enforce payment-reference uniqueness in the database (finding 5).**
+  - [x] Added migration `0008_payment_reference_unique.sql`: `CREATE UNIQUE INDEX idx_cashier_payments_reference ON cashier_payments (agency_id, reference)`.
+  - [x] Kept the pre-check for a friendly error; the batch `INSERT` failure is now the real guarantee and is mapped back to the existing `DUPLICATE_PAYMENT` 409.
+  - [x] Corrected the ADR-0010 wording to "payment-reference uniqueness" and replaced the misleading "Idempotency guard" comment.
+- [x] **T3 — Stop fabricating a lender on the disbursement path (finding 8).**
+  - [x] Removed the inline "Default Partner Bank" creation.
+  - [x] `confirmDisbursement` now resolves the application's `assigned_lender_id`, falls back to the agency's active lender, and throws `NO_ACTIVE_LENDER` (mapped to a 400) if none exists. Two tests that relied on the old fabrication now seed an active lender.
+
+### Phase 2 — decisions first, then implementation (owner/counsel)
+
+- [ ] **T4 — Resolve who holds funds (finding 2).**
+  - [ ] Owner/counsel decision: cashier collects strictly as the lender's disclosed agent, **or** Gidfine handles client funds.
+  - [ ] Supersede ADR-0002 (new section, next free number) recording the choice; if funds are held, reconcile ADR-0014 licensed scope and add a trust-account control.
+  - [ ] If agent model: make the receipt name the lender as payee (ties into ADR-0012 templates).
+- [ ] **T5 — Gate matching on the disclosure profile (finding 3).**
+  - [ ] Supersede/extend ADR-0006 and ADR-0008 to state that a lender with no profile is excluded from the match set (not merely field-masked), and that profiles are versioned.
+  - [ ] Exclude no-profile lenders in `matchingEngine.ts` before eligibility is returned.
+  - [ ] Stamp the disclosure-profile version on each issued proposal (mirror the consent terms-hash pattern) so past disclosures stay auditable.
+- [ ] **T6 — Value-tiered approval and reversal segregation (finding 4).**
+  - [ ] Supersede ADR-0009 to define the approval threshold (single approver below, dual above) and to require a second actor for reversals (apply the cashier rule to admins too).
+  - [ ] Add migration `0009` making `check_maker_checker_distinct` **conditional on amount** rather than dropping it; build the daily disbursement reconciliation report first (it is the named compensating control).
+  - [ ] Enforce the tier in `confirmDisbursement`; ensure the payment record-er cannot also approve its reversal (`servicing.ts:96,133`).
+  - [ ] Replace the simulated MFA (`hardeningMfa.ts` fixed codes) before any of this goes live.
+- [ ] **T7 — Combinatorial re-identification policy (finding 6).**
+  - [ ] Extend ADR-0006's acceptance criteria to require each lender profile be assessed for *combined* re-identification risk, not field-by-field.
+  - [ ] Review `createMaskedBorrowerSummary` output against that criterion.
+- [ ] **T8 — Document key-custody model (finding 7).**
+  - [ ] Close the open ADR-0007 item with an envelope-encryption + controlled-escrow design recording who can decrypt and whether the operator can read a file.
+  - [ ] Only bind R2 and enable KYC upload once this is recorded.
+
+### Phase 3 — deferred (build when the feature lands)
+
+- [ ] **T9 — Margin reversal invariant (finding 9).**
+  - [ ] When margin/revenue recognition (ADR-0004) is implemented, extend the payment's stored allocation snapshot to include margin components.
+  - [ ] Make `reverseCashierPayment` invert recognised margin too.
+  - [ ] Add a property test: `Σ recognised − Σ reversed == margin on currently-collected cash`.
+
+---
+
+*Produced as a point-in-time review. Findings 1, 4, 5, 8 and the rounding note were confirmed against the cited files; findings 2, 3, 6, 7, 9 are decision-level and argued from the records. Fixing a code finding needs no ADR; changing a decision requires a superseding record under [`ADR/DECISIONS.md`](./ADR/DECISIONS.md).*
