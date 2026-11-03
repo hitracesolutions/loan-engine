@@ -139,4 +139,60 @@ created.
 
 ---
 
+## Process rule — how the delivery team closes these
+
+This file is the authoritative remediation checklist. Any developer picking up
+this work follows the rule below. It exists so a second team can proceed without
+re-deciding what is settled or accidentally reverting a protected decision.
+
+**R1 — Know which kind of task you have.** A task is either a **code fix** (no
+owner decision needed) or **decision-gated** (needs a signed ADR first). Phase 1
+is code. Phase 2 is decision-gated. Phase 3 is deferred until its feature exists.
+
+**R2 — Code fixes: the definition of done.** A code task (T1, T2, T3, and the
+implementation half of any Phase 2 task) is done only when **all** hold:
+1. the change is implemented;
+2. `cd workers/api && npm test` is green (currently 88 tests);
+3. `npm run typecheck` introduces **no new** errors in the files you touched
+   (the repo has a known pre-existing baseline — compare, don't aim for zero);
+4. any new migration is the **next free number**, forward-only, and an **applied
+   migration is never edited or renamed** (`BLOCKERS.md` §4);
+5. the task's checkbox here is ticked with a dated note.
+
+**R3 — Decision-gated tasks: decision before code.** For T4–T8 you may **not**
+write behaviour until the matching proposed record in
+[`ADR/DECISIONS.md`](./ADR/DECISIONS.md) is **Accepted and signed by the owner**.
+The proposals already exist as drafts: **ADR-0016** (T4, funds custody),
+**ADR-0017** (T5, disclosure-gated matching), **ADR-0018** (T6, approval tiers).
+T7 and T8 attach to ADR-0006 and ADR-0007 respectively.
+
+**R4 — Accepting a decision (the supersede procedure).** When the owner signs a
+proposal:
+1. fill in *Decision*, *Rationale*, *Decided by* and the date in the ADR;
+2. set its status to **Accepted**;
+3. mark the record it supersedes **Superseded** — never edit the old record;
+4. update the index in `ADR/DECISIONS.md` and the status table in
+   `IMPLEMENTATION_PLAN.md` §3.1;
+5. only then implement the code half (under R2), and only then remove the
+   matching simulation flags listed in the ADR's *Evidence in the codebase*.
+
+**R5 — Never silently revert a protected decision.** The decisions in the
+`AGENTS.md` "Protected decisions" table (impersonation read-only, maker/checker
+constraint, simulation flags, lender fail-closed, `agency_id` filters,
+server-side authorization) stay until a superseding ADR says otherwise. Disagree
+in an ADR, not in a quiet code change.
+
+**R6 — Go-live gate (applies before any real money or PII).** Independently of
+the tasks, production of real disbursement, real PII, or signable contracts stays
+closed until: real MFA replaces the simulated fixed codes; the daily disbursement
+reconciliation report exists and passes on fixtures; and the counsel artefacts in
+`BLOCKERS.md` (C-1…C-4) are recorded. See `EXECUTION_PLAN.md` for the release
+checklist.
+
+**Suggested order:** Phase 1 (done) → T4/ADR-0016 (unblocks the funds model that
+T6 and receipts depend on) → T6/ADR-0018 with its reconciliation report and real
+MFA → T5/ADR-0017 → T7, T8 → T9 when margin is built.
+
+---
+
 *Produced as a point-in-time review. Findings 1, 4, 5, 8 and the rounding note were confirmed against the cited files; findings 2, 3, 6, 7, 9 are decision-level and argued from the records. Fixing a code finding needs no ADR; changing a decision requires a superseding record under [`ADR/DECISIONS.md`](./ADR/DECISIONS.md).*

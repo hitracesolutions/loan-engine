@@ -727,3 +727,27 @@ The current production baseline is Cloudflare Pages + Pages Functions, D1 and KV
 - Added a release gate checklist (reconciliation proof, accountant confirmation,
   security review, restore drill, UAT, owner sign-off).
 - S-10 (impersonation) remains the only completed step; S-00 typecheck is next.
+
+### 2026-11-03 — Decision review, Phase 1 remediation, and a remediation rule
+
+- Consolidated the 15 per-file ADRs and their README into one
+  `ADR/DECISIONS.md` (index, status vocabulary, open-items table) and repointed
+  every cross-reference in the seven companion docs. No decision text changed.
+- Added `DECISION_REVIEW.md`: a decision-and-code review (9 findings, severity
+  ranked, each tagged confirmed-against-code or decision-level), an ordered
+  remediation task list (T1–T9 in three phases), and a **process rule** (R1–R6)
+  that the delivery team follows to close the work — including the
+  decision-before-code gate and the supersede procedure.
+- **Phase 1 shipped** (`943de48`): financial writes (`processCashierPayment`,
+  `reverseCashierPayment`, `confirmDisbursement`) now commit through one
+  `db.batch()`; migration `0008` adds `UNIQUE(agency_id, reference)` on
+  `cashier_payments`; disbursement resolves a real lender instead of fabricating
+  "Default Partner Bank". `npm test` 88 pass; typecheck baseline unchanged.
+- **Phase 2 is owner-gated.** Draft superseding records are open in
+  `ADR/DECISIONS.md`: **ADR-0016** (funds custody, supersedes 0002), **ADR-0017**
+  (disclosure gates matching, extends 0006/0008), **ADR-0018** (value-tiered
+  approval, supersedes 0009). No behaviour is built against them until the owner
+  signs; the old records are not yet marked superseded.
+- Delivery team: start at `DECISION_REVIEW.md` → "Process rule". Do not write
+  Phase 2 code before its ADR is Accepted; do not revert a Protected decision in
+  a quiet change.
