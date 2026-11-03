@@ -323,6 +323,29 @@ describe('Gidfine Release Candidate Critical Invariant Verification', () => {
       env,
     );
     assert.equal(dupRevRes.status, 409);
+
+    // SEGREGATION OF DUTIES (ADR-0018): the user who RECORDED a payment may not
+    // approve its reversal. Admin records, same admin tries to reverse -> 403.
+    const adminPayRes = await worker.fetch(
+      new Request(`http://localhost/loans/${loanId}/payments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${admin.token}` },
+        body: JSON.stringify({ amountPesewas: 50000, paymentMethod: 'CASH', reference: 'SELF-REV-REF-001' }),
+      }),
+      env,
+    );
+    assert.equal(adminPayRes.status, 201);
+    const adminPaymentId = (await adminPayRes.json() as any).data.paymentId;
+
+    const selfReverseRes = await worker.fetch(
+      new Request(`http://localhost/payments/${adminPaymentId}/reverse`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${admin.token}` },
+        body: JSON.stringify({ reason: 'same actor attempting to reverse own entry' }),
+      }),
+      env,
+    );
+    assert.equal(selfReverseRes.status, 403);
   });
 
   // 4. DUPLICATE DISBURSEMENT CONFIRMATION PREVENTION

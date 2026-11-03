@@ -122,7 +122,8 @@ created.
   - [x] Owner decision: **value-tiered**; threshold **T** is a per-account setting; **single approver when T is unset**; reversal record-er ≠ approver.
   - [ ] Settings UI for **T** (surfacing the no-threshold ⇒ single-approver effect); define "supervisor" and role-enum names.
   - [ ] Add migration `0009` making `check_maker_checker_distinct` **conditional on amount** (enforced when amount ≥ T), not dropped; build the daily disbursement reconciliation report first (the named compensating control).
-  - [ ] Enforce the tier in `confirmDisbursement`; ensure the payment record-er cannot also approve its reversal (`servicing.ts:96,133`); replace the simulated MFA (`hardeningMfa.ts`) before go-live. Then mark ADR-0009 Superseded.
+  - [x] **Reversal segregation shipped** (safe tightening, no gate): `reverseCashierPayment` rejects a reversal whose approver is the payment's recorder (`cashier_id === approver` → 403); test in `releaseCandidate.test.ts`.
+  - [ ] Still gated on full acceptance: enforce the amount tier in `confirmDisbursement`, add migration `0009` for the conditional `check_maker_checker_distinct`, ship the daily reconciliation report, and replace the simulated MFA (`hardeningMfa.ts`) before go-live. Then mark ADR-0009 Superseded.
 - [ ] **T7 — Combinatorial re-identification policy (finding 6).**
   - [ ] Extend ADR-0006's acceptance criteria to require each lender profile be assessed for *combined* re-identification risk, not field-by-field.
   - [ ] Review `createMaskedBorrowerSummary` output against that criterion.

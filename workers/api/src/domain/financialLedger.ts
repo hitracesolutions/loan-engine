@@ -373,7 +373,7 @@ export async function reverseCashierPayment(params: ReversePaymentParams) {
 
   const payment = await db
     .prepare(
-      `SELECT cp.id, cp.loan_id, cp.amount_pesewas, cp.allocated_principal_pesewas,
+      `SELECT cp.id, cp.loan_id, cp.cashier_id, cp.amount_pesewas, cp.allocated_principal_pesewas,
               cp.allocated_interest_pesewas, cp.allocated_fees_pesewas, cp.is_reversed,
               cp.journal_entry_id, l.outstanding_principal_pesewas, l.outstanding_interest_pesewas,
               l.outstanding_fees_pesewas, l.application_id
@@ -385,6 +385,7 @@ export async function reverseCashierPayment(params: ReversePaymentParams) {
     .first<{
       id: string;
       loan_id: string;
+      cashier_id: string;
       amount_pesewas: number;
       allocated_principal_pesewas: number;
       allocated_interest_pesewas: number;
@@ -403,6 +404,13 @@ export async function reverseCashierPayment(params: ReversePaymentParams) {
 
   if (payment.is_reversed === 1) {
     throw new Error('PAYMENT_ALREADY_REVERSED');
+  }
+
+  // Segregation of duties (ADR-0018): the user who recorded a payment may not
+  // approve its own reversal — a single actor must not both create and destroy
+  // a financial record.
+  if (payment.cashier_id === approvedBy) {
+    throw new Error('SELF_REVERSAL_FORBIDDEN: the user who recorded a payment may not approve its reversal');
   }
 
   const now = Date.now();

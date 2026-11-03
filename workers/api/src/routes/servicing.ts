@@ -11,7 +11,7 @@
 
 import { processCashierPayment, reverseCashierPayment } from '../domain/financialLedger.ts';
 import { requireActor, requireRole } from '../lib/auth.ts';
-import { badRequest, conflict, json, notFound } from '../lib/http.ts';
+import { badRequest, conflict, forbidden, json, notFound } from '../lib/http.ts';
 import type { RouteContext } from '../router.ts';
 
 export async function listLoans(ctx: RouteContext): Promise<Response> {
@@ -154,6 +154,9 @@ export async function reversePayment(ctx: RouteContext): Promise<Response> {
   } catch (err: any) {
     if (err.message && err.message.includes('PAYMENT_ALREADY_REVERSED')) {
       throw conflict('PAYMENT_ALREADY_REVERSED', err.message);
+    }
+    if (err.message && err.message.includes('SELF_REVERSAL_FORBIDDEN')) {
+      throw forbidden('The user who recorded a payment cannot approve its reversal');
     }
     if (err.message && err.message.includes('PAYMENT_NOT_FOUND')) {
       throw notFound('Payment not found');
