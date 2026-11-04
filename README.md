@@ -2,7 +2,7 @@
 
 # ⚡ Gidfine
 
-### AI-Powered Loan Agency Management Platform
+### Serverless Loan Agency Management Platform
 
 **Instant approval. Transparent pricing. Multi-lender marketplace.**
 
@@ -63,11 +63,11 @@ Loan intermediation in Ghana is fragmented and opaque:
 | **Real-time** | Not enabled | Durable Objects are deferred until a real-time requirement exists |
 | **Cache** | Cloudflare KV | Rate cards, idempotency, repayment schedules |
 | **Async Work** | Deferred Queues/Cron | Add for approved notifications and scheduled servicing jobs |
-| **AI Inference** | Deferred Workers AI/AI Gateway | Not part of the MVP acceptance scope |
+| **AI / ML** | None | The platform runs no AI or ML inference; lending decisions are rule-based, deterministic and auditable |
 | **Auth** | Web Crypto PBKDF2 + application HS256 JWT | Active path uses the Web Crypto implementation |
 | **Styling** | Tailwind CSS | Utility-first, responsive components |
 
-**No Python runtime. No separate production API hostname. D1 is the system of record and is managed through versioned migrations.**
+**No AI/ML. No Python runtime. No separate production API hostname. D1 is the system of record and is managed through versioned migrations.**
 
 ---
 
@@ -97,7 +97,7 @@ Loan intermediation in Ghana is fragmented and opaque:
        │Database│      │       │  │        │ │       │
    └────────┘      └───────┘  └────────┘ └───────┘
 
-     Durable Objects, Workers AI and external notifications are deferred
+     Durable Objects and external notifications are deferred; no AI/ML is used
 ```
 
 ---

@@ -8,11 +8,11 @@
 
 **Status:** Requirements baseline. The business decisions previously listed in §15 are now recorded as owner decisions in [`ADR/`](./ADR/DECISIONS.md); this guide describes the requirements, and each decision points at the record that fixed it.
 
-**Implementation state:** Sprints 1-7 are implemented and every financial or third-party path runs in **simulation mode** pending the gate closures listed in [`BLOCKERS.md`](./BLOCKERS.md).
+**Implementation state:** Sprints 1-7 are implemented and every financial or third-party path runs in **simulation mode** pending the gate closures listed in the [blocker triage](./ADR/DECISIONS.md#blocker-triage) in `ADR/DECISIONS.md`.
 
 **Current platform baseline:** Cloudflare Pages + Pages Functions, React + Vite, D1 and KV. The Pages Functions reuse the TypeScript router in `workers/api/src`; there is no Python runtime. R2, Queues/Cron and Durable Objects are deferred capabilities, not current production dependencies.
 
-**Companion documents:** [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md) (phases, sprints, migration roadmap, authorised steps and progress, definition of done) · [`BLOCKERS.md`](./BLOCKERS.md) (what is answered, what is still open) · [`ADR/DECISIONS.md`](./ADR/DECISIONS.md) (decision records) · [`DECISION_REVIEW.md`](./DECISION_REVIEW.md) (review findings, remediation tasks, agent process rule)
+**Companion documents:** [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md) (phases, sprints, migration roadmap, authorised steps and progress, definition of done) · [`ADR/DECISIONS.md`](./ADR/DECISIONS.md) (decision records **and** the blocker triage — what is answered, what is still open) · [`DECISION_REVIEW.md`](./DECISION_REVIEW.md) (review findings, remediation tasks, agent process rule)
 
 ## 1. Executive summary
 
@@ -213,7 +213,7 @@ R2 is intentionally not required by the current routes. It becomes a delivery de
 
 The target product still requires server-enforced roles, field-level disclosure, versioned pricing, guarded state transitions, append-only financial history, idempotent financial writes, audit evidence and automated security tests. The implementation order is defined in [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md).
 
-**Simulation gating.** Origination, matching, pricing, consent, disbursement, servicing and document metadata are implemented, but the financial and third-party edges are simulated and labelled as such: quotes carry `is_simulation = 1` and `status = 'PROVISIONAL'`, disbursements write `simulation_mode = 1`, payments accept only a manual cashier entry path, and outbox dispatch does not call any provider. A simulation flag may only be removed as part of closing the matching decision record — see [`BLOCKERS.md`](./BLOCKERS.md) and the per-record "Evidence in the codebase" sections in [`ADR/`](./ADR/DECISIONS.md).
+**Simulation gating.** Origination, matching, pricing, consent, disbursement, servicing and document metadata are implemented, but the financial and third-party edges are simulated and labelled as such: quotes carry `is_simulation = 1` and `status = 'PROVISIONAL'`, disbursements write `simulation_mode = 1`, payments accept only a manual cashier entry path, and outbox dispatch does not call any provider. A simulation flag may only be removed as part of closing the matching decision record — see the [blocker triage](./ADR/DECISIONS.md#blocker-triage) and the per-record "Evidence in the codebase" sections in [`ADR/DECISIONS.md`](./ADR/DECISIONS.md).
 
 A shared-database multi-tenant model is appropriate only if Gidfine is intended to serve multiple independent agency businesses; if Gidfine alone is the agency, an agency-scoped single-tenant implementation may be simpler. Confirm commercial tenancy before schema design.
 
@@ -239,7 +239,7 @@ Criterion 7 replaces the former "an agency cannot access a different tenant's lo
 
 The fourteen questions this section previously listed are answered. Each answer
 is recorded with its consequences in the referenced ADR; the residual items that
-remain open are tracked in [`BLOCKERS.md`](./BLOCKERS.md) §3.
+remain open are tracked in the [blocker triage](./ADR/DECISIONS.md#blocker-triage) in `ADR/DECISIONS.md`.
 
 | # | Question | Gate | Answer | Record | Status |
 | --- | --- | --- | --- | --- | --- |

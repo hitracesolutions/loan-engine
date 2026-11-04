@@ -196,7 +196,7 @@ implementation half of any Phase 2 task) is done only when **all** hold:
 3. `npm run typecheck` introduces **no new** errors in the files you touched
    (the repo has a known pre-existing baseline — compare, don't aim for zero);
 4. any new migration is the **next free number**, forward-only, and an **applied
-   migration is never edited or renamed** (`BLOCKERS.md` §4);
+   migration is never edited or renamed** (`ADR/DECISIONS.md` blocker triage, migration discipline);
 5. the task's checkbox here is ticked with a dated note.
 
 **R3 — Decision-gated tasks: decision before code.** For T4–T8 you may **not**
@@ -226,7 +226,7 @@ in an ADR, not in a quiet code change.
 the tasks, production of real disbursement, real PII, or signable contracts stays
 closed until: real MFA replaces the simulated fixed codes; the daily disbursement
 reconciliation report exists and passes on fixtures; and the counsel artefacts in
-`BLOCKERS.md` (C-1…C-4) are recorded. See `IMPLEMENTATION_PLAN.md` for the release
+the `ADR/DECISIONS.md` blocker triage (C-1…C-4) are recorded. See `IMPLEMENTATION_PLAN.md` for the release
 checklist.
 
 **Suggested order:** Phase 1 (done) → T4/ADR-0016 (unblocks the funds model that

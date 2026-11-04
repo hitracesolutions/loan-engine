@@ -12,7 +12,7 @@ mode** until the matching decision is accepted. Read the relevant section before
 changing behaviour that depends on it.
 
 For the current triage of what is answered versus still waiting on an owner or
-counsel answer, see [`BLOCKERS.md`](../BLOCKERS.md).
+counsel answer, see the [Blocker triage](#blocker-triage) below.
 
 ## Status vocabulary
 
@@ -68,7 +68,7 @@ superseded until the outstanding items are closed and the record is Accepted.
 
 Every task still blocking a decision, in one place. Each ADR's own *Outstanding
 before acceptance* list is authoritative; this table is a convenience index and
-links each item to its [`BLOCKERS.md`](../BLOCKERS.md) triage ID. Accepted
+links each item to its [Blocker triage](#blocker-triage) ID. Accepted
 records (0001, 0015) carry no open items.
 
 | ADR | Status | Still needed before acceptance | Triage |
@@ -98,6 +98,109 @@ that SaaS onboarding requires a new, superseding ADR.
 4. Only then remove the simulation flags listed under *Evidence in the codebase*.
 5. Never rewrite an accepted decision — supersede it with a new record (a new
    section with the next free number), and mark the old one **Superseded**.
+
+A reviewer should reject a PR that closes a blocker but skips any of these steps.
+
+## Blocker triage
+
+*Merged from the former `BLOCKERS.md` (2026-11-04): the single place a developer
+checks before starting work, so nobody waits on a question already answered and
+nobody builds on a decision not in force. The A/B/R/C/E identifiers are stable.
+Implementation authorisation and the step list are in
+[`IMPLEMENTATION_PLAN.md`](../IMPLEMENTATION_PLAN.md) §10–§12.*
+
+**Status key:** ANSWERED = decided, build to it · RESIDUAL = main question
+answered, a follow-up open · COUNSEL = needs a signed legal artefact ·
+ENGINEERING = ours to fix.
+
+### Decided earlier — build to this (A1–A12)
+
+Do not re-litigate these, and do not add a feature flag "just in case".
+
+| # | Decision | ADR |
+| --- | --- | --- |
+| A1 | **Single agency.** Gidfine operates for itself. Keep `agency_id` filters as defence in depth. | [0001](#adr-0001) |
+| A2 | **Monthly and annual rates quoted side by side**; method chosen per deal. | [0003](#adr-0003) |
+| A3 | **Margin may be a share of interest or a markup on either side**, flat or percentage. *Refined by B-6: any combination is allowed.* | [0004](#adr-0004) |
+| A4 | **Revenue is recognised when cash is collected** — never at disbursement, never accrued. | [0004](#adr-0004) |
+| A5 | **Hybrid matching:** competitive 1-to-many, then sequential fallback. *Refined by B-8.* | [0008](#adr-0008) |
+| A6 | **Manual cashier payments only at launch.** No provider webhooks; `SIMULATED_MOMO`/`SIMULATED_BANK` are test-only. | [0010](#adr-0010) |
+| A7 | **Negotiated terms must be typed, constrained fields** — never free text. A null grace or penalty means *none*, never a hidden default. | [0005](#adr-0005) |
+| A8 | **In-app + email + SMS notifications**, funded by Gidfine. WhatsApp is out. | [0011](#adr-0011) |
+| A9 | **Full document set at launch**: offer, agreement, schedule, receipts, statements — rendered from the stored immutable snapshots. | [0012](#adr-0012) |
+| A10 | **Per-lender disclosure, fail closed** (a lender with no rights sees nothing). *Reframed by ADR-0017 as assignable rights.* | [0006](#adr-0006) |
+| A11 | **Impersonation is read-only, 15 minutes, audited, revocable.** Never add routes to the allowlist. | [0015](#adr-0015) |
+| A12 | **DPC registration held; credit/moneylending licence held.** | [0013](#adr-0013), [0014](#adr-0014) |
+
+### Answered 2026-10-30 (B-1 to B-11)
+
+| # | Question | Answer | Residual |
+| --- | --- | --- | --- |
+| B-1 | KYC retention and readers | **5 years after the loan closes.** Readable by agency staff, auditors and the borrower; a lender may never open a KYC document. | Key custody/encryption + deletion procedure (R-6) |
+| B-2 | Legal model | **Arranger for every product at launch** — contracts lender ↔ borrower, lender is payee. *Superseded in direction by ADR-0016 (Gidfine holds client funds).* | Signed legal annex (C-4); trust account (ADR-0016) |
+| B-3 | Control replacing dual authorisation | **Daily supervisor reconciliation report over disbursements.** | Built 2026-11-04; relax the constraint only after (E-7) |
+| B-4 | Notification budget control | **No hard cap**; monitor volume and alert on abnormal spend. | Threshold, alert route, retry ceiling (R-4) |
+| B-5 | Rounding to the pesewa | **Round half up.** Both methods, every figure shown. | Worked fixtures (R-9) |
+| B-6 | Margin combinations and tax | **Any combination allowed.** **VAT-exempt** as a financial/credit service. | Accountant confirmation (R-8) |
+| B-7 | Product bounds and early settlement | **Tenure: no cap**, per product. **Early settlement not allowed before maturity.** | Penalty ceiling, min/max amount (R-1) |
+| B-8 | Competitive matching limits | **Every eligible lender** may see the application; **48-hour round**, configurable; agency triggers sequential fallback. | Counter-offers allowed? (R-2) |
+| B-9 | Signature | **Audited click-to-accept + SHA-256 terms hash** is sufficient. | Document numbering scheme (R-3) |
+| B-10 | Single disbursement approver | **`agency_admin` or `loan_officer`.** *Refined by ADR-0018 (value-tiered).* | Permission matrix detail (R-10) |
+| B-11 | Cashier reconciliation | **Daily, by the cashier supervisor.** | Discrepancy escalation path (R-7) |
+
+### Still open — residual owner questions (small)
+
+| # | Question | Affects |
+| --- | --- | --- |
+| R-1 | Maximum late-penalty rate, and minimum/maximum loan amount | [0005](#adr-0005) |
+| R-2 | May lenders counter-offer, and who approves a counter? | [0008](#adr-0008) |
+| R-3 | Document numbering scheme (auditable, gap-free) | [0012](#adr-0012) |
+| R-4 | Alerting threshold and route for notification spend, plus the retry ceiling | [0011](#adr-0011) |
+| R-5 | Email/SMS provider selection, account holder, SMS consent/opt-out, templates | [0011](#adr-0011) |
+| R-6 | Encryption/key custody for stored documents, and the 5-year deletion/anonymisation procedure | [0007](#adr-0007) |
+| R-7 | Escalation path when the daily cashier total does not match the ledger | [0010](#adr-0010) |
+| R-8 | Written accountant confirmation that the agency margin is VAT-exempt | [0004](#adr-0004) |
+| R-9 | Which methods each product may use, plus worked fixtures at round-half-up | [0003](#adr-0003) |
+| R-10 | Remaining permission-matrix cells: rate override, who records vs reverses a payment | [0009](#adr-0009) |
+
+### Still open — counsel artefacts (do not improvise a substitute)
+
+| # | Artefact | Blocks |
+| --- | --- | --- |
+| C-1 | **Signed disclosure matrix per lender** — attribute list and legal basis | Enabling per-lender profiles in production ([0006](#adr-0006), [0017](#adr-0017)) |
+| C-2 | **Privacy notice text (versioned) + consent wording**, processing register, DSAR procedure | Live borrower PII at commercial scale ([0013](#adr-0013)) |
+| C-3 | **Licence reference, class, dates** + confirmation each model sits inside the licensed scope | Live disbursement ([0014](#adr-0014)) |
+| C-4 | **Signed legal operating-model annex** confirming the funds/payee model | Contract generation ([0002](#adr-0002), [0016](#adr-0016)) |
+
+Where wording is needed mid-build, use neutral placeholder copy marked as such; never present it as approved.
+
+### Engineering blockers we own
+
+| # | Issue | Step (see [`IMPLEMENTATION_PLAN.md`](../IMPLEMENTATION_PLAN.md) §12) |
+| --- | --- | --- |
+| E-1 | Worker typecheck is red, so it cannot gate anything | S-00 |
+| E-2 | Pages Functions route only part of the API; several routes 404 same-origin in production | S-01 |
+| E-3 | Three client calls have no handler (`/loans/:id/schedule`, `/transactions`, `/outstanding`) | S-02 |
+| E-4 | Legacy Convex surface still live under `frontend/src` | S-03 |
+| E-5 | Simulated MFA accepts fixed codes `123456`/`654321` (security defect) | S-06 |
+| E-6 | No CI; stale `frontend/tests/*` read a non-existent migration path | S-08 |
+| E-7 | Relaxing `check_maker_checker_distinct` must follow: build reconciliation report (S-07, **done**), prove on fixtures, **then** migrate | S-07 → S-15 |
+| E-8 | `AGENTS.md` "Workflow and skills library" points at the wrong skill (`support-training-hub`); closest match is `ledger-vue-cloudflare`. Owner deferred the repoint. | — |
+
+**Migration discipline.** Next free number is **`0009_`** (`0008_payment_reference_unique.sql` is taken); [`IMPLEMENTATION_PLAN.md`](../IMPLEMENTATION_PLAN.md) §5 reserves `0009_` for negotiated-term fields (S-04). Never rename an applied migration — the two `0002_*` files share a prefix but touch different objects and both apply cleanly. Run migrations from `frontend/` with `--config wrangler.toml`; `workers/api/wrangler.jsonc` still carries a placeholder `database_id`.
+
+### Never do these
+
+1. Move real money, or flip `simulation_mode` / `is_simulation`, before the matching ADR is **Accepted** and C-3 exists.
+2. Drop `check_maker_checker_distinct` before the reconciliation report exists and passes on fixtures (E-7).
+3. Bind R2 before R-6 (key custody + deletion procedure) is written.
+4. Let an impersonated session write anything — the guard is the control.
+5. Bill a borrower or lender for notifications (Gidfine pays) or add WhatsApp.
+6. Implement an early-settlement rebate (B-7: settlement before maturity is not allowed).
+7. Give a lender access to a KYC document (B-1: readers are staff, auditors, borrower).
+8. Commit a secret, a real borrower record, or a production data export.
+9. Invent a legal, tax or regulatory position to keep building. Stop and raise it.
+10. Publish a capability the platform does not have (bank integrations, OTP, document upload, "instant approval", customer/volume statistics).
 
 ---
 

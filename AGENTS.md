@@ -27,7 +27,7 @@ Non-negotiable rules for any agent doing this work:
   disagree in a superseding ADR, not in a quiet code change.
 - **R6 — go-live gate.** No real disbursement / PII / signable contracts until
   real MFA, the daily disbursement reconciliation report, and counsel artefacts
-  (`BLOCKERS.md` C-1…C-4) exist. Never relax `check_maker_checker_distinct`
+  (the `ADR/DECISIONS.md` blocker triage, C-1…C-4) exist. Never relax `check_maker_checker_distinct`
   before the reconciliation report and real MFA are in place.
 - **Verify, don't assume.** `cd workers/api && npm test` (88 pass); worker
   `typecheck` has a known pre-existing error baseline — compare, don't aim for 0.
@@ -517,7 +517,7 @@ when a used skill was inaccurate.
 Filament training platform and does not describe this repository. The closest
 library match is `ledger-vue-cloudflare` (Cloudflare Pages Functions + D1 + KV +
 Wrangler), which shares this project's backend but not its React frontend. The
-pointer is left unchanged pending an owner decision; see `BLOCKERS.md` E-8.
+pointer is left unchanged pending an owner decision; see the blocker triage (E-8) in `ADR/DECISIONS.md`.
 
 ## Protected decisions
 
@@ -529,12 +529,12 @@ revert it silently.**
 | Decision | Recorded in | Undoing it breaks |
 | --- | --- | --- |
 | Impersonated sessions are **read-only**; never add a route to the guard allowlist | [ADR-0015](./ADR/DECISIONS.md#adr-0015) | Consent evidence: a support session could sign as a borrower |
-| **Migrations are forward-only and never renamed**, including the two `0002_*` files | `BLOCKERS.md` §4 | Data: a rename re-executes an applied migration |
+| **Migrations are forward-only and never renamed**, including the two `0002_*` files | `ADR/DECISIONS.md` blocker triage (migration discipline) | Data: a rename re-executes an applied migration |
 | `check_maker_checker_distinct` **stays** until the daily disbursement reconciliation exists and passes on fixtures | [ADR-0009](./ADR/DECISIONS.md#adr-0009) | The only detective control on disbursement |
-| **Simulation flags stay** (`is_simulation`, `simulation_mode = 1`, `PROVISIONAL`) until the matching ADR is Accepted | `BLOCKERS.md` §5 | Simulated money becomes real money |
+| **Simulation flags stay** (`is_simulation`, `simulation_mode = 1`, `PROVISIONAL`) until the matching ADR is Accepted | `ADR/DECISIONS.md` blocker triage ("Never do these") | Simulated money becomes real money |
 | Lender disclosure **fails closed** — no profile means no data | [ADR-0006](./ADR/DECISIONS.md#adr-0006) | Unlawful borrower data reaching a lender |
 | `agency_id` filters stay in every query even though the agency is single-tenant | [ADR-0001](./ADR/DECISIONS.md#adr-0001) | Defence in depth; re-adding them later is a large change |
-| Authorization is enforced **server-side before the router returns data**, never by frontend guards alone | `BLOCKERS.md`, `docs` skill rule | Any user with devtools can bypass a UI check |
+| Authorization is enforced **server-side before the router returns data**, never by frontend guards alone | `ADR/DECISIONS.md` blocker triage, `docs` skill rule | Any user with devtools can bypass a UI check |
 
 
 ---

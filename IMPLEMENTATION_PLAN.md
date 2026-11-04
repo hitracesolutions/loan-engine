@@ -10,10 +10,9 @@
 > (baseline, gates, sprints, definition of done) and the execution plan
 > (authorisation, forward steps, release gate, progress log). It is now the
 > single plan. Companion docs: [`ADR/DECISIONS.md`](./ADR/DECISIONS.md)
-> (decisions), [`DECISION_REVIEW.md`](./DECISION_REVIEW.md) (review findings +
-> remediation tasks + agent process rule), [`BLOCKERS.md`](./BLOCKERS.md)
-> (triage), [`Gidfine_Dev_Guide.md`](./Gidfine_Dev_Guide.md) §17 (requirement
-> traceability).
+> (decisions **and** the blocker triage), [`DECISION_REVIEW.md`](./DECISION_REVIEW.md)
+> (review findings + remediation tasks + agent process rule),
+> [`Gidfine_Dev_Guide.md`](./Gidfine_Dev_Guide.md) §17 (requirement traceability).
 
 ## Contents
 
@@ -273,7 +272,7 @@ Status: `DONE` · `NEXT` · `AUTHORISED` · `SEQUENCED` (needs an earlier step) 
 | C-4 Legal operating-model annex, lender as payee | Counsel | Signable contracts from S-18 |
 | R-8 Written accountant confirmation (VAT exemption) | Accountant | Invoicing / receipts |
 
-Smaller owner answers still open (R-1 to R-10) are in [`BLOCKERS.md`](./BLOCKERS.md) §3.1; none blocks starting any step above.
+Smaller owner answers still open (R-1 to R-10) are in the [blocker triage](./ADR/DECISIONS.md#blocker-triage) in `ADR/DECISIONS.md`; none blocks starting any step above.
 
 ---
 

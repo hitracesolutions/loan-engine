@@ -99,7 +99,7 @@ npm.cmd run build
 - Product requirements and current stack: [`Gidfine_Dev_Guide.md`](./Gidfine_Dev_Guide.md)
 - Owner decisions and delivery phases: [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md)
 - Owner decision records (ADR-0001 to ADR-0015): [`ADR/DECISIONS.md`](./ADR/DECISIONS.md)
-- Blockers and answers (read before starting work): [`BLOCKERS.md`](./BLOCKERS.md)
+- Blockers and answers (read before starting work): [`ADR/DECISIONS.md` → Blocker triage](./ADR/DECISIONS.md#blocker-triage)
 - Pages deployment and bindings: [`PAGES_DEPLOYMENT.md`](./PAGES_DEPLOYMENT.md)
 - Pages Functions migration notes: [`PAGES_FUNCTIONS_MIGRATION.md`](./PAGES_FUNCTIONS_MIGRATION.md)
 - Change history: [`CHANGELOG.md`](./CHANGELOG.md)
