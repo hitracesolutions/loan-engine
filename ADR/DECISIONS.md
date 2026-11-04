@@ -1134,7 +1134,7 @@ create legally binding evidence (consent), change money, or approve anything.
 ### References
 
 - [`IMPLEMENTATION_PLAN.md` §9](../IMPLEMENTATION_PLAN.md) — quality gates
-- [`EXECUTION_PLAN.md`](../EXECUTION_PLAN.md) — step S-10
+- [`IMPLEMENTATION_PLAN.md`](../IMPLEMENTATION_PLAN.md) — step S-10
 
 ---
 

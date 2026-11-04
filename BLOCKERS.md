@@ -5,12 +5,11 @@
 waits on a question that is already answered and nobody builds on a decision that
 is not in force.
 **Implementation authorisation:** the owner approved the **complete programme**
-(S-00 to S-24) on 2026-10-30 — see [`EXECUTION_PLAN.md`](./EXECUTION_PLAN.md).
+(S-00 to S-24) on 2026-10-30 — see [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md) §12.
 The four counsel artefacts, the accountant confirmation and the "safety floor"
 listed there are the only remaining external gates.
 **Sources of truth:** [`ADR/`](./ADR/DECISIONS.md) (decisions),
-[`EXECUTION_PLAN.md`](./EXECUTION_PLAN.md) (authorised steps),
-[`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md) §3.1 (gate status),
+[`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md) (authorised steps §12, gate status §3.1),
 [`DECISION_REVIEW.md`](./DECISION_REVIEW.md) (review findings, remediation tasks, process rule).
 
 **Status key**
@@ -118,7 +117,8 @@ placeholder copy marked as such, and never present it as approved.
 
 ### Migration discipline (read before adding a migration)
 
-- Next free number is **`0008_`**. `EXECUTION_PLAN.md` reserves it for the
+- Next free number is **`0009_`** (`0008_payment_reference_unique.sql` is taken).
+  [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md) §5 reserves `0009_` for the
   negotiated-term fields (S-04); if another change needs a migration first,
   renumber **both** the file and the plan.
 - **Never rename an applied migration.** `0002_application_review.sql` and
@@ -160,7 +160,7 @@ placeholder copy marked as such, and never present it as approved.
    [`ADR/DECISIONS.md`](./ADR/DECISIONS.md) matches.
 3. [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md) §3.1 row updated.
 4. If it was a *Blocked* step, it moves to *Authorised* in
-   [`EXECUTION_PLAN.md`](./EXECUTION_PLAN.md).
+   [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md) §12.
 5. Remove the simulation flags named under that ADR's *Evidence in the codebase*.
 
 A reviewer should reject a PR that skips any of these five.

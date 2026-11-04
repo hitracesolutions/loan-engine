@@ -12,7 +12,7 @@
 
 **Current platform baseline:** Cloudflare Pages + Pages Functions, React + Vite, D1 and KV. The Pages Functions reuse the TypeScript router in `workers/api/src`; there is no Python runtime. R2, Queues/Cron and Durable Objects are deferred capabilities, not current production dependencies.
 
-**Companion documents:** [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md) (phases, sprints, migration roadmap, definition of done) · [`EXECUTION_PLAN.md`](./EXECUTION_PLAN.md) (authorised steps and progress) · [`BLOCKERS.md`](./BLOCKERS.md) (what is answered, what is still open) · [`ADR/DECISIONS.md`](./ADR/DECISIONS.md) (decision records) · [`DECISION_REVIEW.md`](./DECISION_REVIEW.md) (review findings, remediation tasks, agent process rule)
+**Companion documents:** [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md) (phases, sprints, migration roadmap, authorised steps and progress, definition of done) · [`BLOCKERS.md`](./BLOCKERS.md) (what is answered, what is still open) · [`ADR/DECISIONS.md`](./ADR/DECISIONS.md) (decision records) · [`DECISION_REVIEW.md`](./DECISION_REVIEW.md) (review findings, remediation tasks, agent process rule)
 
 ## 1. Executive summary
 
@@ -194,7 +194,7 @@ Associate every financial event with creator, approver (where necessary), source
 
 ## 12. Security and compliance baselines
 
-- Authenticate all actors; enable multi-factor authentication for financial approvals and privileged accounts. **Current state:** MFA enrolment and verification exist but the verifier still accepts fixed test codes (`123456`, `654321`). That is a defect to fix before any privileged flow goes live (EXECUTION_PLAN S-06); do not enable MFA-dependent controls on top of it.
+- Authenticate all actors; enable multi-factor authentication for financial approvals and privileged accounts. **Current state:** MFA enrolment and verification exist but the verifier still accepts fixed test codes (`123456`, `654321`). That is a defect to fix before any privileged flow goes live (IMPLEMENTATION_PLAN S-06); do not enable MFA-dependent controls on top of it.
 - Enforce least privilege, field redaction and agency-controlled information disclosure on backend APIs.
 - Encrypt transport and sensitive information at rest; secure backups; use short-lived credentials and secret management. National ID values are stored AES-256-GCM encrypted with ciphertext, IV, tag and version; no plaintext column exists.
 - Maintain immutable or append-only audit evidence for rate changes, approvals, access policies and payment postings.
@@ -219,7 +219,7 @@ A shared-database multi-tenant model is appropriate only if Gidfine is intended 
 
 ## 14. MVP delivery plan and acceptance tests
 
-Phase numbering here is product-facing; [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md) §4 and §6 hold the binding phase and sprint breakdown, and [`EXECUTION_PLAN.md`](./EXECUTION_PLAN.md) holds what is authorised to be built next. Where the two disagree, the implementation plan wins.
+Phase numbering here is product-facing; [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md) §4 and §6 hold the binding phase and sprint breakdown, and §12 holds the authorised forward steps (S-00–S-24). Where this guide and the implementation plan disagree, the implementation plan wins.
 
 | Phase | Key output | Acceptance evidence |
 | --- | --- | --- |
@@ -483,7 +483,7 @@ Before introducing any new schema, route, component or subsystem, the developmen
 - Preserve existing functionality unless a change has been explicitly approved.
 - Document important architectural decisions and business-rule changes.
 - The retired Python implementation and its historical migration notes are removed from the active repository. Do not reintroduce a second backend runtime; extend the shared TypeScript router and Pages Functions boundary.
-- The Convex prototype (`frontend/convex/*`, `frontend/src/services/loanService.ts`) is retired per [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md) §8. Removing it is EXECUTION_PLAN S-03; it must not be extended in the meantime, and no new feature may read from it.
+- The Convex prototype (`frontend/convex/*`, `frontend/src/services/loanService.ts`) is retired per [`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md) §8. Removing it is IMPLEMENTATION_PLAN S-03; it must not be extended in the meantime, and no new feature may read from it.
 
 **Critical Requirement:** the Cloudflare Worker is the authoritative backend for all Gidfine business operations. Financial calculations, approval workflows, access-control decisions and audit records must be validated and enforced server-side. React must never be the source of truth for financial or security-critical business logic.
 

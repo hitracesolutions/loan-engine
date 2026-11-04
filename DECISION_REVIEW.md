@@ -226,7 +226,7 @@ in an ADR, not in a quiet code change.
 the tasks, production of real disbursement, real PII, or signable contracts stays
 closed until: real MFA replaces the simulated fixed codes; the daily disbursement
 reconciliation report exists and passes on fixtures; and the counsel artefacts in
-`BLOCKERS.md` (C-1…C-4) are recorded. See `EXECUTION_PLAN.md` for the release
+`BLOCKERS.md` (C-1…C-4) are recorded. See `IMPLEMENTATION_PLAN.md` for the release
 checklist.
 
 **Suggested order:** Phase 1 (done) → T4/ADR-0016 (unblocks the funds model that

@@ -717,7 +717,7 @@ The current production baseline is Cloudflare Pages + Pages Functions, D1 and KV
   project; recorded as `BLOCKERS.md` E-8. Owner deferred the repoint, so agents
   will keep loading the wrong skill until it is fixed.
 - Recorded the impersonation UI as configured-but-unverified (never opened in a
-  browser) in `EXECUTION_PLAN.md` S-10.
+  browser) in `IMPLEMENTATION_PLAN.md` S-10.
 - `library-contribution` check run, no library writes (owner requested review only).
 
 ### 2026-10-30 — Landing page claims corrected
@@ -755,7 +755,7 @@ The current production baseline is Cloudflare Pages + Pages Functions, D1 and KV
 
 ### 2026-10-30 — Full programme authorised
 
-- Owner approved all remaining work; `EXECUTION_PLAN.md` now defines 25 steps
+- Owner approved all remaining work; `IMPLEMENTATION_PLAN.md` now defines 25 steps
   (S-00 to S-24) with acceptance criteria, dependencies and a measured baseline.
 - Recorded the safety floor: live PII, live disbursement, signable contracts and
   per-lender disclosure enablement stay closed until their counsel artefacts

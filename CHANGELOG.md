@@ -124,7 +124,7 @@
 - Added a closed-list of things not to do (no live money, no constraint drop, no
   R2, no writing while impersonating, no invented legal position) and the
   five-step procedure for closing a blocker.
-- Linked from `EXECUTION_PLAN.md`, `QUICK_START.md` and the ADR index.
+- Linked from `IMPLEMENTATION_PLAN.md`, `QUICK_START.md` and the ADR index.
 
 ## 2026-10-30 — Administrator impersonation ("view as")
 
