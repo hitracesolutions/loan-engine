@@ -124,6 +124,21 @@ const router = new Router()
   .get('/borrower/applications', listApplications)
   .post('/borrower/applications/:id/response', submitBorrowerResponse);
 
+const API_TOP_SEGMENTS = router.topLevelSegments();
+
+/** Every registered API route, exposed for the Pages route-parity check. */
+export const apiRoutes = router.list();
+
+/**
+ * True when a path's first segment is owned by the API router rather than the
+ * SPA. The Pages `_middleware` uses this to forward API requests to the Worker
+ * and let every other path fall through to the static single-page app.
+ */
+export function isApiPath(pathname: string): boolean {
+  const first = pathname.split('/').filter(Boolean)[0];
+  return first !== undefined && API_TOP_SEGMENTS.has(first);
+}
+
 let adminInitialization:
   | { configuration: string; promise: Promise<void> }
   | undefined;

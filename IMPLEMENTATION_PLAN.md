@@ -225,7 +225,7 @@ Status: `DONE` · `NEXT` · `AUTHORISED` · `SEQUENCED` (needs an earlier step) 
 | ID | Work | Acceptance | Status |
 | --- | --- | --- | --- |
 | S-00 | Restore green worker typecheck | `npm run typecheck` exit 0; suite still green; no behaviour change | **DONE** (2026-11-04) |
-| S-01 | Pages Functions route parity for every worker route | automated check asserts a Pages entrypoint per `index.ts` route; `/lenders`, `/loans` return 401 not 404 | AUTHORISED |
+| S-01 | Pages Functions route parity for every worker route | automated check asserts a Pages entrypoint per `index.ts` route; `/lenders`, `/loans` return 401 not 404 | **DONE** (2026-11-04) |
 | S-02 | `GET /loans/:id/schedule`, `/transactions`, `/outstanding` | tests cover ordering + outstanding balance; owner scoping matches `/loans/:id` | AUTHORISED |
 | S-03 | Retire the Convex surface | zero `convex` under `frontend/src`; build passes; no feature loses a data source | SEQUENCED (S-01, S-02) |
 | S-04 | Migration `0009`: negotiated-term fields | applies to fresh + current schema; defaults preserve simulation; check constraints present | AUTHORISED |
@@ -295,7 +295,7 @@ Smaller owner answers still open (R-1 to R-10) are in the [blocker triage](./ADR
 | Step | Status | Date | Evidence |
 | --- | --- | --- | --- |
 | S-00 | DONE | 2026-11-04 | `npm run typecheck` exit 0 (was ~33 errors); `npm test` 88 pass; type-only changes (unused imports removed, `?? 0`/`?? ''` guards, test-adapter casts), no behaviour change |
-| S-01 | PENDING | — | Pages entrypoints cover health/auth/applications/borrower/admin only |
+| S-01 | DONE | 2026-11-04 | single `frontend/functions/_middleware.ts` forwards every `isApiPath` route to the Worker (per-path forwarders removed); `pagesParity.test.ts` asserts coverage of all routes + `/lenders`,`/loans` → 401; 91 tests pass; frontend build green |
 | S-02 | PENDING | — | 3 client calls have no handler |
 | S-03 | PENDING | — | convex references under frontend/src |
 | S-04 | PENDING | — | latest migration is `0008`; negotiated-terms migration will be `0009` |

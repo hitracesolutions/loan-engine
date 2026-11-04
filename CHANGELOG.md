@@ -10,6 +10,11 @@
 - Consolidated docs: `EXECUTION_PLAN.md` → `IMPLEMENTATION_PLAN.md` (§12 steps);
   `BLOCKERS.md` → `ADR/DECISIONS.md` ("Blocker triage"). README de-AI'd
   (no AI/ML, no Python).
+- **S-01 done:** Pages route parity. One `frontend/functions/_middleware.ts`
+  forwards every API path (`isApiPath`, derived from the router) to the Worker
+  and lets SPA/static paths fall through; the per-path forwarders were removed.
+  `tests/pagesParity.test.ts` asserts every route is covered and that `/lenders`
+  and `/loans` return 401 (auth), not 404. 91 tests pass; frontend build green.
 
 ## 2026-10-30 — Full programme authorised (S-00 to S-24)
 

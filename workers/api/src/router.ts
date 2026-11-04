@@ -41,6 +41,21 @@ export class Router {
     return this.add('PUT', pattern, handler);
   }
 
+  /** Every registered route as `{ method, pattern }`, for parity checks. */
+  list(): { method: string; pattern: string }[] {
+    return this.routes.map((r) => ({ method: r.method, pattern: '/' + r.segments.join('/') }));
+  }
+
+  /** The set of distinct first path segments the API owns (e.g. `lenders`, `loans`). */
+  topLevelSegments(): Set<string> {
+    const segments = new Set<string>();
+    for (const route of this.routes) {
+      const first = route.segments[0];
+      if (first && !first.startsWith(':')) segments.add(first);
+    }
+    return segments;
+  }
+
   /** Returns the handler and captured path params, or throws 404. */
   match(method: string, pathname: string): { handler: RouteHandler; params: Record<string, string> } {
     const pathSegments = pathname.split('/').filter(Boolean);

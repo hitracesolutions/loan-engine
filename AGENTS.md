@@ -803,4 +803,10 @@ The current production baseline is Cloudflare Pages + Pages Functions, D1 and KV
   guards for `noUncheckedIndexedAccess` on `ctx.params.id` and split arrays,
   `??=` for a map access, and cast the four test D1 adapters to `D1Database` /
   `D1PreparedStatement`. `npm test` still 88 pass / 0 fail.
-- Left undone: S-01 (Pages route parity) is the next authorised step.
+- **S-01 done:** replaced the scattered `frontend/functions/*` forwarders with a
+  single `_middleware.ts` that forwards every `isApiPath` route to the Worker and
+  lets SPA/asset paths fall through. `isApiPath`/`apiRoutes` are derived from the
+  router so they cannot drift; `tests/pagesParity.test.ts` asserts coverage and
+  that `/lenders`,`/loans` → 401. 91 tests pass; frontend build green.
+- Left undone: S-02 (`GET /loans/:id/schedule`, `/transactions`, `/outstanding`)
+  is the next authorised step.
