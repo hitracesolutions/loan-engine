@@ -41,7 +41,7 @@ This plan translates the product requirements in [`Gidfine_Dev_Guide.md`](./Gidf
 
 ### 2.2 Current test evidence
 
-Measured 2026-11-04 with `npm test` in `workers/api`: **88 pass / 0 fail**. Worker `npm run typecheck` still has a known pre-existing error baseline (test-adapter D1 typing drift + a few `src` undefined-safety spots) — clearing it is step **S-00**; it does not affect runtime or the test run (tests execute via `--experimental-strip-types`). The frontend production build passes.
+Measured 2026-11-04 with `npm test` in `workers/api`: **88 pass / 0 fail**. Worker `npm run typecheck` is **exit 0** as of 2026-11-04 (step **S-00** cleared the former ~33-error baseline — test-adapter D1 typing and a few `src` undefined-safety spots — with type-only changes). The frontend production build passes.
 
 *(Historical snapshots, for the record: Sprint 1 baseline was 50/50; the programme baseline on 2026-10-30 was 81/81.)*
 
@@ -224,7 +224,7 @@ Status: `DONE` · `NEXT` · `AUTHORISED` · `SEQUENCED` (needs an earlier step) 
 
 | ID | Work | Acceptance | Status |
 | --- | --- | --- | --- |
-| S-00 | Restore green worker typecheck | `npm run typecheck` exit 0; suite still green; no behaviour change | NEXT |
+| S-00 | Restore green worker typecheck | `npm run typecheck` exit 0; suite still green; no behaviour change | **DONE** (2026-11-04) |
 | S-01 | Pages Functions route parity for every worker route | automated check asserts a Pages entrypoint per `index.ts` route; `/lenders`, `/loans` return 401 not 404 | AUTHORISED |
 | S-02 | `GET /loans/:id/schedule`, `/transactions`, `/outstanding` | tests cover ordering + outstanding balance; owner scoping matches `/loans/:id` | AUTHORISED |
 | S-03 | Retire the Convex surface | zero `convex` under `frontend/src`; build passes; no feature loses a data source | SEQUENCED (S-01, S-02) |
@@ -294,7 +294,7 @@ Smaller owner answers still open (R-1 to R-10) are in the [blocker triage](./ADR
 
 | Step | Status | Date | Evidence |
 | --- | --- | --- | --- |
-| S-00 | PENDING | — | baseline: typecheck error baseline, tests green |
+| S-00 | DONE | 2026-11-04 | `npm run typecheck` exit 0 (was ~33 errors); `npm test` 88 pass; type-only changes (unused imports removed, `?? 0`/`?? ''` guards, test-adapter casts), no behaviour change |
 | S-01 | PENDING | — | Pages entrypoints cover health/auth/applications/borrower/admin only |
 | S-02 | PENDING | — | 3 client calls have no handler |
 | S-03 | PENDING | — | convex references under frontend/src |

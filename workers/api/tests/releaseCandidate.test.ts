@@ -42,7 +42,7 @@ function createD1Adapter(sqliteDb: DatabaseSync): D1Database {
       raw<T = unknown>(): Promise<T[]> {
         throw new Error('Not implemented');
       },
-    };
+    } as unknown as D1PreparedStatement;
   }
 
   return {
@@ -71,7 +71,7 @@ function createD1Adapter(sqliteDb: DatabaseSync): D1Database {
     dump(): Promise<ArrayBuffer> {
       throw new Error('Not implemented');
     },
-  };
+  } as unknown as D1Database;
 }
 
 describe('Gidfine Release Candidate Critical Invariant Verification', () => {

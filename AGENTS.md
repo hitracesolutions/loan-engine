@@ -30,7 +30,7 @@ Non-negotiable rules for any agent doing this work:
   (the `ADR/DECISIONS.md` blocker triage, C-1…C-4) exist. Never relax `check_maker_checker_distinct`
   before the reconciliation report and real MFA are in place.
 - **Verify, don't assume.** `cd workers/api && npm test` (88 pass); worker
-  `typecheck` has a known pre-existing error baseline — compare, don't aim for 0.
+  `typecheck` is green (exit 0) as of 2026-11-04 (S-00) — keep it green.
   Migrations are forward-only; next free number is **0009**. This environment may
   auto-commit — check `git status`/`git log` before and after.
 
@@ -790,3 +790,17 @@ The current production baseline is Cloudflare Pages + Pages Functions, D1 and KV
 - Delivery team: start at `DECISION_REVIEW.md` → "Process rule". Do not write
   Phase 2 code before its ADR is Accepted; do not revert a Protected decision in
   a quiet change.
+
+### 2026-11-04 — Doc consolidation and S-00 (green typecheck)
+
+- Merged `EXECUTION_PLAN.md` into `IMPLEMENTATION_PLAN.md` (one plan; steps in
+  §12) and `BLOCKERS.md` into `ADR/DECISIONS.md` (one "Blocker triage" section);
+  both old files deleted and every reference repointed. De-AI'd the README
+  (no AI/ML, no Python).
+- **S-00 done:** worker `npm run typecheck` now exits 0 (was ~33 errors).
+  Type-only changes, no behaviour change: removed unused imports/functions
+  (`toPublic`, `addApplicationReviewNote`, and dead imports), added `?? 0`/`?? ''`
+  guards for `noUncheckedIndexedAccess` on `ctx.params.id` and split arrays,
+  `??=` for a map access, and cast the four test D1 adapters to `D1Database` /
+  `D1PreparedStatement`. `npm test` still 88 pass / 0 fail.
+- Left undone: S-01 (Pages route parity) is the next authorised step.

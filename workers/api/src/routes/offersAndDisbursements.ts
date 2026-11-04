@@ -15,7 +15,7 @@ import type { RouteContext } from '../router.ts';
 
 export async function createOffer(ctx: RouteContext): Promise<Response> {
   const actor = await requireRole(ctx, 'agency_admin', 'underwriter', 'loan_officer');
-  const applicationId = ctx.params.id;
+  const applicationId = ctx.params.id ?? '';
 
   const body = await ctx.request.json().catch(() => null) as {
     quoteSnapshotId?: string;
@@ -94,7 +94,7 @@ export async function getActiveOffer(ctx: RouteContext): Promise<Response> {
 
 export async function submitBorrowerConsent(ctx: RouteContext): Promise<Response> {
   const actor = await requireRole(ctx, 'borrower');
-  const applicationId = ctx.params.id;
+  const applicationId = ctx.params.id ?? '';
 
   const body = await ctx.request.json().catch(() => null) as {
     offerId?: string;

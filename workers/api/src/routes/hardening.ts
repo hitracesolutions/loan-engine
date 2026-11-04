@@ -6,7 +6,7 @@
  * - Rate limiting and security event audit logs.
  */
 
-import { recordSecurityEvent, setupMfa, verifyMfa } from '../domain/hardeningMfa.ts';
+import { setupMfa, verifyMfa } from '../domain/hardeningMfa.ts';
 import { requireActor, requireRole } from '../lib/auth.ts';
 import { badRequest, json, unauthorized } from '../lib/http.ts';
 import type { RouteContext } from '../router.ts';

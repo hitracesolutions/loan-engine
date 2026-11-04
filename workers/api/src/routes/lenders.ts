@@ -11,7 +11,7 @@
 import { executeMatching, createMaskedBorrowerSummary } from '../domain/matchingEngine.ts';
 import { calculateQuote, type CalculationStrategy } from '../domain/pricingEngine.ts';
 import { requireActor, requireRole } from '../lib/auth.ts';
-import { badRequest, json, notFound, forbidden } from '../lib/http.ts';
+import { badRequest, json, notFound } from '../lib/http.ts';
 import { ulid } from '../lib/ids.ts';
 import type { RouteContext } from '../router.ts';
 
@@ -185,7 +185,7 @@ export async function listLenderProducts(ctx: RouteContext): Promise<Response> {
 
 export async function runMatching(ctx: RouteContext): Promise<Response> {
   const actor = await requireRole(ctx, 'agency_admin', 'loan_officer', 'underwriter');
-  const applicationId = ctx.params.id;
+  const applicationId = ctx.params.id ?? '';
 
   const result = await executeMatching({
     db: ctx.env.DB,

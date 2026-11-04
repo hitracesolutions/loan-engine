@@ -8,7 +8,6 @@
  */
 
 import {
-  enqueueNotification,
   processOutboxBatch,
   registerDocument,
   type DocumentType,

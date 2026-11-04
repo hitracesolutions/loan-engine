@@ -1,5 +1,16 @@
 # Gidfine Changelog
 
+## 2026-11-04 — S-00: green worker typecheck; doc consolidation
+
+- **S-00 done:** `npm run typecheck` in `workers/api` now exits 0 (was ~33
+  errors). Type-only changes with no behaviour change — removed unused
+  imports/functions, added `?? 0` / `?? ''` guards for `noUncheckedIndexedAccess`
+  (`ctx.params.id`, pricing split arrays), used `??=` for a map access, and cast
+  the four test D1 adapters to their Cloudflare types. `npm test` stays 88 pass.
+- Consolidated docs: `EXECUTION_PLAN.md` → `IMPLEMENTATION_PLAN.md` (§12 steps);
+  `BLOCKERS.md` → `ADR/DECISIONS.md` ("Blocker triage"). README de-AI'd
+  (no AI/ML, no Python).
+
 ## 2026-10-30 — Full programme authorised (S-00 to S-24)
 
 - Replaced the partial step authorisation with approval of the **complete

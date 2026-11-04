@@ -178,7 +178,7 @@ Where wording is needed mid-build, use neutral placeholder copy marked as such; 
 
 | # | Issue | Step (see [`IMPLEMENTATION_PLAN.md`](../IMPLEMENTATION_PLAN.md) §12) |
 | --- | --- | --- |
-| E-1 | Worker typecheck is red, so it cannot gate anything | S-00 |
+| E-1 | ~~Worker typecheck is red~~ **Resolved 2026-11-04** — `npm run typecheck` exit 0 | S-00 **done** |
 | E-2 | Pages Functions route only part of the API; several routes 404 same-origin in production | S-01 |
 | E-3 | Three client calls have no handler (`/loans/:id/schedule`, `/transactions`, `/outstanding`) | S-02 |
 | E-4 | Legacy Convex surface still live under `frontend/src` | S-03 |

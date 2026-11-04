@@ -106,9 +106,9 @@ export async function calculateQuote(params: {
   const installments: RepaymentInstallmentQuote[] = [];
 
   for (let i = 0; i < tenureMonths; i++) {
-    const p = principalSplits[i];
-    const intr = interestSplits[i];
-    const f = feeSplits[i];
+    const p = principalSplits[i] ?? 0;
+    const intr = interestSplits[i] ?? 0;
+    const f = feeSplits[i] ?? 0;
     installments.push({
       installmentNumber: i + 1,
       principalPesewas: p,

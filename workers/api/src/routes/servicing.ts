@@ -94,7 +94,7 @@ export async function getLoanDetails(ctx: RouteContext): Promise<Response> {
 
 export async function recordPayment(ctx: RouteContext): Promise<Response> {
   const actor = await requireRole(ctx, 'cashier', 'agency_admin');
-  const loanId = ctx.params.id;
+  const loanId = ctx.params.id ?? '';
 
   const body = await ctx.request.json().catch(() => null) as {
     amountPesewas?: number;
@@ -131,7 +131,7 @@ export async function recordPayment(ctx: RouteContext): Promise<Response> {
 
 export async function reversePayment(ctx: RouteContext): Promise<Response> {
   const actor = await requireRole(ctx, 'agency_admin');
-  const paymentId = ctx.params.id;
+  const paymentId = ctx.params.id ?? '';
 
   const body = await ctx.request.json().catch(() => null) as {
     reason?: string;
@@ -192,10 +192,7 @@ export async function listJournalEntries(ctx: RouteContext): Promise<Response> {
     ).all<{ journal_entry_id: string; [key: string]: any }>();
 
     for (const line of lines.results) {
-      if (!linesByEntry[line.journal_entry_id]) {
-        linesByEntry[line.journal_entry_id] = [];
-      }
-      linesByEntry[line.journal_entry_id].push(line);
+      (linesByEntry[line.journal_entry_id] ??= []).push(line);
     }
   }
 

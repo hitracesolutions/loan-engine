@@ -12,7 +12,6 @@ import {
   StateTransitionError,
   validateStateTransition,
   type ApplicationStatus,
-  type UserRole,
 } from '../domain/stateMachine.ts';
 
 const CREATION_SCOPE = 'applications.create';
@@ -104,33 +103,6 @@ async function findApplication(
   return row;
 }
 
-function toPublic(row: ApplicationRow, role?: UserRole) {
-  if (role) {
-    return {
-      ...discloseApplication(row, role),
-      rejectionReason: row.rejection_reason ?? null,
-      notesCount: Number(row.notes_count ?? 0),
-    };
-  }
-  return {
-    id: row.id,
-    borrowerId: row.borrower_id,
-    borrowerName: row.borrower_full_name ?? null,
-    borrowerEmail: row.borrower_email ?? null,
-    borrowerPhone: row.borrower_phone ?? null,
-    status: row.status as ApplicationStatus,
-    requestedAmountPesewas: row.requested_amount_pesewas,
-    tenureMonths: row.tenure_months,
-    purpose: row.purpose,
-    rejectionReason: row.rejection_reason ?? null,
-    notesCount: Number(row.notes_count ?? 0),
-    assignedOfficerId: row.assigned_officer_id ?? null,
-    submittedAt: row.submitted_at ?? null,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  };
-}
-
 function urlStatus(requestUrl: string): ApplicationStatus | null {
   const value = new URL(requestUrl).searchParams.get('status');
   if (value === null) return null;
@@ -147,11 +119,11 @@ export async function createApplication({ request, env, requestId }: RouteContex
   const idempotencyKey = request.headers.get('idempotency-key');
   if (idempotencyKey) {
     await assertKeyScope(env.DB, actor.agencyId, idempotencyKey, CREATION_SCOPE);
-    const cached = await findIdempotentResponse<Record<string, unknown>>(
+    const cached = (await findIdempotentResponse(
       env.DB,
       actor.agencyId,
       idempotencyKey,
-    );
+    )) as Record<string, unknown> | undefined;
     if (cached) return jsonResponse(cached, requestId, 200);
   }
 
@@ -451,16 +423,6 @@ export async function reviewApplication({
   );
 }
 
-/** POST /applications/:id/notes — add an internal review note. */
-export async function addApplicationReviewNote({
-  request,
-  env,
-  params,
-  requestId,
-}: RouteContext): Promise<Response> {
-  return addApplicationNote({ request, env, params, requestId });
-}
-
 /** GET /applications/:id/review — staff-only review evidence. */
 export async function getApplicationReview({
   request,
@@ -520,7 +482,7 @@ export async function addApplicationNote({ request, env, params, requestId }: Ro
     throw badRequest('MISSING_ID', 'Application ID is required');
   }
 
-  const app = await findApplication(env.DB, applicationId, actor.agencyId);
+  await findApplication(env.DB, applicationId, actor.agencyId);
   const body = await readJsonObject(request);
   const noteText =
     optionalString(body, 'noteText', 4000) || optionalString(body, 'note', 4000);
@@ -592,7 +554,7 @@ export async function listApplicationNotes({ request, env, params, requestId }: 
     throw badRequest('MISSING_ID', 'Application ID is required');
   }
 
-  const app = await findApplication(env.DB, applicationId, actor.agencyId);
+  await findApplication(env.DB, applicationId, actor.agencyId);
 
   const query = env.DB.prepare(
     `SELECT n.*, u.full_name as author_name, u.role as author_role

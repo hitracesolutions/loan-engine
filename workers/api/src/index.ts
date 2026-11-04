@@ -12,7 +12,6 @@ import { corsHeaders, errorResponse } from './lib/http.ts';
 import { enforceImpersonationScope } from './lib/impersonationGuard.ts';
 import {
   addApplicationNote,
-  addApplicationReviewNote,
   assignApplication,
   createApplication,
   getApplicationReview,
