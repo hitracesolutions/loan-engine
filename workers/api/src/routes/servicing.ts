@@ -14,6 +14,47 @@ import { requireActor, requireRole } from '../lib/auth.ts';
 import { badRequest, conflict, json, notFound } from '../lib/http.ts';
 import type { RouteContext } from '../router.ts';
 
+/**
+ * Helper to fetch a loan within the authenticated actor's agency,
+ * enforcing tenant isolation and borrower ownership.
+ * Throws 404 if the loan does not exist or if a borrower tries to access another borrower's loan.
+ */
+async function resolveLoanForActor(
+  ctx: RouteContext,
+  loanId: string,
+) {
+  const actor = await requireActor(ctx);
+
+  const loan = await ctx.env.DB.prepare(
+    `SELECT l.*, u.full_name as borrower_name, u.email as borrower_email, lend.name as lender_name
+     FROM loans l
+     JOIN users u ON u.id = l.borrower_id
+     JOIN lenders lend ON lend.id = l.lender_id
+     WHERE l.id = ? AND l.agency_id = ?`,
+  )
+    .bind(loanId, actor.agencyId)
+    .first<{
+      id: string;
+      agency_id: string;
+      borrower_id: string;
+      outstanding_principal_pesewas: number;
+      outstanding_interest_pesewas: number;
+      outstanding_fees_pesewas: number;
+      status: string;
+      [key: string]: any;
+    }>();
+
+  if (!loan) {
+    throw notFound('Loan not found');
+  }
+
+  if (actor.role === 'borrower' && loan.borrower_id !== actor.userId) {
+    throw notFound('Loan not found');
+  }
+
+  return { actor, loan };
+}
+
 export async function listLoans(ctx: RouteContext): Promise<Response> {
   const actor = await requireActor(ctx);
 
@@ -38,30 +79,8 @@ export async function listLoans(ctx: RouteContext): Promise<Response> {
 }
 
 export async function getLoanDetails(ctx: RouteContext): Promise<Response> {
-  const actor = await requireActor(ctx);
   const loanId = ctx.params.id;
-
-  const loan = await ctx.env.DB.prepare(
-    `SELECT l.*, u.full_name as borrower_name, u.email as borrower_email, lend.name as lender_name
-     FROM loans l
-     JOIN users u ON u.id = l.borrower_id
-     JOIN lenders lend ON lend.id = l.lender_id
-     WHERE l.id = ? AND l.agency_id = ?`,
-  )
-    .bind(loanId, actor.agencyId)
-    .first<{
-      id: string;
-      borrower_id: string;
-      [key: string]: any;
-    }>();
-
-  if (!loan) {
-    throw notFound('Loan not found');
-  }
-
-  if (actor.role === 'borrower' && loan.borrower_id !== actor.userId) {
-    throw notFound('Loan not found');
-  }
+  const { actor, loan } = await resolveLoanForActor(ctx, loanId);
 
   // Get active repayment schedule & installments
   const installments = await ctx.env.DB.prepare(
@@ -89,6 +108,87 @@ export async function getLoanDetails(ctx: RouteContext): Promise<Response> {
     loan,
     installments: installments.results,
     payments: payments.results,
+  });
+}
+
+/**
+ * GET /loans/:id/schedule
+ * Retrieves repayment installments for a loan in ascending installment order.
+ */
+export async function getLoanSchedule(ctx: RouteContext): Promise<Response> {
+  const loanId = ctx.params.id;
+  const { actor } = await resolveLoanForActor(ctx, loanId);
+
+  const installments = await ctx.env.DB.prepare(
+    `SELECT ri.*
+     FROM repayment_installments ri
+     JOIN repayment_schedules rs ON rs.id = ri.schedule_id
+     WHERE rs.loan_id = ? AND rs.agency_id = ?
+     ORDER BY ri.installment_number ASC`,
+  )
+    .bind(loanId, actor.agencyId)
+    .all();
+
+  const results = installments.results ?? [];
+  return json({
+    loanId,
+    installments: results,
+    results,
+  });
+}
+
+/**
+ * GET /loans/:id/transactions
+ * Retrieves cashier payments and cashier names for a loan in descending creation order.
+ */
+export async function getLoanTransactions(ctx: RouteContext): Promise<Response> {
+  const loanId = ctx.params.id;
+  const { actor } = await resolveLoanForActor(ctx, loanId);
+
+  const payments = await ctx.env.DB.prepare(
+    `SELECT cp.*, u.full_name as cashier_name
+     FROM cashier_payments cp
+     JOIN users u ON u.id = cp.cashier_id
+     WHERE cp.loan_id = ? AND cp.agency_id = ?
+     ORDER BY cp.created_at DESC`,
+  )
+    .bind(loanId, actor.agencyId)
+    .all();
+
+  const results = payments.results ?? [];
+  return json({
+    loanId,
+    payments: results,
+    results,
+  });
+}
+
+/**
+ * GET /loans/:id/outstanding
+ * Calculates and returns outstanding principal, interest, fees, and total in integer pesewas.
+ */
+export async function getLoanOutstanding(ctx: RouteContext): Promise<Response> {
+  const loanId = ctx.params.id;
+  const { loan } = await resolveLoanForActor(ctx, loanId);
+
+  const principalPesewas = Number(loan.outstanding_principal_pesewas ?? 0);
+  const interestPesewas = Number(loan.outstanding_interest_pesewas ?? 0);
+  const feesPesewas = Number(loan.outstanding_fees_pesewas ?? 0);
+  const totalOutstandingPesewas = principalPesewas + interestPesewas + feesPesewas;
+
+  return json({
+    loanId: loan.id,
+    status: loan.status,
+    outstanding: {
+      principalPesewas,
+      interestPesewas,
+      feesPesewas,
+      totalPesewas: totalOutstandingPesewas,
+    },
+    outstandingPrincipalPesewas: principalPesewas,
+    outstandingInterestPesewas: interestPesewas,
+    outstandingFeesPesewas: feesPesewas,
+    totalOutstandingPesewas,
   });
 }
 

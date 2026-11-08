@@ -11,7 +11,7 @@ import BorrowerLoanManager from '../BorrowerLoanManager';
 export default function LoanApplication() {
   const { sessionId, setSessionId, loanDetails, setAgentActive, addAgentLog, clearAgentLogs } = useLoanStore();
   const [step, setStep] = useState<number>(1);
-  const [workflowMode, setWorkflowMode] = useState<'convex' | 'legacy'>('convex');
+  const [workflowMode, setWorkflowMode] = useState<'api' | 'legacy'>('api');
 
   const steps = [
     { id: 1, name: 'Capital Selection' },
@@ -102,9 +102,9 @@ export default function LoanApplication() {
         </span>
         <div className="flex gap-2">
           <button
-            onClick={() => setWorkflowMode('convex')}
+            onClick={() => setWorkflowMode('api')}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
-              workflowMode === 'convex'
+              workflowMode === 'api'
                 ? 'bg-emerald-500 text-black shadow-md shadow-emerald-500/20'
                 : 'text-white/60 hover:text-white bg-white/5'
             }`}
@@ -124,8 +124,8 @@ export default function LoanApplication() {
         </div>
       </div>
 
-      {/* Direct Convex Workflow */}
-      {workflowMode === 'convex' && (
+      {/* Direct Cloudflare API Workflow */}
+      {workflowMode === 'api' && (
         <BorrowerLoanManager />
       )}
 

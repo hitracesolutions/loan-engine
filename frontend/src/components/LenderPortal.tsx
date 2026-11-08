@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useOptionalConvex } from '../lib/convex';
 import {
   loanService,
   type LenderProposalItem,
   type LenderDetailedProposal,
   pesewasToGhsString,
   bpsToPercentString,
-  ConvexCloudUnavailableError,
 } from '../services/loanService';
 import {
   Landmark,
@@ -21,7 +19,6 @@ import {
   AlertCircle,
   FileCheck,
 } from 'lucide-react';
-import type { Id } from '../../convex/_generated/dataModel';
 
 interface LenderPortalProps {
   lenderName?: string;
@@ -30,8 +27,6 @@ interface LenderPortalProps {
 export const LenderPortal: React.FC<LenderPortalProps> = ({
   lenderName = 'Institutional Lender',
 }) => {
-  const convexClient = useOptionalConvex();
-
   // State
   const [proposals, setProposals] = useState<LenderProposalItem[]>([]);
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'ACCEPTED' | 'DECLINED'>('ALL');
@@ -59,29 +54,20 @@ export const LenderPortal: React.FC<LenderPortalProps> = ({
     isSubmitting: false,
   });
 
-  // Fetch Proposals from Convex
+  // Fetch Proposals from Worker API
   const loadProposals = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
-    if (!convexClient) {
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      const data = await loanService.getLenderProposals(convexClient, statusFilter);
+      const data = await loanService.getLenderProposals(null, statusFilter);
       setProposals(data);
     } catch (err: any) {
-      if (err instanceof ConvexCloudUnavailableError) {
-        setError('Convex Cloud backend is not deployed. Lender queue cannot be loaded.');
-      } else {
-        setError(err.message || 'Failed to load assigned proposals.');
-      }
+      setError(err.message || 'Failed to load assigned proposals.');
     } finally {
       setIsLoading(false);
     }
-  }, [convexClient, statusFilter]);
+  }, [statusFilter]);
 
   useEffect(() => {
     loadProposals();
@@ -93,13 +79,8 @@ export const LenderPortal: React.FC<LenderPortalProps> = ({
     setDetailedProposal(null);
     setIsLoadingDetail(true);
 
-    if (!convexClient) {
-      setIsLoadingDetail(false);
-      return;
-    }
-
     try {
-      const detail = await loanService.getLenderProposal(convexClient, item.applicationId);
+      const detail = await loanService.getLenderProposal(null, item.applicationId);
       setDetailedProposal(detail);
     } catch (err: any) {
       console.error('Failed to load proposal detail:', err);
@@ -127,14 +108,14 @@ export const LenderPortal: React.FC<LenderPortalProps> = ({
 
   // Submit Decision
   const handleDecisionSubmit = async () => {
-    if (!decisionModal.proposal || !convexClient) return;
+    if (!decisionModal.proposal) return;
 
     setDecisionModal((prev) => ({ ...prev, isSubmitting: true }));
     setError(null);
     setSuccessNotice(null);
 
     try {
-      const result = await loanService.decideLenderProposal(convexClient, {
+      const result = await loanService.decideLenderProposal(null, {
         applicationId: decisionModal.proposal.applicationId,
         proposalId: decisionModal.proposal.proposalId,
         decision: decisionModal.decision,
@@ -198,7 +179,7 @@ export const LenderPortal: React.FC<LenderPortalProps> = ({
           <div className="flex items-center gap-3">
             <button
               onClick={loadProposals}
-              disabled={isLoading || !convexClient}
+              disabled={isLoading}
               className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
             >
               <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -217,19 +198,6 @@ export const LenderPortal: React.FC<LenderPortalProps> = ({
           </div>
         </div>
       </div>
-
-      {/* Phase 3 Gating Notice */}
-      {!convexClient && (
-        <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-sm flex items-start gap-3" role="status" aria-live="polite">
-          <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-          <div>
-            <div className="font-semibold">Lender Workflow APIs Scheduled for Phase 3</div>
-            <p className="mt-0.5 text-xs text-amber-700">
-              The Cloudflare Workers REST backend currently serves Phase 1-2 identity and application services. Institutional lender matching, proposal review, and decisioning endpoints will be enabled following Phase 3 schema migrations and legal disclosure sign-off (Owner Decision O-06).
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* Global Alerts */}
       {error && (
@@ -336,16 +304,12 @@ export const LenderPortal: React.FC<LenderPortalProps> = ({
             <RefreshCw className="w-8 h-8 text-indigo-600 animate-spin mx-auto mb-3" />
             <p className="text-sm font-medium text-slate-600">Loading lender proposal queue...</p>
           </div>
-        ) : !convexClient || proposals.length === 0 ? (
+        ) : proposals.length === 0 ? (
           <div className="py-16 text-center" role="status">
             <Clock className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <h3 className="text-base font-semibold text-slate-700">
-              {!convexClient ? 'Lender Proposal Queue Inactive' : 'No proposals found'}
-            </h3>
+            <h3 className="text-base font-semibold text-slate-700">No proposals found</h3>
             <p className="text-xs text-slate-500 max-w-md mx-auto mt-1">
-              {!convexClient
-                ? 'Institutional proposal assignment and decisioning workflows are scheduled for Phase 3 implementation. No live proposals will appear until Phase 3 lender endpoints are deployed.'
-                : `There are currently no loan proposals assigned to your institution in the '${statusFilter}' status.`}
+              {`There are currently no loan proposals assigned to your institution in the '${statusFilter}' status.`}
             </p>
           </div>
         ) : (

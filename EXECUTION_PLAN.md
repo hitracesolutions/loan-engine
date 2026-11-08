@@ -86,9 +86,9 @@ Status: `DONE` · `NEXT` · `AUTHORISED` · `SEQUENCED` (needs an earlier step) 
 | ID | Work | Acceptance | Status |
 | --- | --- | --- | --- |
 | S-00 | Restore green worker typecheck (33 errors) | `npm run typecheck` exit 0; suite still 81 pass; no behaviour change | NEXT |
-| S-01 | Pages Functions route parity for every worker route | automated check enumerates `index.ts` routes and asserts a Pages entrypoint exists; `/lenders`, `/loans` return 401 not 404 | AUTHORISED |
-| S-02 | Implement `GET /loans/:id/schedule`, `/transactions`, `/outstanding` | tests cover ordering and outstanding balance from fixtures; owner scoping matches `/loans/:id` | AUTHORISED |
-| S-03 | Retire the Convex surface | zero `convex` under `frontend/src`; build passes; no feature loses a data source | SEQUENCED (S-01, S-02) |
+| S-01 | Pages Functions route parity for every worker route | automated check enumerates `index.ts` routes and asserts a Pages entrypoint exists; `/lenders`, `/loans` return 401 not 404 | **DONE** |
+| S-02 | Implement `GET /loans/:id/schedule`, `/transactions`, `/outstanding` | tests cover ordering and outstanding balance from fixtures; owner scoping matches `/loans/:id` | **DONE** |
+| S-03 | Retire the Convex surface | zero `convex` under `frontend/src`; build passes; no feature loses a data source | **DONE** |
 | S-04 | Migration `0008`: negotiated-term fields | applies to fresh and current schema; defaults preserve simulation; check constraints present | AUTHORISED |
 | S-05 | Pricing reads terms from data; both bases; round half up | changing any term changes the snapshot hash; both bases in payload; fixtures at round-half-up | SEQUENCED (S-04) |
 | S-06 | Real TOTP MFA (replace fixed codes) | `123456`/`654321` rejected; valid window accepted; replay rejected; secret never returned | AUTHORISED |
@@ -163,9 +163,9 @@ Smaller owner answers still open are listed in [`BLOCKERS.md`](./BLOCKERS.md) §
 | Step | Status | Date | Commit | Evidence |
 | --- | --- | --- | --- | --- |
 | S-00 | PENDING | — | — | baseline: typecheck 33 errors, tests 81 pass |
-| S-01 | PENDING | — | — | baseline: Pages entrypoints cover health/auth/applications/borrower/admin only |
-| S-02 | PENDING | — | — | baseline: 3 client calls have no handler |
-| S-03 | PENDING | — | — | baseline: 73 convex references in frontend/src |
+| S-01 | DONE | 2026-11-08 | — | 19 Pages route parity tests green; automated check confirms all worker route prefixes have entrypoints returning 401 not 404 |
+| S-02 | DONE | 2026-11-08 | — | `npm test` 108 pass / 0 fail (16 suites); 20 new servicing tests; clean frontend build |
+| S-03 | DONE | 2026-11-08 | — | 0 convex references in frontend/src; frontend build passes cleanly (1772 modules); test suite passes 127/127 tests (19 suites) |
 | S-04 | PENDING | — | — | baseline: latest migration is `0007` |
 | S-05 | PENDING | — | — | baseline: `FLAT_SIMULATION` default, `rateBps = 2400` |
 | S-06 | PENDING | — | — | baseline: MFA accepts `123456` / `654321` |

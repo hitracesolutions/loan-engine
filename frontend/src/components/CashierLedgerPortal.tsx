@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useOptionalConvex } from "../lib/convex";
 import { loanService, pesewasToGhsString } from "../services/loanService";
 
 export interface CashierLedgerPortalProps {
@@ -7,7 +6,6 @@ export interface CashierLedgerPortalProps {
 }
 
 export const CashierLedgerPortal: React.FC<CashierLedgerPortalProps> = ({ onBack }) => {
-  const convexClient = useOptionalConvex();
   const [activeTab, setActiveTab] = useState<"disbursements" | "repayments" | "journal">("disbursements");
   
   // States
@@ -29,17 +27,17 @@ export const CashierLedgerPortal: React.FC<CashierLedgerPortalProps> = ({ onBack
 
   useEffect(() => {
     loadData();
-  }, [convexClient, activeTab]);
+  }, [activeTab]);
 
   const loadData = async () => {
     setLoading(true);
     setActionError(null);
     try {
       if (activeTab === "disbursements") {
-        const requests = await loanService.getDisbursementRequests(convexClient);
+        const requests = await loanService.getDisbursementRequests();
         setDisbursementRequests(requests || []);
       } else if (activeTab === "journal") {
-        const txs = await loanService.getJournalTransactions(convexClient);
+        const txs = await loanService.getJournalTransactions();
         setJournalTransactions(txs || []);
       }
     } catch (err: any) {
@@ -54,8 +52,8 @@ export const CashierLedgerPortal: React.FC<CashierLedgerPortalProps> = ({ onBack
     setActionError(null);
     setActionSuccess(null);
     try {
-      await loanService.approveDisbursement(convexClient, {
-        disbursementRequestId: requestId as any,
+      await loanService.approveDisbursement(null, {
+        disbursementRequestId: requestId,
       });
       setActionSuccess("Disbursement request approved successfully by checker.");
       await loadData();
@@ -72,8 +70,8 @@ export const CashierLedgerPortal: React.FC<CashierLedgerPortalProps> = ({ onBack
     setActionSuccess(null);
     try {
       const extRef = `TX-MOMO-${Date.now()}`;
-      await loanService.executeDisbursement(convexClient, {
-        disbursementRequestId: requestId as any,
+      await loanService.executeDisbursement(null, {
+        disbursementRequestId: requestId,
         externalReference: extRef,
       });
       setActionSuccess(`Disbursement executed. Double-entry journal posted & loan activated with ref: ${extRef}`);
@@ -97,8 +95,8 @@ export const CashierLedgerPortal: React.FC<CashierLedgerPortalProps> = ({ onBack
     setActionError(null);
     setActionSuccess(null);
     try {
-      const res = await loanService.recordRepayment(convexClient, {
-        applicationId: repayAppId.trim() as any,
+      const res = await loanService.recordRepayment(null, {
+        applicationId: repayAppId.trim(),
         amountGhs: amount,
         channel: repayChannel,
         externalReference: repayExtRef ? repayExtRef.trim() : undefined,

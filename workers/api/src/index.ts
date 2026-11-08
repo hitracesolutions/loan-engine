@@ -58,6 +58,9 @@ import {
 import { getBorrowerProfile, updateBorrowerProfile } from './routes/profile.ts';
 import {
   getLoanDetails,
+  getLoanOutstanding,
+  getLoanSchedule,
+  getLoanTransactions,
   listJournalEntries,
   listLoans,
   recordPayment,
@@ -108,6 +111,9 @@ const router = new Router()
   // Servicing & Double-Entry Ledger
   .get('/loans', listLoans)
   .get('/loans/:id', getLoanDetails)
+  .get('/loans/:id/schedule', getLoanSchedule)
+  .get('/loans/:id/transactions', getLoanTransactions)
+  .get('/loans/:id/outstanding', getLoanOutstanding)
   .post('/loans/:id/payments', recordPayment)
   .post('/payments/:id/reverse', reversePayment)
   .get('/ledger/entries', listJournalEntries)
