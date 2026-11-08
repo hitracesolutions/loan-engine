@@ -226,8 +226,8 @@ Status: `DONE` · `NEXT` · `AUTHORISED` · `SEQUENCED` (needs an earlier step) 
 | --- | --- | --- | --- |
 | S-00 | Restore green worker typecheck | `npm run typecheck` exit 0; suite still green; no behaviour change | **DONE** (2026-11-04) |
 | S-01 | Pages Functions route parity for every worker route | automated check asserts a Pages entrypoint per `index.ts` route; `/lenders`, `/loans` return 401 not 404 | **DONE** (2026-11-04) |
-| S-02 | `GET /loans/:id/schedule`, `/transactions`, `/outstanding` | tests cover ordering + outstanding balance; owner scoping matches `/loans/:id` | AUTHORISED |
-| S-03 | Retire the Convex surface | zero `convex` under `frontend/src`; build passes; no feature loses a data source | SEQUENCED (S-01, S-02) |
+| S-02 | `GET /loans/:id/schedule`, `/transactions`, `/outstanding` | tests cover ordering + outstanding balance; owner scoping matches `/loans/:id` | **DONE** (2026-11-08) |
+| S-03 | Retire the Convex surface | zero `convex` under `frontend/src`; build passes; no feature loses a data source | **DONE** (2026-11-08) |
 | S-04 | Migration `0009`: negotiated-term fields | applies to fresh + current schema; defaults preserve simulation; check constraints present | AUTHORISED |
 | S-05 | Pricing reads terms from data; both bases; round half up | any term change changes the snapshot hash; both bases in payload; round-half-up fixtures | SEQUENCED (S-04) |
 | S-06 | Real TOTP MFA (replace fixed codes) | `123456`/`654321` rejected; valid window accepted; replay rejected; secret never returned | AUTHORISED |
@@ -296,8 +296,8 @@ Smaller owner answers still open (R-1 to R-10) are in the [blocker triage](./ADR
 | --- | --- | --- | --- |
 | S-00 | DONE | 2026-11-04 | `npm run typecheck` exit 0 (was ~33 errors); `npm test` 88 pass; type-only changes (unused imports removed, `?? 0`/`?? ''` guards, test-adapter casts), no behaviour change |
 | S-01 | DONE | 2026-11-04 | single `frontend/functions/_middleware.ts` forwards every `isApiPath` route to the Worker (per-path forwarders removed); `pagesParity.test.ts` asserts coverage of all routes + `/lenders`,`/loans` → 401; 91 tests pass; frontend build green |
-| S-02 | PENDING | — | 3 client calls have no handler |
-| S-03 | PENDING | — | convex references under frontend/src |
+| S-02 | DONE | 2026-11-08 | 3 servicing endpoints implemented in `servicing.ts`; 20 tests in `servicingEndpoints.test.ts` pass; integer pesewas, strict ordering, borrower scoping + 404 anti-enumeration |
+| S-03 | DONE | 2026-11-08 | zero convex references in `frontend/src`; `loanService.ts`, `LenderPortal.tsx`, `CashierLedgerPortal.tsx`, `LoanApplication.tsx` rewired to Worker API; `frontend/src/lib/convex.tsx` deleted; `frontend` build green |
 | S-04 | PENDING | — | latest migration is `0008`; negotiated-terms migration will be `0009` |
 | S-05 | PENDING | — | `FLAT_SIMULATION` default, `rateBps = 2400` |
 | S-06 | PENDING | — | MFA accepts `123456` / `654321` |

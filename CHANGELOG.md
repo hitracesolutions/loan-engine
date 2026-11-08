@@ -1,5 +1,42 @@
 # Gidfine Changelog
 
+## 2026-11-08 — Step S-01: Pages Functions Route Parity & Step S-03: Convex Retirement Shipped
+
+- **S-01 — Pages Functions Route Parity (`frontend/functions/`)**:
+  - Implemented missing Cloudflare Pages Functions route handlers for all Worker API route prefixes to guarantee complete routing parity between Pages static hosting and the Worker REST router:
+    - `loans.ts` and `loans/[[path]].ts` (covers `/loans`, `/loans/:id`, `/loans/:id/schedule`, `/loans/:id/transactions`, `/loans/:id/outstanding`, `/loans/:id/payments`)
+    - `lenders.ts` and `lenders/[[path]].ts` (covers `/lenders`, `/lenders/:id/products`)
+    - `lender/[[path]].ts` (covers `/lender/proposals`, `/lender/proposals/:id/respond`)
+    - `disbursements.ts` and `disbursements/[[path]].ts` (covers `/disbursements`, `/disbursements/prepare`, `/disbursements/confirm`)
+    - `payments/[[path]].ts` (covers `/payments/:id/reverse`)
+    - `ledger/[[path]].ts` (covers `/ledger/entries`)
+    - `documents.ts` and `documents/[[path]].ts` (covers `/documents`, `/documents/:id`)
+    - `outbox.ts` and `outbox/[[path]].ts` (covers `/outbox`, `/outbox/process`)
+    - `audit/[[path]].ts` (covers `/audit/security`)
+    - `borrower/applications/[[path]].ts` (covers `/borrower/applications/:id/response`)
+  - Compatible with Pages `_middleware.ts` single same-origin forwarder.
+  - Added test suite `workers/api/tests/pagesRouteParity.test.ts` (19 test cases) validating that all Pages Functions files exist and accurately route requests into the Worker router, returning 401 `UNAUTHENTICATED` (never 404 Route Not Found) on protected endpoints.
+
+- **S-03 — Convex Retirement in `frontend/src/`**:
+  - Audited and retired all legacy Convex calls across `frontend/src/`:
+    - `frontend/src/components/workspace/pages/LoanApplication.tsx`: Replaced `'convex'` workflow state with `'api'`, preserving default routing to `<BorrowerLoanManager />`.
+    - `frontend/src/services/loanService.ts`: Rewrote the loan service adapter to use the live Cloudflare Worker API client (`gidfineAPI`), removing all imports of `convex/react`, `convex/_generated/api`, and `convex/_generated/dataModel`. Preserved all integer pesewas helpers (`ghsToPesewas`, `pesewasToGhs`, `pesewasToGhsString`, `bpsToPercentString`) and service interfaces.
+    - `frontend/src/components/CashierLedgerPortal.tsx`: Removed `useOptionalConvex` and `convexClient` hook, rewiring disbursement request approvals, executions, double-entry journal views, and waterfall repayment receipts to live Worker API endpoints.
+    - `frontend/src/components/LenderPortal.tsx`: Removed `useOptionalConvex`, `convexClient`, and `ConvexCloudUnavailableError`, rewiring proposal fetching, detail review, and lender decisioning to live Worker API endpoints.
+    - `frontend/src/lib/convex.tsx`: Removed obsolete client provider and unused generated API re-exports from `frontend/src/`.
+  - Audited `frontend/src/` with `git grep -i "convex" frontend/src` confirming zero remaining references.
+  - Verification: `npm test` passes 127/127 tests across 19 suites (0 failures). `frontend` production build (`tsc -b && vite build`) compiles cleanly (1,772 modules transformed, exit code 0).
+
+## 2026-11-08 — Step S-02: Loan Servicing Endpoints Shipped
+
+- Implemented the three missing loan servicing query endpoints to resolve `BLOCKERS.md` Issue E-3:
+  - `GET /loans/:id/schedule`: Returns active repayment schedule installments in strict ascending `installment_number` order. Supports dual response shape (`{ installments, results }`) for frontend client compatibility.
+  - `GET /loans/:id/transactions`: Returns cashier payment receipts in descending `created_at` order, joining cashier full name from `users`. Supports dual response shape (`{ payments, results }`).
+  - `GET /loans/:id/outstanding`: Calculates outstanding balances (`outstanding_principal_pesewas`, `outstanding_interest_pesewas`, `outstanding_fees_pesewas`, and `total_outstanding_pesewas`) in pure integer pesewas.
+- Added shared helper `resolveLoanForActor` in `workers/api/src/routes/servicing.ts` to enforce tenant isolation (`agency_id`) and borrower ownership (`loan.borrower_id === actor.userId`). Cross-borrower and cross-agency queries return 404 to prevent ID enumeration.
+- Mounted the three endpoints on the shared router in `workers/api/src/index.ts`.
+- Created dedicated test suite `workers/api/tests/servicingEndpoints.test.ts` with 20 test cases covering happy paths, chronological ordering, balance calculations, zero balance loans, role authorization across agency staff, cross-borrower 404 isolation, and simulated D1 error handling.
+
 ## 2026-11-04 — S-00: green worker typecheck; doc consolidation
 
 - **S-00 done:** `npm run typecheck` in `workers/api` now exits 0 (was ~33

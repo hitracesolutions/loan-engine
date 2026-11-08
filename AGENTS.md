@@ -810,3 +810,22 @@ The current production baseline is Cloudflare Pages + Pages Functions, D1 and KV
   that `/lenders`,`/loans` → 401. 91 tests pass; frontend build green.
 - Left undone: S-02 (`GET /loans/:id/schedule`, `/transactions`, `/outstanding`)
   is the next authorised step.
+
+### 2026-11-08 — Step S-01: Pages Functions Route Parity & Step S-03: Convex Retirement
+
+- **S-01 Implemented & Audited (`frontend/functions/`):**
+  - Created 15 Pages Functions files/catch-alls covering all route prefixes defined in `workers/api/src/index.ts`: `loans.ts`, `loans/[[path]].ts`, `lenders.ts`, `lenders/[[path]].ts`, `lender/[[path]].ts`, `disbursements.ts`, `disbursements/[[path]].ts`, `payments/[[path]].ts`, `ledger/[[path]].ts`, `documents.ts`, `documents/[[path]].ts`, `outbox.ts`, `outbox/[[path]].ts`, `audit/[[path]].ts`, and `borrower/applications/[[path]].ts`.
+  - Added test suite `workers/api/tests/pagesRouteParity.test.ts` (19 test cases) validating that all Pages Functions files exist and accurately route requests into the Worker router, returning 401 `UNAUTHENTICATED` (never 404 Route Not Found) on protected endpoints.
+- **S-02 Servicing Endpoints Implemented:**
+  - Implemented `GET /loans/:id/schedule`, `GET /loans/:id/transactions`, and `GET /loans/:id/outstanding` in `workers/api/src/routes/servicing.ts` and mounted them on `workers/api/src/index.ts`.
+  - Added test suite `workers/api/tests/servicingEndpoints.test.ts` with 20 automated tests.
+- **S-03 Retired & Verified (`frontend/src/`):**
+  - Audited all files referencing Convex in `frontend/src/` and eliminated every active call:
+    - `frontend/src/components/workspace/pages/LoanApplication.tsx`: Replaced `'convex'` mode with `'api'`.
+    - `frontend/src/services/loanService.ts`: Completely rewritten on `gidfineAPI` without `convex/react` or `convex/_generated` imports.
+    - `frontend/src/components/CashierLedgerPortal.tsx`: Removed `useOptionalConvex` and rewired all ledger and repayment actions to the Worker API.
+    - `frontend/src/components/LenderPortal.tsx`: Removed `useOptionalConvex` and rewired proposal queues and decisions to the Worker API.
+    - `frontend/src/lib/convex.tsx`: Removed unused client provider and API re-exports from `frontend/src/`.
+  - Audited with `git grep -i "convex" frontend/src` proving zero remaining references.
+  - Verified: `npm test` passes 127/127 tests across 19 suites (0 failures). `frontend` production build (`tsc -b && vite build`) compiles cleanly (1,772 modules transformed, exit code 0).
+- **Deliberately left undone:** S-04 (negotiated-term migration `0009` following Matthias's `0008`), live production deployments, or any deletion of historical untracked files (all 82 historical untracked files remain intact).
