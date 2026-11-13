@@ -1,6 +1,5 @@
-import { LayoutDashboard, FileText, CreditCard, Bot, LogOut, Book, ClipboardList } from 'lucide-react';
+import { LayoutDashboard, FileText, CreditCard, LogOut, ClipboardList } from 'lucide-react';
 import { useLoanStore } from '../../../store/useLoanStore';
-import AgentOverlay from '../../shared/AgentOverlay';
 import AnalyticsDashboard from '../pages/AnalyticsDashboard';
 import LoanApplication from '../pages/LoanApplication';
 import AgencyReviewQueue from '../../AgencyReviewQueue';
@@ -9,7 +8,7 @@ import UserProfile from '../pages/UserProfile';
 import Docs from '../../../pages/Docs';
 
 export default function DashboardLayout() {
-  const { user, currentView, setView, agentLogs, isAgentActive, clearSession } = useLoanStore();
+  const { user, currentView, setView, clearSession } = useLoanStore();
 
   const navigation = [
     { name: 'Dashboard', id: 'DASHBOARD', icon: LayoutDashboard },
@@ -105,8 +104,6 @@ export default function DashboardLayout() {
         </main>
       </div>
 
-      {/* Global Agent Overlay (Tool Calling UI) */}
-      <AgentOverlay logs={agentLogs} isActive={isAgentActive} />
     </div>
   );
 }
