@@ -5,45 +5,10 @@ import ProfileCompletionModal from './components/auth/ProfileCompletionModal';
 import Docs from './pages/Docs';
 import { ImpersonationBanner } from './components/ImpersonationBanner';
 import { useLoanStore } from './store/useLoanStore';
-import { api } from './lib/api';
 
 function App() {
-  const { currentState, setUser, setSessionId } = useLoanStore();
+  const { currentState } = useLoanStore();
   const [showProfileCompletion, setShowProfileCompletion] = useState(false);
-
-  useEffect(() => {
-    // OAuth/OIDC handoff: the provider returns a session_id that only the server
-    // can resolve. Query parameters are never trusted as identity — the user is
-    // populated exclusively from the verified session payload.
-    const params = new URLSearchParams(window.location.search);
-    const sessionId = params.get('session_id');
-    if (!sessionId) return;
-
-    setSessionId(sessionId);
-    window.history.replaceState({}, document.title, window.location.pathname);
-
-    void api.verifySession(sessionId).then((res) => {
-      const cust = res.success ? res.data?.customer_data : undefined;
-      if (!cust?.name) return;
-
-      const userObj = {
-        name: cust.name,
-        email: cust.email || '',
-        picture: cust.picture || '',
-        phone: cust.phone || '',
-        salary: cust.salary || 5000,  // GHS per month
-        city: cust.city || 'Accra',   // Ghana
-        creditScore: cust.credit_score || 750,
-        preApprovedLimit: cust.pre_approved_limit || 50000,  // GHS
-      };
-      setUser(userObj);
-
-      // Prompt for profile completion only when the phone is missing or a placeholder.
-      setShowProfileCompletion(
-        !userObj.phone || userObj.phone.startsWith('g_') || userObj.phone.length < 10,
-      );
-    });
-  }, [setUser, setSessionId]);
 
   useEffect(() => {
     const handleAuthInvalidated = () => {
