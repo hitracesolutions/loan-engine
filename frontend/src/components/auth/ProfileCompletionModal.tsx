@@ -72,7 +72,7 @@ export default function ProfileCompletionModal({ isOpen, phoneInitial = '', onCo
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="+91 99999 99999"
+                placeholder="+233 24 123 4567"
                 className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:outline-none focus:border-white/30 placeholder:text-white/20"
               />
             </div>

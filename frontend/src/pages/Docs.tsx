@@ -1,30 +1,27 @@
-import { BookOpen, Users, Zap, Shield, BarChart3, Globe2, Cpu, Lock, FileText, ArrowRight, Globe } from 'lucide-react';
+import { Zap, Shield, BarChart3, Lock, FileText, ArrowRight, Globe, UserPlus, HandCoins, ScrollText } from 'lucide-react';
 
 export default function Docs() {
   return (
     <div className="max-w-5xl mx-auto space-y-16 py-8">
       {/* Hero */}
       <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold text-white tracking-tight">Gidfine Platform</h1>
+        <h1 className="text-4xl font-bold text-white tracking-tight">Gidfine Help Centre</h1>
         <p className="text-lg text-white/60 max-w-2xl mx-auto">
-          An autonomous lending infrastructure powered by state-graph orchestration,
-          real-time credit profiling, and cryptographic-grade risk underwriting.
+          Gidfine is a licensed loan arranger. We match you with partner lenders,
+          show you the full borrower rate before you accept, and service your
+          repayments — all in Ghana cedis.
         </p>
-        <div className="flex items-center justify-center gap-4 text-sm text-white/40 pt-2">
-          <span className="flex items-center gap-1.5"><Globe className="w-4 h-4" /> Production</span>
-          <span className="flex items-center gap-1.5"><Cpu className="w-4 h-4" /> v1.0.0</span>
-        </div>
       </div>
 
       {/* Quick Links */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { icon: Zap, label: 'Quick Start', desc: 'Get loan in 4 steps' },
-          { icon: FileText, label: 'API Endpoints', desc: 'REST interface' },
-          { icon: BarChart3, label: 'Analytics', desc: 'Dashboard overview' },
-          { icon: Shield, label: 'Security', desc: 'Encryption & auth' },
+          { icon: Zap, label: 'Getting Started', desc: 'Apply in 4 steps' },
+          { icon: HandCoins, label: 'Repayments', desc: 'Schedules & balances' },
+          { icon: BarChart3, label: 'Your Dashboard', desc: 'Track applications' },
+          { icon: Shield, label: 'Security', desc: 'How we protect you' },
         ].map((item, i) => (
-          <div key={i} className="border border-white/10 bg-white/[0.02] rounded-lg p-4 text-center hover:bg-white/5 transition-colors cursor-pointer">
+          <div key={i} className="border border-white/10 bg-white/[0.02] rounded-lg p-4 text-center">
             <item.icon className="w-6 h-6 text-emerald-400 mb-2 mx-auto" />
             <p className="text-xs font-medium text-white/70">{item.label}</p>
             <p className="text-xs text-white/40">{item.desc}</p>
@@ -34,14 +31,14 @@ export default function Docs() {
 
       {/* Workflow */}
       <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-white tracking-tight">Borrower Workflow</h2>
+        <h2 className="text-2xl font-semibold text-white tracking-tight">How borrowing works</h2>
         <div className="border border-white/10 bg-[#0d0d0d] rounded-lg p-6">
           <ol className="space-y-6 ml-0">
             {[
-              { step: 1, title: 'Create Account', icon: Globe, description: 'Register using phone OTP or Google SSO to secure your identity.' },
-              { step: 2, title: 'Complete Profile', icon: FileText, description: 'Provide your income, employment and identification details, and upload any required documents.' },
-              { step: 3, title: 'AI Underwriting', icon: Cpu, description: 'Dual‑LLM decisioning engine evaluates credit worthiness in under 400ms.' },
-              { step: 4, title: 'Accept & Disburse', icon: ArrowRight, description: 'Review offer, e‑sign the sanction letter, and receive funds.' },
+              { step: 1, title: 'Create your account', icon: UserPlus, description: 'Register with your email and set a password to secure your account.' },
+              { step: 2, title: 'Complete your profile', icon: FileText, description: 'Add your phone number, city and monthly income so we can assess affordability.' },
+              { step: 3, title: 'Apply for a loan', icon: ScrollText, description: 'Tell us how much you need and over how long. Our team reviews your request with a partner lender.' },
+              { step: 4, title: 'Accept & repay', icon: ArrowRight, description: 'Review your rate and repayment schedule, accept the offer, and track every repayment in your dashboard.' },
             ].map((s) => (
               <li key={s.step} className="flex items-start gap-4">
                 <div className="mt-1 w-10 h-10 flex-shrink-0 rounded-full border border-emerald-500/30 bg-emerald-500/10 flex items-center justify-center">
@@ -57,49 +54,14 @@ export default function Docs() {
         </div>
       </section>
 
-      {/* API Table */}
-      <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-white">Core API Routes</h2>
-        <div className="border border-white/10 rounded-lg overflow-hidden">
-          <table className="w-full text-sm text-left">
-            <thead className="bg-white/5">
-              <tr>
-                <th className="py-3 px-4 font-medium text-white/80">Endpoint</th>
-                <th className="py-3 px-4 font-medium text-white/80">Method</th>
-                <th className="py-3 px-4 font-medium text-white/80">Description</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {[
-                ['/api/auth/signup', 'POST', 'Create new borrower account'],
-                ['/api/auth/login', 'POST', 'Authenticate existing user'],
-                ['/api/auth/google', 'GET', 'Initiate OAuth flow'],
-                ['/api/underwriting/evaluate', 'POST', 'AI risk scoring'],
-                ['/api/sanction/generate', 'POST', 'Issue loan agreement'],
-                ['/api/loan/repay', 'POST', 'Process EMI payment'],
-                ['/api/admin/dashboard', 'GET', 'Administrator overview'],
-              ].map(([endpoint, method, desc]) => (
-                <tr key={`${endpoint}`} className="hover:bg-white/5 transition-colors">
-                  <td className="py-3 px-4 font-mono text-emerald-300 text-xs">{endpoint}</td>
-                  <td className="py-3 px-4 text-xs">
-                    <span className="bg-white/10 text-white/70 px-2 py-0.5 rounded text-xs font-mono">{method}</span>
-                  </td>
-                  <td className="py-3 px-4 text-white/50">{desc}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
       {/* Security & Compliance */}
       <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-white">Security & Compliance</h2>
+        <h2 className="text-2xl font-semibold text-white">Security & your data</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
-            { icon: Lock, title: 'End‑to‑end Encryption', description: 'All data in transit is protected by TLS 1.3 and at rest by AES‑256.' },
-            { icon: Shield, title: 'GDPR / PDP Bill', description: 'We comply with Indian DPDP Act 2023 and global data privacy rules.' },
-            { icon: BarChart3, title: 'Audit Logs', description: 'Every underwriting decision is recorded immutably for regulatory reporting.' },
+            { icon: Lock, title: 'Encrypted in transit', description: 'All traffic between you and Gidfine is protected with TLS.' },
+            { icon: Shield, title: 'Data protection', description: 'Gidfine is registered with the Data Protection Commission of Ghana and shares your data with a lender only when you proceed with their offer.' },
+            { icon: BarChart3, title: 'Audit trail', description: 'Every decision on your application is recorded so it can be reviewed if you ever query it.' },
           ].map((item, i) => (
             <div key={i} className="border border-white/10 rounded-lg p-4 bg-[#0d0d0d]">
               <item.icon className="w-6 h-6 text-blue-400 mb-2" />
@@ -110,13 +72,14 @@ export default function Docs() {
         </div>
       </section>
 
-      {/* FAQ — compact */}
+      {/* FAQ */}
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-white">FAQ</h2>
         {[
           { q: 'How are interest rates determined?', a: 'Each lender sets its own rate. Gidfine adds a transparent agency margin and shows you the full borrower rate and repayment schedule before you accept.' },
-          { q: 'Can I prepay my loan?', a: 'Yes. Pre‑closure is permitted any time subject to a 24‑hour cooling period. Visit Active Loans → Prepay.' },
-          { q: 'What is the maximum loan amount?', a: 'Loan limits are configured in Ghana cedis according to the approved product, affordability policy and credit assessment.' },
+          { q: 'Can I prepay my loan?', a: 'Yes. Early settlement is permitted. Visit Active Loans to see your outstanding balance.' },
+          { q: 'What is the maximum loan amount?', a: 'Loan limits are set in Ghana cedis according to the approved product, affordability policy and your credit assessment.' },
+          { q: 'Which currency does Gidfine use?', a: 'All amounts are shown and repaid in Ghana cedis (GH₵).' },
         ].map((item, i) => (
           <div key={i} className="border-b border-white/10 pb-4 last:border-0">
             <p className="text-white font-medium text-sm">{item.q}</p>

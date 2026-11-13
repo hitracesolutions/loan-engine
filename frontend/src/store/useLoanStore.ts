@@ -118,7 +118,7 @@ export const useLoanStore = create<LoanStore>()(
       }),
     }),
     {
-      name: 'nbfc-session',
+      name: 'gidfine-session',
       partialize: (state) => ({
         currentState: state.currentState,
         user: state.user,
