@@ -192,9 +192,9 @@ is code. Phase 2 is decision-gated. Phase 3 is deferred until its feature exists
 **R2 — Code fixes: the definition of done.** A code task (T1, T2, T3, and the
 implementation half of any Phase 2 task) is done only when **all** hold:
 1. the change is implemented;
-2. `cd workers/api && npm test` is green (currently 88 tests);
-3. `npm run typecheck` introduces **no new** errors in the files you touched
-   (the repo has a known pre-existing baseline — compare, don't aim for zero);
+2. `cd workers/api && npm test` is green (currently 130 tests);
+3. `npm run typecheck` stays **exit 0** (the former pre-existing baseline was
+   cleared by S-00 on 2026-11-04 and re-cleared on 2026-11-13 — keep it at zero);
 4. any new migration is the **next free number**, forward-only, and an **applied
    migration is never edited or renamed** (`ADR/DECISIONS.md` blocker triage, migration discipline);
 5. the task's checkbox here is ticked with a dated note.

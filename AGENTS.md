@@ -29,10 +29,11 @@ Non-negotiable rules for any agent doing this work:
   real MFA, the daily disbursement reconciliation report, and counsel artefacts
   (the `ADR/DECISIONS.md` blocker triage, C-1…C-4) exist. Never relax `check_maker_checker_distinct`
   before the reconciliation report and real MFA are in place.
-- **Verify, don't assume.** `cd workers/api && npm test` (88 pass); worker
-  `typecheck` is green (exit 0) as of 2026-11-04 (S-00) — keep it green.
-  Migrations are forward-only; next free number is **0009**. This environment may
-  auto-commit — check `git status`/`git log` before and after.
+- **Verify, don't assume.** `cd workers/api && npm test` (130 pass) and worker
+  `typecheck` are green (exit 0) as of 2026-11-13; `frontend && npm run build`
+  is green (`tsc -b && vite build`, exit 0). Keep all three green. Convex is fully
+  retired. Migrations are forward-only; next free number is **0009**. This
+  environment may auto-commit — check `git status`/`git log` before and after.
 
 State in one line: **Phase 1 shipped** (atomic writes, reference-unique migration
 `0008`, no fabricated lender) **+ reversal segregation**; **Phase 2 directions
@@ -829,3 +830,57 @@ The current production baseline is Cloudflare Pages + Pages Functions, D1 and KV
   - Audited with `git grep -i "convex" frontend/src` proving zero remaining references.
   - Verified: `npm test` passes 127/127 tests across 19 suites (0 failures). `frontend` production build (`tsc -b && vite build`) compiles cleanly (1,772 modules transformed, exit code 0).
 - **Deliberately left undone:** S-04 (negotiated-term migration `0009` following Matthias's `0008`), live production deployments, or any deletion of historical untracked files (all 82 historical untracked files remain intact).
+
+### 2026-11-13 — Frontend refinement to the Gidfine suite, dead-code purge, green bars restored
+
+Owner brief: review the frontend against the dev guide, remove irrelevant
+flows/logic, stop raw API text showing in the UI, fix spurious logouts, purge
+**all** India wiring/references, and remove **all** dead and unrelated code.
+
+- **Workspace rebuilt on the real Worker API.** The authenticated workspace
+  pages were still the retired AI-underwriting / session product (the source of
+  the stray "API text" and the unexpected logouts). Rebuilt
+  `AnalyticsDashboard`, `ActiveLoans`, `UserProfile` and `LoanApplication` on
+  `gidfineAPI` (`listApplications`/`listLoans`/`getRepaymentSchedule`/
+  `getBorrowerProfile`), and stripped the agent overlay/session/OAuth wiring from
+  `App.tsx` and `DashboardLayout.tsx`.
+- **India purge — zero references remain** across `frontend/src` (Razorpay,
+  eNACH, UPI, NetBanking, HDFC, NBFC, CIBIL, Experian, Aadhaar, DigiLocker,
+  UIDAI, PAN, ITD, rupee/₹/INR, Mumbai/Bengaluru, MongoDB, FinServe, lakh/crore,
+  Paytm/PhonePe, DPDP, dual-LLM). `Docs.tsx` lost the fabricated API-endpoint
+  table and "AI underwriting" copy; it is now an honest Ghana arranger help page.
+  Phone placeholders are `+233`, cities default to Accra, IDs are Ghana IDs.
+- **Dead code removed.** Deleted the legacy FastAPI client/websocket
+  (`src/api/`), the loan-comparison engine (`LoanCard`, `useComparisonAPI`,
+  `types/comparison`), the legacy admin hook (`useAdminAPI`, `types/admin`,
+  `LenderManagement` — these pointed at retired `/admin` endpoints via
+  `REACT_APP_API_URL`), `EmiDonutChart`, the `utils/rebuild.ts` stub, and the
+  unused `types.ts`. `useLoanStore` was slimmed to `{ currentView, currentState,
+  user }` + `setView/setState/setUser/clearSession` (removed the dead
+  agent/chat/session/documents/loanDetails state), which also cleared the last
+  `no-explicit-any` lint errors in that file. Persist key `nbfc-session` →
+  `gidfine-session`.
+- **Convex fully retired (owner decision, this session).** Deleted the tracked
+  `frontend/convex/` backend, the six Convex-coupled test files under
+  `frontend/tests/`, the `convex` dependency (lockfile updated via `npm
+  install`) and the `convex:*` scripts. `git grep -i convex` is now clean.
+- **Kept by owner decision:** `LenderPortal`, `CashierLedgerPortal` and the admin
+  `ImpersonationPanel` (ADR-0015 / S-10) remain as staged, Worker-API-backed
+  features that are not yet wired into a route. They tree-shake out of the build.
+- **Logouts.** The 401→`gidfine:auth-invalidated`→`clearSession` path is correct
+  (role mismatches are 403 and do not log out); the spurious logouts came from
+  the deleted legacy pages calling endpoints that 401'd. For a valid borrower the
+  dashboard's `listApplications`/`listLoans` calls succeed, so no auto-logout.
+- **S-00 typecheck re-greened.** The 2026-11-08 work had regressed the worker
+  typecheck to 9 errors (`servicing.ts` ×4 unchecked `ctx.params.id`,
+  `pagesRouteParity.test.ts` ×2 bad `AppEnv` mock + unused import,
+  `servicingEndpoints.test.ts` ×3 D1-adapter type mismatch). Fixed with the
+  established conventions (`?? ''` guards; `as unknown as D1Database` /
+  `D1PreparedStatement` casts; corrected `AppEnv` mock to
+  `JWT_SIGNING_KEY`/`APP_NAME`/`APP_ENV`/`ACCESS_TOKEN_TTL_SECONDS`).
+- **Verified:** worker `npm run typecheck` exits 0; worker `npm test` 130/130
+  pass; `frontend` `npm run build` (`tsc -b && vite build`) exits 0.
+  Pre-existing repo-wide `no-explicit-any` lint debt (≈341 in `api-gidfine.ts`
+  and tests) is unchanged and out of scope — the project gates are
+  build + typecheck + tests, all green.
+- **Not committed** — the owner commits their own work.

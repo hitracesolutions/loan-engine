@@ -1,9 +1,9 @@
 # Gidfine Implementation Plan
 
 **Status:** Sprints 1–7 implemented and verified in simulation/gated mode; remediation and forward steps (S-00–S-24) in progress.<br/>
-**Updated:** 4 November 2026<br/>
+**Updated:** 13 November 2026<br/>
 **Source of truth for requirements:** [`Gidfine_Dev_Guide.md`](./Gidfine_Dev_Guide.md)<br/>
-**Current test evidence:** `npm test` in `workers/api` → **88 pass / 0 fail**; frontend `npm run build` passes.<br/>
+**Current test evidence:** `npm test` in `workers/api` → **130 pass / 0 fail**; worker `npm run typecheck` exit 0; frontend `npm run build` passes.<br/>
 **Deployment:** `https://gidfin.dekacentral.com` is managed separately by Matthias (see §2.3). No remote D1 migration or live money movement is performed from this repo without the release gate (§14).
 
 > This file merges what were formerly two plans — the implementation plan
@@ -41,9 +41,9 @@ This plan translates the product requirements in [`Gidfine_Dev_Guide.md`](./Gidf
 
 ### 2.2 Current test evidence
 
-Measured 2026-11-04 with `npm test` in `workers/api`: **88 pass / 0 fail**. Worker `npm run typecheck` is **exit 0** as of 2026-11-04 (step **S-00** cleared the former ~33-error baseline — test-adapter D1 typing and a few `src` undefined-safety spots — with type-only changes). The frontend production build passes.
+Measured 2026-11-13 with `npm test` in `workers/api`: **130 pass / 0 fail**. Worker `npm run typecheck` is **exit 0** (S-00 cleared the original ~33-error baseline; a 9-error regression introduced on 2026-11-08 was re-cleared on 2026-11-13 with the same type-only conventions). The frontend production build passes (`tsc -b && vite build`, exit 0).
 
-*(Historical snapshots, for the record: Sprint 1 baseline was 50/50; the programme baseline on 2026-10-30 was 81/81.)*
+*(Historical snapshots, for the record: Sprint 1 baseline was 50/50; the programme baseline on 2026-10-30 was 81/81; 2026-11-04 was 88/88; 2026-11-08 was 127/127.)*
 
 ### 2.3 Deployment environment
 
@@ -164,9 +164,14 @@ All seven sprints are implemented and verified in simulation/gated mode. Live be
 
 ---
 
-## 8. Legacy Code Retirement (Convex)
+## 8. Legacy Code Retirement (Convex) — **COMPLETE (2026-11-13)**
 
-Convex files (`frontend/convex/*`, `frontend/src/services/loanService.ts`, fallback hooks in `LenderPortal.tsx`) remain only to prevent build breaks. They must not be extended and no new feature may read from them. Removal is step **S-03**. Milestones: Sprint 3 retires proposal queries; Sprint 4-5 cut loan/financial flows to the D1 ledger; the dedicated cleanup commit removes all Convex packages and directories.
+Convex is fully retired. S-03 (2026-11-08) rewired every active `frontend/src`
+flow onto the Worker API; the 2026-11-13 cleanup then deleted the tracked
+`frontend/convex/` backend directory, the six Convex-coupled test files under
+`frontend/tests/`, the `convex` npm dependency (lockfile updated) and the
+`convex:*` scripts. `git grep -i convex` is clean and the frontend build passes
+without it. No Convex packages, directories or references remain.
 
 ---
 
@@ -224,10 +229,10 @@ Status: `DONE` · `NEXT` · `AUTHORISED` · `SEQUENCED` (needs an earlier step) 
 
 | ID | Work | Acceptance | Status |
 | --- | --- | --- | --- |
-| S-00 | Restore green worker typecheck | `npm run typecheck` exit 0; suite still green; no behaviour change | **DONE** (2026-11-04) |
+| S-00 | Restore green worker typecheck | `npm run typecheck` exit 0; suite still green; no behaviour change | **DONE** (2026-11-04; re-greened 2026-11-13 after a 9-error regression) |
 | S-01 | Pages Functions route parity for every worker route | automated check asserts a Pages entrypoint per `index.ts` route; `/lenders`, `/loans` return 401 not 404 | **DONE** (2026-11-04) |
 | S-02 | `GET /loans/:id/schedule`, `/transactions`, `/outstanding` | tests cover ordering + outstanding balance; owner scoping matches `/loans/:id` | **DONE** (2026-11-08) |
-| S-03 | Retire the Convex surface | zero `convex` under `frontend/src`; build passes; no feature loses a data source | **DONE** (2026-11-08) |
+| S-03 | Retire the Convex surface | zero `convex` under `frontend/src`; build passes; no feature loses a data source | **DONE** (2026-11-08; `frontend/convex/` dir, dep, scripts and coupled tests removed 2026-11-13) |
 | S-04 | Migration `0009`: negotiated-term fields | applies to fresh + current schema; defaults preserve simulation; check constraints present | AUTHORISED |
 | S-05 | Pricing reads terms from data; both bases; round half up | any term change changes the snapshot hash; both bases in payload; round-half-up fixtures | SEQUENCED (S-04) |
 | S-06 | Real TOTP MFA (replace fixed codes) | `123456`/`654321` rejected; valid window accepted; replay rejected; secret never returned | AUTHORISED |
@@ -297,7 +302,8 @@ Smaller owner answers still open (R-1 to R-10) are in the [blocker triage](./ADR
 | S-00 | DONE | 2026-11-04 | `npm run typecheck` exit 0 (was ~33 errors); `npm test` 88 pass; type-only changes (unused imports removed, `?? 0`/`?? ''` guards, test-adapter casts), no behaviour change |
 | S-01 | DONE | 2026-11-04 | single `frontend/functions/_middleware.ts` forwards every `isApiPath` route to the Worker (per-path forwarders removed); `pagesParity.test.ts` asserts coverage of all routes + `/lenders`,`/loans` → 401; 91 tests pass; frontend build green |
 | S-02 | DONE | 2026-11-08 | 3 servicing endpoints implemented in `servicing.ts`; 20 tests in `servicingEndpoints.test.ts` pass; integer pesewas, strict ordering, borrower scoping + 404 anti-enumeration |
-| S-03 | DONE | 2026-11-08 | zero convex references in `frontend/src`; `loanService.ts`, `LenderPortal.tsx`, `CashierLedgerPortal.tsx`, `LoanApplication.tsx` rewired to Worker API; `frontend/src/lib/convex.tsx` deleted; `frontend` build green |
+| S-03 | DONE | 2026-11-08 / 2026-11-13 | 2026-11-08: zero convex references in `frontend/src`; `loanService.ts`, `LenderPortal.tsx`, `CashierLedgerPortal.tsx`, `LoanApplication.tsx` rewired to Worker API; `frontend/src/lib/convex.tsx` deleted. 2026-11-13: `frontend/convex/` backend dir, 6 Convex-coupled test files, `convex` dep (lockfile updated) and `convex:*` scripts removed; `git grep -i convex` clean; `frontend` build green |
+| S-03b | DONE | 2026-11-13 | Frontend refined to the Gidfine suite: workspace pages rebuilt on `gidfineAPI`; all India wiring/references purged from `frontend/src` (grep-clean); legacy FastAPI client/websocket, comparison engine, admin hook, `EmiDonutChart`, `rebuild.ts`, `types.ts` deleted; `useLoanStore` slimmed; stray "API text" removed from `Docs.tsx` |
 | S-04 | PENDING | — | latest migration is `0008`; negotiated-terms migration will be `0009` |
 | S-05 | PENDING | — | `FLAT_SIMULATION` default, `rateBps = 2400` |
 | S-06 | PENDING | — | MFA accepts `123456` / `654321` |

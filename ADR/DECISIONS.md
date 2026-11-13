@@ -180,8 +180,8 @@ Where wording is needed mid-build, use neutral placeholder copy marked as such; 
 | --- | --- | --- |
 | E-1 | ~~Worker typecheck is red~~ **Resolved 2026-11-04** — `npm run typecheck` exit 0 | S-00 **done** |
 | E-2 | ~~Pages Functions route only part of the API~~ **Resolved 2026-11-04** — one `_middleware.ts` forwards every API path to the Worker | S-01 **done** |
-| E-3 | Three client calls have no handler (`/loans/:id/schedule`, `/transactions`, `/outstanding`) | S-02 |
-| E-4 | Legacy Convex surface still live under `frontend/src` | S-03 |
+| E-3 | ~~Three client calls have no handler (`/loans/:id/schedule`, `/transactions`, `/outstanding`)~~ **Resolved 2026-11-08** — implemented in `servicing.ts` | S-02 **done** |
+| E-4 | ~~Legacy Convex surface still live under `frontend/src`~~ **Resolved 2026-11-13** — Convex fully retired: `frontend/convex/` dir, dependency, scripts and coupled tests removed; `git grep -i convex` clean | S-03 **done** |
 | E-5 | Simulated MFA accepts fixed codes `123456`/`654321` (security defect) | S-06 |
 | E-6 | No CI; stale `frontend/tests/*` read a non-existent migration path | S-08 |
 | E-7 | Relaxing `check_maker_checker_distinct` must follow: build reconciliation report (S-07, **done**), prove on fixtures, **then** migrate | S-07 → S-15 |

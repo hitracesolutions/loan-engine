@@ -1,5 +1,29 @@
 # Gidfine Changelog
 
+## 2026-11-13 — Frontend refined to the Gidfine suite; dead code purged; green bars restored
+
+- **Workspace rebuilt on the Worker API.** `AnalyticsDashboard`, `ActiveLoans`,
+  `UserProfile` and `LoanApplication` were still the retired AI-underwriting /
+  session product (the source of stray "API text" and the spurious logouts).
+  Rebuilt on `gidfineAPI`; removed the agent overlay / session / OAuth wiring
+  from `App.tsx` and `DashboardLayout.tsx`.
+- **India references purged** from `frontend/src` (grep-clean): Razorpay, eNACH,
+  UPI, NetBanking, HDFC, NBFC, CIBIL, Experian, Aadhaar, DigiLocker, UIDAI, PAN,
+  ITD, rupee/₹/INR, Mumbai/Bengaluru, MongoDB, FinServe, lakh/crore,
+  Paytm/PhonePe, DPDP, dual-LLM. `Docs.tsx` lost the fabricated API-endpoint
+  table and "AI underwriting" copy; phones are `+233`, cities default to Accra.
+- **Dead code removed:** legacy FastAPI client/websocket (`src/api/`), the loan
+  comparison engine (`LoanCard`, `useComparisonAPI`, `types/comparison`), the
+  legacy admin hook (`useAdminAPI`, `types/admin`, `LenderManagement`),
+  `EmiDonutChart`, `utils/rebuild.ts`, unused `types.ts`, and the dead
+  agent/chat/session state in `useLoanStore`.
+- **Convex fully retired:** deleted `frontend/convex/`, six Convex-coupled test
+  files, the `convex` dependency (lockfile updated) and `convex:*` scripts.
+- **Kept (owner decision):** `LenderPortal`, `CashierLedgerPortal`,
+  `ImpersonationPanel` as staged, Worker-API-backed features not yet wired in.
+- **Worker typecheck re-greened** (9-error regression from 2026-11-08 cleared);
+  `npm test` 130/130; `frontend` build exit 0.
+
 ## 2026-11-08 — Step S-01: Pages Functions Route Parity & Step S-03: Convex Retirement Shipped
 
 - **S-01 — Pages Functions Route Parity (`frontend/functions/`)**:
