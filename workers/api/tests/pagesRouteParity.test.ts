@@ -12,18 +12,18 @@ import { onRequest as disbursementsNestedHandler } from '../../../frontend/funct
 import { onRequest as paymentsNestedHandler } from '../../../frontend/functions/payments/[[path]].ts';
 import { onRequest as ledgerNestedHandler } from '../../../frontend/functions/ledger/[[path]].ts';
 import { onRequest as documentsListHandler } from '../../../frontend/functions/documents.ts';
-import { onRequest as documentsNestedHandler } from '../../../frontend/functions/documents/[[path]].ts';
 import { onRequest as outboxListHandler } from '../../../frontend/functions/outbox.ts';
 import { onRequest as outboxNestedHandler } from '../../../frontend/functions/outbox/[[path]].ts';
 import { onRequest as auditNestedHandler } from '../../../frontend/functions/audit/[[path]].ts';
 import type { AppEnv } from '../src/env.ts';
 
 const mockEnv: AppEnv = {
-  DB: {} as any,
-  JWT_SECRET: 'test_jwt_secret_32_characters_long_min_len',
-  ENVIRONMENT: 'test',
-  AGENCY_ID: 'agency_01',
+  DB: {} as unknown as D1Database,
+  APP_NAME: 'Gidfine',
+  APP_ENV: 'test',
   ALLOWED_ORIGINS: 'https://lending.gidfine.com,http://localhost:5173',
+  ACCESS_TOKEN_TTL_SECONDS: '900',
+  JWT_SIGNING_KEY: 'test_jwt_secret_32_characters_long_min_len',
 };
 
 describe('S-01: Pages Functions Route Parity Audit', () => {

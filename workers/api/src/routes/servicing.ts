@@ -79,7 +79,7 @@ export async function listLoans(ctx: RouteContext): Promise<Response> {
 }
 
 export async function getLoanDetails(ctx: RouteContext): Promise<Response> {
-  const loanId = ctx.params.id;
+  const loanId = ctx.params.id ?? '';
   const { actor, loan } = await resolveLoanForActor(ctx, loanId);
 
   // Get active repayment schedule & installments
@@ -116,7 +116,7 @@ export async function getLoanDetails(ctx: RouteContext): Promise<Response> {
  * Retrieves repayment installments for a loan in ascending installment order.
  */
 export async function getLoanSchedule(ctx: RouteContext): Promise<Response> {
-  const loanId = ctx.params.id;
+  const loanId = ctx.params.id ?? '';
   const { actor } = await resolveLoanForActor(ctx, loanId);
 
   const installments = await ctx.env.DB.prepare(
@@ -142,7 +142,7 @@ export async function getLoanSchedule(ctx: RouteContext): Promise<Response> {
  * Retrieves cashier payments and cashier names for a loan in descending creation order.
  */
 export async function getLoanTransactions(ctx: RouteContext): Promise<Response> {
-  const loanId = ctx.params.id;
+  const loanId = ctx.params.id ?? '';
   const { actor } = await resolveLoanForActor(ctx, loanId);
 
   const payments = await ctx.env.DB.prepare(
@@ -168,7 +168,7 @@ export async function getLoanTransactions(ctx: RouteContext): Promise<Response> 
  * Calculates and returns outstanding principal, interest, fees, and total in integer pesewas.
  */
 export async function getLoanOutstanding(ctx: RouteContext): Promise<Response> {
-  const loanId = ctx.params.id;
+  const loanId = ctx.params.id ?? '';
   const { loan } = await resolveLoanForActor(ctx, loanId);
 
   const principalPesewas = Number(loan.outstanding_principal_pesewas ?? 0);

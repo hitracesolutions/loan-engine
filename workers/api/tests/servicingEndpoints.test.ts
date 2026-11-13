@@ -50,7 +50,7 @@ function createD1Adapter(sqliteDb: DatabaseSync, shouldFailQuery = false): D1Dat
       raw<T = unknown>(): Promise<T[]> {
         throw new Error('Not implemented');
       },
-    };
+    } as unknown as D1PreparedStatement;
   }
 
   return {
@@ -79,7 +79,7 @@ function createD1Adapter(sqliteDb: DatabaseSync, shouldFailQuery = false): D1Dat
     dump(): Promise<ArrayBuffer> {
       throw new Error('Not implemented');
     },
-  };
+  } as unknown as D1Database;
 }
 
 describe('Loan Servicing Endpoints (S-02 Acceptance Suite)', () => {
