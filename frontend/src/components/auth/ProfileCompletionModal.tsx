@@ -102,7 +102,7 @@ export default function ProfileCompletionModal({ isOpen, phoneInitial = '', onCo
                 type="text"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                placeholder="Bengaluru"
+                placeholder="Accra"
                 className="w-full bg-[#0A0A0A] border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white focus:outline-none focus:border-white/30 placeholder:text-white/20"
               />
             </div>
@@ -113,7 +113,7 @@ export default function ProfileCompletionModal({ isOpen, phoneInitial = '', onCo
             disabled={loading}
             className="w-full h-12 mt-4 bg-white text-black font-semibold rounded-xl hover:bg-white/90 shadow-lg transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50"
           >
-            {loading ? 'Updating MongoDB...' : 'Save Profile & Enter Workspace'}
+            {loading ? 'Saving…' : 'Save Profile & Enter Workspace'}
             <ArrowRight className="w-4 h-4" />
           </button>
         </form>

@@ -5,7 +5,7 @@ export default function Docs() {
     <div className="max-w-5xl mx-auto space-y-16 py-8">
       {/* Hero */}
       <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold text-white tracking-tight">FinServe Platform</h1>
+        <h1 className="text-4xl font-bold text-white tracking-tight">Gidfine Platform</h1>
         <p className="text-lg text-white/60 max-w-2xl mx-auto">
           An autonomous lending infrastructure powered by state-graph orchestration,
           real-time credit profiling, and cryptographic-grade risk underwriting.
@@ -39,7 +39,7 @@ export default function Docs() {
           <ol className="space-y-6 ml-0">
             {[
               { step: 1, title: 'Create Account', icon: Globe, description: 'Register using phone OTP or Google SSO to secure your identity.' },
-              { step: 2, title: 'Complete Profile', icon: FileText, description: 'Provide income, employment, PAN, Aadhar, and upload documents.' },
+              { step: 2, title: 'Complete Profile', icon: FileText, description: 'Provide your income, employment and identification details, and upload any required documents.' },
               { step: 3, title: 'AI Underwriting', icon: Cpu, description: 'Dual‑LLM decisioning engine evaluates credit worthiness in under 400ms.' },
               { step: 4, title: 'Accept & Disburse', icon: ArrowRight, description: 'Review offer, e‑sign the sanction letter, and receive funds.' },
             ].map((s) => (
@@ -114,7 +114,7 @@ export default function Docs() {
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold text-white">FAQ</h2>
         {[
-          { q: 'How are interest rates determined?', a: 'Our dual‑LLM engine computes prime‑adjusted rates using 18 financial variables, including CIBIL, DTI, and employer‑class.' },
+          { q: 'How are interest rates determined?', a: 'Each lender sets its own rate. Gidfine adds a transparent agency margin and shows you the full borrower rate and repayment schedule before you accept.' },
           { q: 'Can I prepay my loan?', a: 'Yes. Pre‑closure is permitted any time subject to a 24‑hour cooling period. Visit Active Loans → Prepay.' },
           { q: 'What is the maximum loan amount?', a: 'Loan limits are configured in Ghana cedis according to the approved product, affordability policy and credit assessment.' },
         ].map((item, i) => (
@@ -129,7 +129,7 @@ export default function Docs() {
       <div className="text-center pb-12">
         <a href="/" className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-white/10 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-sm font-medium transition-colors">
           <Globe className="w-4 h-4" />
-          Back to FinServe AI
+          Back to Gidfine
           <ArrowRight className="w-4 h-4" />
         </a>
       </div>

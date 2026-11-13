@@ -20,8 +20,6 @@ export interface UserProfile {
   salary?: number;
   city?: string;
   creditScore?: number;
-  pan?: string;
-  aadhaar?: string;
   preApprovedLimit?: number;
 }
 
@@ -36,7 +34,7 @@ export interface LoanDetails {
 
 export interface Document {
   id: string;
-  type: 'PAN' | 'AADHAAR';
+  type: 'NATIONAL_ID' | 'PASSPORT' | 'DRIVERS_LICENSE';
   status: 'UPLOADED' | 'VERIFIED' | 'REJECTED';
   extractedData?: Record<string, any>;
 }
