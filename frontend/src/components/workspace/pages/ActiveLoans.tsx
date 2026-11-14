@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { CreditCard, ChevronDown, RefreshCw } from 'lucide-react';
 import { gidfineAPI, pesewasToGhsString, bpsToPercentString } from '../../../lib/api-gidfine';
+import { useTranslation } from '../../../lib/useTranslation';
 
 interface LoanRow {
   id: string;
@@ -38,14 +39,16 @@ function statusLabel(status: string): string {
   return status.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-function formatDate(ms: number | null | undefined): string {
+function formatDate(ms: number | null | undefined, language: 'en' | 'fr' | 'tw'): string {
   if (!ms) return '—';
   const d = new Date(Number(ms));
   if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  const locale = language === 'fr' ? 'fr-GH' : language === 'tw' ? 'ak-GH' : 'en-GH';
+  return d.toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 export default function ActiveLoans() {
+  const { t, language } = useTranslation();
   const [loans, setLoans] = useState<LoanRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -100,21 +103,21 @@ export default function ActiveLoans() {
     <div className="space-y-6 max-w-5xl mx-auto pb-12 animate-fade-in">
       <div className="flex justify-between items-end">
         <div>
-          <h1 className="text-3xl font-display font-medium text-white tracking-tight">Loans &amp; Ledger</h1>
-          <p className="text-white/60 text-sm mt-1">Your active loans, repayment schedules and outstanding balances.</p>
+          <h1 className="text-3xl font-display font-medium text-white tracking-tight">{t('loansLedgerTitle')}</h1>
+          <p className="text-white/60 text-sm mt-1">{t('loansLedgerIntro')}</p>
         </div>
         <button
           type="button"
           onClick={() => void loadLoans()}
           className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-medium border border-white/10 transition-all flex items-center gap-2"
         >
-          <RefreshCw className="w-4 h-4 text-emerald-400" /> Refresh
+          <RefreshCw className="w-4 h-4 text-emerald-400" /> {t('refresh')}
         </button>
       </div>
 
       {loading && (
         <div className="bg-[#111] border border-white/10 rounded-2xl p-10 text-center text-white/50 text-sm">
-          Loading your loans…
+          {t('loadingLoans')}
         </div>
       )}
 
@@ -126,7 +129,7 @@ export default function ActiveLoans() {
             onClick={() => void loadLoans()}
             className="mt-4 px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-medium border border-white/10"
           >
-            Try again
+            {t('tryAgain')}
           </button>
         </div>
       )}
@@ -134,8 +137,8 @@ export default function ActiveLoans() {
       {!loading && !error && loans.length === 0 && (
         <div className="bg-[#111] border border-white/10 rounded-2xl p-12 text-center">
           <CreditCard className="w-10 h-10 text-white/20 mx-auto mb-3" />
-          <p className="text-white font-medium">No active loans yet</p>
-          <p className="text-white/50 text-sm mt-1">Once a loan is disbursed, it will appear here with its repayment schedule.</p>
+          <p className="text-white font-medium">{t('noActiveLoans')}</p>
+          <p className="text-white/50 text-sm mt-1">{t('loanDisbursedHint')}</p>
         </div>
       )}
 
@@ -161,12 +164,12 @@ export default function ActiveLoans() {
                   {pesewasToGhsString(loan.principal_pesewas)}
                 </h2>
                 <p className="text-xs text-white/40 mt-1">
-                  {bpsToPercentString(loan.nominal_annual_rate_bps)} p.a. · {loan.tenure_months} months · disbursed {formatDate(loan.disbursed_at)}
+                  {bpsToPercentString(loan.nominal_annual_rate_bps)} p.a. · {loan.tenure_months} {t('months')} · {t('disbursed')} {formatDate(loan.disbursed_at, language)}
                 </p>
               </div>
               <div className="flex items-center gap-6">
                 <div className="text-right">
-                  <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold">Outstanding</p>
+                  <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold">{t('outstanding')}</p>
                   <p className="text-lg font-semibold text-white">{pesewasToGhsString(outstandingTotal(loan))}</p>
                 </div>
                 <ChevronDown className={`w-5 h-5 text-white/40 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
@@ -177,24 +180,24 @@ export default function ActiveLoans() {
               <div className="border-t border-white/10 p-6 bg-[#0A0A0A]/40">
                 <div className="grid grid-cols-3 gap-3 mb-6">
                   <div className="bg-[#0A0A0A] border border-white/5 rounded-xl p-3">
-                    <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold">Principal</p>
+                    <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold">{t('principal')}</p>
                     <p className="text-sm font-semibold text-white mt-1">{pesewasToGhsString(loan.outstanding_principal_pesewas ?? 0)}</p>
                   </div>
                   <div className="bg-[#0A0A0A] border border-white/5 rounded-xl p-3">
-                    <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold">Interest</p>
+                    <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold">{t('interest')}</p>
                     <p className="text-sm font-semibold text-white mt-1">{pesewasToGhsString(loan.outstanding_interest_pesewas ?? 0)}</p>
                   </div>
                   <div className="bg-[#0A0A0A] border border-white/5 rounded-xl p-3">
-                    <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold">Fees</p>
+                    <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold">{t('fees')}</p>
                     <p className="text-sm font-semibold text-white mt-1">{pesewasToGhsString(loan.outstanding_fees_pesewas ?? 0)}</p>
                   </div>
                 </div>
 
-                <h3 className="text-sm font-medium text-white mb-3">Repayment schedule</h3>
-                {loadingSchedule === loan.id && <p className="text-white/40 text-xs">Loading schedule…</p>}
+                <h3 className="text-sm font-medium text-white mb-3">{t('repaymentSchedule')}</h3>
+                {loadingSchedule === loan.id && <p className="text-white/40 text-xs">{t('loadingSchedule')}</p>}
                 {scheduleError[loan.id] && <p className="text-red-300 text-xs">{scheduleError[loan.id]}</p>}
                 {!loadingSchedule && !scheduleError[loan.id] && (schedules[loan.id]?.length ?? 0) === 0 && (
-                  <p className="text-white/40 text-xs">No schedule has been generated for this loan yet.</p>
+                  <p className="text-white/40 text-xs">{t('noSchedule')}</p>
                 )}
                 {(schedules[loan.id]?.length ?? 0) > 0 && (
                   <div className="space-y-2">
@@ -209,7 +212,7 @@ export default function ActiveLoans() {
                             <span className="w-7 h-7 rounded-lg bg-white/5 text-white/60 flex items-center justify-center font-semibold">
                               {inst.installment_number}
                             </span>
-                            <span className="text-white/60">Due {formatDate(inst.due_date)}</span>
+                            <span className="text-white/60">{t('due')} {formatDate(inst.due_date, language)}</span>
                           </div>
                           <div className="flex items-center gap-4">
                             <span className="font-semibold text-white">{pesewasToGhsString(inst.total_due_pesewas)}</span>

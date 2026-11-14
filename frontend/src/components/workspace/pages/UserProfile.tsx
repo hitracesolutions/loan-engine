@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react';
 import { useLoanStore } from '../../../store/useLoanStore';
 import { User, Phone, Mail, MapPin, Briefcase, CheckCircle2, Save } from 'lucide-react';
 import { gidfineAPI } from '../../../lib/api-gidfine';
+import { useTranslation } from '../../../lib/useTranslation';
 
 export default function UserProfile() {
   const { user, setUser } = useLoanStore();
+  const { t } = useTranslation();
 
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
@@ -48,7 +50,7 @@ export default function UserProfile() {
       setSavedSuccess(true);
       setTimeout(() => setSavedSuccess(false), 3000);
     } catch {
-      setError('We could not save your profile. Please try again.');
+      setError(t('profileSaveError'));
     } finally {
       setIsSaving(false);
     }
@@ -57,8 +59,8 @@ export default function UserProfile() {
   return (
     <div className="space-y-8 max-w-3xl mx-auto pb-12 animate-fade-in">
       <div>
-        <h1 className="text-3xl font-display font-medium text-white tracking-tight">Your Profile</h1>
-        <p className="text-white/60 text-sm mt-1">Keep your contact and income details up to date.</p>
+        <h1 className="text-3xl font-display font-medium text-white tracking-tight">{t('profile')}</h1>
+        <p className="text-white/60 text-sm mt-1">{t('profileIntro')}</p>
       </div>
 
       <div className="bg-[#111] border border-white/10 rounded-2xl p-6 md:p-8 space-y-6">
@@ -67,14 +69,14 @@ export default function UserProfile() {
             <span className="font-display font-bold text-2xl text-white">{(name.charAt(0) || 'U').toUpperCase()}</span>
           </div>
           <div>
-            <h3 className="font-display font-semibold text-lg text-white">{name || 'Your name'}</h3>
-            <p className="text-xs text-white/50">{email || 'No email set'}</p>
+            <h3 className="font-display font-semibold text-lg text-white">{name || t('yourName')}</h3>
+            <p className="text-xs text-white/50">{email || t('noEmail')}</p>
           </div>
         </div>
 
         {savedSuccess && (
           <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 font-medium text-xs flex items-center gap-2 animate-fade-in">
-            <CheckCircle2 className="w-4 h-4" /> Profile saved.
+            <CheckCircle2 className="w-4 h-4" /> {t('profileSaved')}
           </div>
         )}
         {error && (
@@ -84,7 +86,7 @@ export default function UserProfile() {
         <form onSubmit={handleSaveProfile} className="space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="space-y-1.5">
-              <label htmlFor="pf-name" className="text-xs font-semibold uppercase tracking-widest text-white/50">Full Name</label>
+              <label htmlFor="pf-name" className="text-xs font-semibold uppercase tracking-widest text-white/50">{t('fullName')}</label>
               <div className="relative">
                 <User className="w-4 h-4 text-white/30 absolute left-3 top-3.5" />
                 <input
@@ -98,7 +100,7 @@ export default function UserProfile() {
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="pf-email" className="text-xs font-semibold uppercase tracking-widest text-white/50">Email Address</label>
+              <label htmlFor="pf-email" className="text-xs font-semibold uppercase tracking-widest text-white/50">{t('emailAddress')}</label>
               <div className="relative">
                 <Mail className="w-4 h-4 text-white/30 absolute left-3 top-3.5" />
                 <input
@@ -112,7 +114,7 @@ export default function UserProfile() {
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="pf-phone" className="text-xs font-semibold uppercase tracking-widest text-white/50">Phone Number</label>
+              <label htmlFor="pf-phone" className="text-xs font-semibold uppercase tracking-widest text-white/50">{t('phoneNumber')}</label>
               <div className="relative">
                 <Phone className="w-4 h-4 text-white/30 absolute left-3 top-3.5" />
                 <input
@@ -127,7 +129,7 @@ export default function UserProfile() {
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="pf-city" className="text-xs font-semibold uppercase tracking-widest text-white/50">City</label>
+              <label htmlFor="pf-city" className="text-xs font-semibold uppercase tracking-widest text-white/50">{t('city')}</label>
               <div className="relative">
                 <MapPin className="w-4 h-4 text-white/30 absolute left-3 top-3.5" />
                 <input
@@ -169,7 +171,7 @@ export default function UserProfile() {
               </>
             ) : (
               <>
-                <Save className="w-4 h-4" /> Save Profile
+                <Save className="w-4 h-4" /> {t('saveProfile')}
               </>
             )}
           </button>
