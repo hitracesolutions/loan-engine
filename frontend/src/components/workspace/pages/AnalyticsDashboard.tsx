@@ -2,19 +2,22 @@ import { useEffect, useState } from 'react';
 import { useLoanStore } from '../../../store/useLoanStore';
 import { FileText, CreditCard, Wallet, ArrowUpRight } from 'lucide-react';
 import { gidfineAPI, pesewasToGhsString } from '../../../lib/api-gidfine';
+import { translate, type TranslationKey } from '../../../lib/translations';
 
 function statusLabel(status: string): string {
   return status.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-function formatDate(ms: number | null | undefined): string {
+function formatDate(ms: number | null | undefined, language: 'en' | 'fr' | 'tw'): string {
   if (!ms) return '—';
   const d = new Date(Number(ms));
-  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  const locale = language === 'fr' ? 'fr-GH' : language === 'tw' ? 'ak-GH' : 'en-GH';
+  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 export default function AnalyticsDashboard() {
-  const { user, setView } = useLoanStore();
+  const { user, setView, language } = useLoanStore();
+  const t = (key: TranslationKey) => translate(language, key);
   const [applications, setApplications] = useState<any[]>([]);
   const [loans, setLoans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,9 +49,9 @@ export default function AnalyticsDashboard() {
   );
 
   const metrics = [
-    { label: 'Applications', value: String(applications.length), icon: FileText, tint: 'text-blue-400 bg-blue-500/10 border-blue-500/20' },
-    { label: 'Active loans', value: String(activeLoans.length), icon: CreditCard, tint: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
-    { label: 'Total outstanding', value: pesewasToGhsString(totalOutstanding), icon: Wallet, tint: 'text-purple-400 bg-purple-500/10 border-purple-500/20' },
+    { label: t('applications'), value: String(applications.length), icon: FileText, tint: 'text-blue-400 bg-blue-500/10 border-blue-500/20' },
+    { label: t('activeLoans'), value: String(activeLoans.length), icon: CreditCard, tint: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
+    { label: t('totalOutstanding'), value: pesewasToGhsString(totalOutstanding), icon: Wallet, tint: 'text-purple-400 bg-purple-500/10 border-purple-500/20' },
   ];
 
   const recent = applications.slice(0, 6);
@@ -59,10 +62,10 @@ export default function AnalyticsDashboard() {
         <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="max-w-2xl space-y-3 relative z-10">
           <h1 className="dashboard-heading text-3xl font-display font-semibold tracking-tight lg:text-4xl">
-            Welcome back{user?.name ? `, ${user.name}` : ''}
+            {t('welcome')}{user?.name ? `, ${user.name}` : ''}
           </h1>
           <p className="dashboard-copy text-sm leading-relaxed">
-            Track your loan applications, active loans and repayment status.
+            {t('dashboardIntro')}
           </p>
           <div className="pt-2">
             <button
@@ -70,7 +73,7 @@ export default function AnalyticsDashboard() {
               onClick={() => setView('APPLICATION')}
               className="dashboard-primary-button flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all"
             >
-              Apply for a loan <ArrowUpRight className="w-4 h-4" />
+              {t('applyLoan')} <ArrowUpRight className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -87,34 +90,34 @@ export default function AnalyticsDashboard() {
                   <Icon className="w-5 h-5" />
                 </div>
               </div>
-              <h3 className="text-3xl font-display font-bold text-white tracking-tight">{loading ? '—' : m.value}</h3>
+              <h3 className="dashboard-heading text-3xl font-display font-bold tracking-tight">{loading ? '—' : m.value}</h3>
             </div>
           );
         })}
       </div>
 
       <div className="dashboard-card rounded-2xl border p-5 sm:p-6">
-        <h3 className="dashboard-heading mb-4 text-lg font-display font-semibold tracking-tight">Recent applications</h3>
+        <h3 className="dashboard-heading mb-4 text-lg font-display font-semibold tracking-tight">{t('recentApplications')}</h3>
         {loading ? (
-          <p className="dashboard-copy text-sm">Loading…</p>
+          <p className="dashboard-copy text-sm">{t('loading')}</p>
         ) : recent.length === 0 ? (
-          <p className="dashboard-copy text-sm">No applications yet. Apply for a loan to get started.</p>
+          <p className="dashboard-copy text-sm">{t('noApplications')}</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="dashboard-table w-full text-left text-sm">
               <thead className="dashboard-label border-b text-xs font-semibold uppercase tracking-wider">
                 <tr>
-                  <th className="pb-3">Reference</th>
-                  <th className="pb-3">Date</th>
-                  <th className="pb-3">Amount</th>
-                  <th className="pb-3">Status</th>
+                  <th className="pb-3">{t('reference')}</th>
+                  <th className="pb-3">{t('date')}</th>
+                  <th className="pb-3">{t('amount')}</th>
+                  <th className="pb-3">{t('status')}</th>
                 </tr>
               </thead>
               <tbody>
                 {recent.map((a) => (
                   <tr key={a.id}>
                     <td className="dashboard-heading border-b py-3 font-mono text-xs">{String(a.id).slice(0, 10)}</td>
-                    <td className="dashboard-copy border-b py-3">{formatDate(a.createdAt)}</td>
+                    <td className="dashboard-copy border-b py-3">{formatDate(a.createdAt, language)}</td>
                     <td className="dashboard-heading border-b py-3 font-medium">{pesewasToGhsString(a.requestedAmountPesewas ?? 0)}</td>
                     <td className="py-3">
                       <span className="inline-flex items-center px-2.5 py-1 rounded-full border border-white/10 bg-white/5 text-xs">
