@@ -127,7 +127,7 @@ describe('Gidfine Sprints 3-7 Comprehensive Verification', () => {
     const admin = await createUser('admin2@gidfine.com', 'agency_admin', 'Admin User');
     const loanOfficer = await createUser('officer@gidfine.com', 'loan_officer', 'Loan Officer');
     const borrower = await createUser('borrower1@gidfine.com', 'borrower', 'Kwame Mensah');
-    const lenderStaff = await createUser('lenderstaff@partnerbank.com', 'lender', 'Lender Agent');
+    const unrelatedLender = await createUser('unrelated@partnerbank.com', 'lender', 'Unrelated Lender');
 
     // 1. Admin onboards partner lender
     const createLenderRes = await worker.fetch(
@@ -141,6 +141,7 @@ describe('Gidfine Sprints 3-7 Comprehensive Verification', () => {
           name: 'CalBank SME Credit',
           slug: 'calbank-sme',
           contactEmail: 'sme@calbank.net',
+          contactName: 'Ama Boateng',
           licenseNumber: 'BOG-LEND-2024-001',
         }),
       }),
@@ -149,12 +150,40 @@ describe('Gidfine Sprints 3-7 Comprehensive Verification', () => {
     assert.equal(createLenderRes.status, 201);
     const lenderData = await createLenderRes.json() as any;
     const lenderId = lenderData.data.lender.id;
+    assert.equal(lenderData.data.login.role, 'lender');
+    assert.equal(lenderData.data.login.email, 'sme@calbank.net');
+    assert.equal(typeof lenderData.data.login.temporaryPassword, 'string');
+    assert.ok(lenderData.data.login.temporaryPassword.length >= 24);
+    assert.equal(Object.hasOwn(lenderData.data, 'token'), false);
+    const provisioned = sqlite.prepare(
+      `SELECT u.id, u.role, u.password_hash, lu.lender_id
+       FROM users u JOIN lender_users lu ON lu.user_id = u.id
+       WHERE u.agency_id = 'agency_default' AND lower(u.email) = lower(?)`,
+    ).get(lenderData.data.login.email) as any;
+    assert.equal(provisioned.role, 'lender');
+    assert.equal(provisioned.lender_id, lenderId);
+    assert.notEqual(provisioned.password_hash, lenderData.data.login.temporaryPassword);
+    const lenderAudit = sqlite.prepare("SELECT actor_id, details FROM audit_events WHERE resource_id = ? AND action='LENDER_LOGIN_CREATED_BY_STAFF'").get(provisioned.id) as any;
+    assert.equal(lenderAudit.actor_id, admin.id);
+    assert.equal(JSON.stringify(lenderAudit).includes(lenderData.data.login.temporaryPassword), false);
+    const loginRes = await worker.fetch(new Request('http://localhost/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: lenderData.data.login.email, password: lenderData.data.login.temporaryPassword }),
+    }), env);
+    assert.equal(loginRes.status, 200);
+    const lenderLogin = await loginRes.json() as any;
+    const lenderToken = lenderLogin.data.token as string;
+    assert.equal(lenderLogin.data.user.role, 'lender');
 
-    // Link lender user
-    sqlite.prepare(
-      `INSERT INTO lender_users (id, agency_id, lender_id, user_id, role, created_at)
-       VALUES (?, 'agency_default', ?, ?, 'lender_officer', ?)`,
-    ).run(ulid(), lenderId, lenderStaff.id, Date.now());
+    const productionEnv = { ...env, APP_ENV: 'production' };
+    const productionAttempt = await worker.fetch(new Request('http://localhost/lenders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${admin.token}` },
+      body: JSON.stringify({ name: 'Production blocked lender', slug: 'prod-blocked', contactEmail: 'blocked@example.com' }),
+    }), productionEnv as AppEnv);
+    assert.equal(productionAttempt.status, 403);
+    assert.equal(sqlite.prepare("SELECT count(*) AS count FROM lenders WHERE slug='prod-blocked'").get()?.count, 0);
 
     // 2. Admin adds product with eligibility
     const createProdRes = await worker.fetch(
@@ -224,7 +253,7 @@ describe('Gidfine Sprints 3-7 Comprehensive Verification', () => {
     // 5. Lender views proposals: STRICT PII MASKING TEST (O-06)
     const lenderPropsRes = await worker.fetch(
       new Request('http://localhost/lender/proposals', {
-        headers: { Authorization: `Bearer ${lenderStaff.token}` },
+        headers: { Authorization: `Bearer ${lenderToken}` },
       }),
       env,
     );
@@ -251,13 +280,26 @@ describe('Gidfine Sprints 3-7 Comprehensive Verification', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${lenderStaff.token}`,
+          Authorization: `Bearer ${lenderToken}`,
         },
         body: JSON.stringify({ action: 'ACCEPT', notes: 'Approved for prime SME credit' }),
       }),
       env,
     );
     assert.equal(acceptRes.status, 200);
+
+    const unrelatedResponse = await worker.fetch(new Request(`http://localhost/lender/proposals/${proposalId}/respond`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${unrelatedLender.token}` },
+      body: JSON.stringify({ action: 'DECLINE' }),
+    }), env);
+    assert.equal(unrelatedResponse.status, 404);
+
+    const mappedLenderList = await worker.fetch(new Request('http://localhost/lender/proposals', {
+      headers: { Authorization: `Bearer ${unrelatedLender.token}` },
+    }), env);
+    const mappedLenderBody = await mappedLenderList.json() as any;
+    assert.equal(mappedLenderBody.data.proposals.length, 0);
 
     // 7. Generate deterministic quote simulation snapshot
     const quoteRes = await worker.fetch(

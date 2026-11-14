@@ -7,6 +7,8 @@ export type DashboardView =
   | 'DASHBOARD'
   | 'APPLICATION'
   | 'STAFF_INTAKE'
+  | 'LENDER_PORTAL'
+  | 'LENDER_REGISTER'
   | 'AGENCY_QUEUE'
   | 'ACTIVE_LOANS'
   | 'PROFILE'

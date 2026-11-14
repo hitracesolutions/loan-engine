@@ -70,6 +70,8 @@ describe('staff on-behalf origination', () => {
       assert.equal(result.data.user.role, 'borrower');
       assert.equal(result.data.user.agencyId, 'agency_default');
       assert.equal('token' in result.data, false);
+      assert.equal('password' in result.data.user, false);
+      assert.equal('passwordHash' in result.data.user, false);
       const audit = sqlite.prepare("SELECT actor_id, resource_id FROM audit_events WHERE action='BORROWER_REGISTERED_BY_STAFF' AND resource_id=?").get(result.data.user.id) as any;
       assert.equal(audit.actor_id, staffId);
       assert.equal(audit.resource_id, result.data.user.id);
@@ -114,7 +116,9 @@ describe('staff on-behalf origination', () => {
     assert.ok(queue.data.applications.some((app: any) => app.id === applicationId));
     const borrowerQueue = await call('GET', '/borrower/applications', 'borrower', undefined, await signAccessToken({ userId: borrowerId, agencyId: 'agency_default', role: 'borrower' }, secret, 3600));
     assert.equal(borrowerQueue.status, 200);
-    assert.ok(JSON.stringify(borrowerQueue.data).includes(applicationId));
+    const borrowerView = borrowerQueue.data.applications.find((app: any) => app.id === applicationId);
+    assert.ok(borrowerView);
+    for (const field of ['borrowerId', 'borrowerName', 'borrowerEmail', 'borrowerPhone']) assert.equal(field in borrowerView, false);
   });
 
   it('enforces staff role, agency and borrower identity checks', async () => {

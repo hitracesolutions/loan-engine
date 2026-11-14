@@ -106,6 +106,7 @@ export interface LenderProposalItem {
   caseId: string;
   version: number;
   proposedAmountPesewas: number;
+  requestedAmountPesewas: number;
   lenderBaseRateBps: number;
   tenureMonths: number;
   purpose: string;
@@ -274,13 +275,14 @@ export const loanService = {
       const rawList = res.proposals || [];
       const mapped: LenderProposalItem[] = rawList.map((p: any) => ({
         proposalId: p.proposalId || p.proposal_id,
-        applicationId: p.borrowerSummary?.application?.id || p.application_id || p.applicationId || '',
+        applicationId: p.borrowerSummary?.applicationId || p.borrowerSummary?.application?.id || p.application_id || p.applicationId || '',
         caseId: `CASE-${(p.proposalId || p.proposal_id || '').substring(0, 8).toUpperCase()}`,
         version: 1,
         proposedAmountPesewas: p.offeredAmountPesewas || p.offered_amount_pesewas || 0,
         lenderBaseRateBps: p.nominalAnnualRateBps || p.nominal_annual_rate_bps || 0,
         tenureMonths: p.tenureMonths || p.tenure_months || 0,
-        purpose: p.borrowerSummary?.application?.purpose || p.purpose || 'Business Expansion',
+        requestedAmountPesewas: p.borrowerSummary?.requestedAmountPesewas || 0,
+        purpose: p.borrowerSummary?.purpose || p.borrowerSummary?.application?.purpose || p.purpose || 'Business Expansion',
         proposalStatus: (p.status || 'PENDING') as "PENDING" | "ACCEPTED" | "DECLINED" | "SUPERSEDED",
         applicationStatus: p.status || 'PENDING',
         decisionReason: p.notes || undefined,
@@ -304,21 +306,22 @@ export const loanService = {
     applicationId: string
   ): Promise<LenderDetailedProposal> {
     try {
-      const review = await gidfineAPI.getApplicationReview(applicationId);
-      const app = review.application;
+      const proposals = await loanService.getLenderProposals();
+      const proposal = proposals.find((item) => item.applicationId === applicationId);
+      if (!proposal) throw new Error('Proposal not found for this lender.');
       return {
         caseId: `CASE-${applicationId.substring(0, 8).toUpperCase()}`,
-        applicationId: app.id,
-        requestedAmountPesewas: app.requestedAmountPesewas,
-        tenureMonths: app.tenureMonths,
-        purpose: app.purpose || '',
-        status: app.status,
+        applicationId,
+        requestedAmountPesewas: proposal.requestedAmountPesewas,
+        tenureMonths: proposal.tenureMonths,
+        purpose: proposal.purpose,
+        status: proposal.proposalStatus,
         proposal: {
-          proposalId: applicationId,
-          version: 1,
-          proposedAmountPesewas: app.requestedAmountPesewas,
-          lenderBaseRateBps: 2400,
-          status: app.status,
+          proposalId: proposal.proposalId,
+          version: proposal.version,
+          proposedAmountPesewas: proposal.proposedAmountPesewas,
+          lenderBaseRateBps: proposal.lenderBaseRateBps,
+          status: proposal.proposalStatus,
         },
       };
     } catch (err: any) {

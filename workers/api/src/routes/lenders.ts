@@ -10,60 +10,110 @@
 
 import { executeMatching, createMaskedBorrowerSummary } from '../domain/matchingEngine.ts';
 import { calculateQuote, type CalculationStrategy } from '../domain/pricingEngine.ts';
-import { requireActor, requireRole } from '../lib/auth.ts';
-import { badRequest, json, notFound } from '../lib/http.ts';
+import { auditStatement } from '../lib/audit.ts';
+import { hashPassword, requireActor, requireRole } from '../lib/auth.ts';
+import { badRequest, conflict, forbidden, json, notFound } from '../lib/http.ts';
 import { ulid } from '../lib/ids.ts';
+import { requireEmail, requirePersonName, requireString } from '../lib/validation.ts';
 import type { RouteContext } from '../router.ts';
 
 export async function createLender(ctx: RouteContext): Promise<Response> {
   const actor = await requireRole(ctx, 'agency_admin');
+  if (ctx.env.APP_ENV.trim().toLowerCase() === 'production') {
+    throw forbidden('Lender onboarding is disabled in production until ADR-0013 and the R6 go-live gates are closed');
+  }
   const body = await ctx.request.json().catch(() => null) as {
     name?: string;
     slug?: string;
     licenseNumber?: string;
     contactEmail?: string;
     contactPhone?: string;
+    contactName?: string;
   } | null;
 
-  if (!body?.name?.trim() || !body?.slug?.trim() || !body?.contactEmail?.trim()) {
-    throw badRequest('INVALID_PAYLOAD', 'Lender name, slug, and contactEmail are required');
-  }
+  if (!body || typeof body !== 'object') throw badRequest('INVALID_PAYLOAD', 'A lender payload is required');
+  const name = requireString(body, 'name', { maxLength: 160 });
+  const slug = requireString(body, 'slug', { maxLength: 80 }).toLowerCase();
+  const contactEmail = requireEmail(body, 'contactEmail');
+  const contactName = requirePersonName(body, 'contactName');
+  const licenseNumber = typeof body.licenseNumber === 'string' ? body.licenseNumber.trim() || null : null;
+  const contactPhone = typeof body.contactPhone === 'string' ? body.contactPhone.trim() || null : null;
+  if (licenseNumber && licenseNumber.length > 100) throw badRequest('INVALID_FIELD', 'licenseNumber must be at most 100 characters');
+  if (contactPhone && contactPhone.length > 32) throw badRequest('INVALID_FIELD', 'contactPhone must be at most 32 characters');
+
+  const normalizedSlug = slug.replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  if (!normalizedSlug) throw badRequest('INVALID_PAYLOAD', 'Lender slug must contain letters or numbers');
+
+  const existingLender = await ctx.env.DB.prepare(
+    'SELECT id FROM lenders WHERE agency_id = ? AND slug = ?',
+  ).bind(actor.agencyId, normalizedSlug).first<{ id: string }>();
+  if (existingLender) throw conflict('LENDER_SLUG_TAKEN', 'A lender with that slug already exists');
+
+  const existingUser = await ctx.env.DB.prepare(
+    'SELECT id FROM users WHERE agency_id = ? AND lower(email) = ?',
+  ).bind(actor.agencyId, contactEmail).first<{ id: string }>();
+  if (existingUser) throw conflict('EMAIL_TAKEN', 'An account with that email already exists in this agency');
 
   const lenderId = ulid();
+  const userId = ulid();
   const now = Date.now();
+  const temporaryPassword = generateTemporaryPassword();
+  const passwordHash = await hashPassword(temporaryPassword);
 
-  await ctx.env.DB.prepare(
-    `INSERT INTO lenders (id, agency_id, name, slug, license_number, contact_email, contact_phone, status, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, 'ACTIVE', ?, ?)`,
-  )
-    .bind(
-      lenderId,
-      actor.agencyId,
-      body.name.trim(),
-      body.slug.trim().toLowerCase(),
-      body.licenseNumber?.trim() ?? null,
-      body.contactEmail.trim().toLowerCase(),
-      body.contactPhone?.trim() ?? null,
-      now,
-      now,
-    )
-    .run();
+  await ctx.env.DB.batch([
+    ctx.env.DB.prepare(
+      `INSERT INTO lenders (id, agency_id, name, slug, license_number, contact_email, contact_phone, status, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'ACTIVE', ?, ?)`,
+    ).bind(lenderId, actor.agencyId, name, normalizedSlug, licenseNumber, contactEmail, contactPhone, now, now),
+    ctx.env.DB.prepare(
+      `INSERT INTO users (id, agency_id, role, email, phone, full_name, password_hash, is_active, created_at, updated_at)
+       VALUES (?, ?, 'lender', ?, ?, ?, ?, 1, ?, ?)`,
+    ).bind(userId, actor.agencyId, contactEmail, contactPhone, contactName, passwordHash, now, now),
+    ctx.env.DB.prepare(
+      `INSERT INTO lender_users (id, agency_id, lender_id, user_id, role, created_at)
+       VALUES (?, ?, ?, ?, 'lender_admin', ?)`,
+    ).bind(ulid(), actor.agencyId, lenderId, userId, now),
+    auditStatement(ctx.env.DB, {
+      agencyId: actor.agencyId,
+      actorId: actor.userId,
+      action: 'LENDER_REGISTERED_BY_STAFF',
+      resourceType: 'lender',
+      resourceId: lenderId,
+      details: { lenderUserId: userId, createdByRole: actor.role },
+    }),
+    auditStatement(ctx.env.DB, {
+      agencyId: actor.agencyId,
+      actorId: actor.userId,
+      action: 'LENDER_LOGIN_CREATED_BY_STAFF',
+      resourceType: 'user',
+      resourceId: userId,
+      details: { role: 'lender', lenderId, email: contactEmail },
+    }),
+  ]);
 
   return json(
     {
       lender: {
         id: lenderId,
         agencyId: actor.agencyId,
-        name: body.name.trim(),
-        slug: body.slug.trim().toLowerCase(),
-        licenseNumber: body.licenseNumber ?? null,
-        contactEmail: body.contactEmail.trim().toLowerCase(),
+        name,
+        slug: normalizedSlug,
+        licenseNumber,
+        contactEmail,
         status: 'ACTIVE',
         createdAt: now,
       },
+      login: { userId, email: contactEmail, role: 'lender', temporaryPassword },
     },
     201,
   );
+}
+
+function generateTemporaryPassword(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(18));
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
 }
 
 export async function listLenders(ctx: RouteContext): Promise<Response> {
@@ -237,10 +287,12 @@ export async function listLenderProposals(ctx: RouteContext): Promise<Response> 
 
   // Find lender associated with actor
   let lenderId = (
-    await ctx.env.DB.prepare(`SELECT lender_id FROM lender_users WHERE user_id = ? AND agency_id = ?`)
+    await ctx.env.DB.prepare(`SELECT lender_id FROM lender_users WHERE user_id = ? AND agency_id = ? ORDER BY created_at LIMIT 1`)
       .bind(actor.userId, actor.agencyId)
       .first<{ lender_id: string }>()
   )?.lender_id;
+
+  if (actor.role === 'lender' && !lenderId) throw forbidden('Lender account is not linked to a lender');
 
   if (!lenderId && actor.role === 'agency_admin') {
     // Agency admin inspecting lender queue
@@ -257,7 +309,7 @@ export async function listLenderProposals(ctx: RouteContext): Promise<Response> 
   const proposals = await ctx.env.DB.prepare(
     `SELECT lp.id as proposal_id, lp.status, lp.offered_amount_pesewas,
             lp.nominal_annual_rate_bps, lp.tenure_months, lp.notes, lp.created_at,
-            la.id as application_id, la.requested_amount_pesewas, la.tenure_months as requested_tenure_months,
+            la.id as application_id, la.requested_amount_pesewas, la.tenure_months as requested_tenure_months, la.purpose,
             bp.employer, bp.monthly_salary_pesewas as monthly_income_pesewas, bp.city as residential_city, bp.id_number_masked
      FROM lender_proposals lp
      JOIN loan_applications la ON la.id = lp.application_id
@@ -336,9 +388,15 @@ export async function respondToProposal(ctx: RouteContext): Promise<Response> {
     `SELECT id, agency_id, application_id, lender_id, status, offered_amount_pesewas,
             nominal_annual_rate_bps, tenure_months
      FROM lender_proposals
-     WHERE id = ? AND agency_id = ?`,
+     WHERE id = ? AND agency_id = ?
+       AND (? = 'agency_admin' OR EXISTS (
+         SELECT 1 FROM lender_users lu
+         WHERE lu.agency_id = lender_proposals.agency_id
+           AND lu.lender_id = lender_proposals.lender_id
+           AND lu.user_id = ?
+       ))`,
   )
-    .bind(proposalId, actor.agencyId)
+    .bind(proposalId, actor.agencyId, actor.role, actor.userId)
     .first<{
       id: string;
       agency_id: string;

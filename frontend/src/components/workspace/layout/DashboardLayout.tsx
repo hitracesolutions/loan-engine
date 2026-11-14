@@ -1,4 +1,4 @@
-import { LayoutDashboard, FileText, CreditCard, LogOut, ClipboardList, UserPlus } from 'lucide-react';
+import { LayoutDashboard, FileText, CreditCard, LogOut, ClipboardList, UserPlus, Landmark } from 'lucide-react';
 import { useLoanStore } from '../../../store/useLoanStore';
 import AnalyticsDashboard from '../pages/AnalyticsDashboard';
 import LoanApplication from '../pages/LoanApplication';
@@ -7,29 +7,37 @@ import ActiveLoans from '../pages/ActiveLoans';
 import UserProfile from '../pages/UserProfile';
 import Docs from '../../../pages/Docs';
 import StaffIntake from '../pages/StaffIntake';
+import { LenderPortal } from '../../LenderPortal';
+import LenderRegistration from '../pages/LenderRegistration';
 
 export default function DashboardLayout() {
   const { user, currentView, setView, clearSession } = useLoanStore();
   const staffRole = user?.role === 'loan_officer' || user?.role === 'agency_admin';
+  const lenderRole = user?.role === 'lender';
 
-  const navigation = [
+  const navigation: { name: string; id: string; icon: typeof Landmark }[] = lenderRole ? [
+    { name: 'Lender proposals', id: 'LENDER_PORTAL', icon: Landmark },
+  ] : [
     { name: 'Dashboard', id: 'DASHBOARD', icon: LayoutDashboard },
     { name: 'Loan Application', id: 'APPLICATION', icon: FileText },
     { name: 'Agency Review Queue', id: 'AGENCY_QUEUE', icon: ClipboardList },
     { name: 'Active Loans & Ledgers', id: 'ACTIVE_LOANS', icon: CreditCard },
   ];
   if (staffRole) navigation.splice(2, 0, { name: 'Borrower Intake', id: 'STAFF_INTAKE', icon: UserPlus });
+  if (user?.role === 'agency_admin') navigation.splice(3, 0, { name: 'Register Lender', id: 'LENDER_REGISTER', icon: Landmark });
 
   const renderContent = () => {
     switch (currentView) {
       case 'DASHBOARD': return <AnalyticsDashboard />;
       case 'APPLICATION': return <LoanApplication />;
       case 'STAFF_INTAKE': return staffRole ? <StaffIntake /> : <AnalyticsDashboard />;
+      case 'LENDER_REGISTER': return user?.role === 'agency_admin' ? <LenderRegistration /> : <AnalyticsDashboard />;
+      case 'LENDER_PORTAL': return lenderRole ? <LenderPortal lenderName={user?.name} /> : <AnalyticsDashboard />;
       case 'AGENCY_QUEUE': return <AgencyReviewQueue />;
       case 'ACTIVE_LOANS': return <ActiveLoans />;
       case 'PROFILE': return <UserProfile />;
       case 'DOCS': return <Docs />;
-      default: return <AnalyticsDashboard />;
+      default: return lenderRole ? <LenderPortal lenderName={user?.name} /> : <AnalyticsDashboard />;
     }
   };
 

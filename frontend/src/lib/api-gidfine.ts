@@ -535,7 +535,7 @@ class GidfineAPI {
     return this.request('GET', '/lenders');
   }
 
-  async createLender(data: { name: string; slug: string; contactEmail: string; licenseNumber?: string; contactPhone?: string }): Promise<any> {
+  async createLender(data: { name: string; slug: string; contactName: string; contactEmail: string; licenseNumber?: string; contactPhone?: string }): Promise<{ lender: { id: string; name: string; slug: string; contactEmail: string }; login: { userId: string; email: string; role: 'lender'; temporaryPassword: string } }> {
     return this.request('POST', '/lenders', data);
   }
 
