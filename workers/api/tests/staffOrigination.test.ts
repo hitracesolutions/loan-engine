@@ -9,12 +9,12 @@ import type { AppEnv } from '../src/env.ts';
 
 type SqlValue = null | number | bigint | string | NodeJS.ArrayBufferView;
 function createD1Adapter(sqlite: DatabaseSync): D1Database {
-  const meta = (changes = 0): D1Meta => ({ duration: 0, size_after: 0, rows_read: 0, rows_written: changes, last_row_id: 0, changed_db: changes > 0, changes });
+  const meta = (changes = 0): D1Meta & Record<string, unknown> => ({ duration: 0, size_after: 0, rows_read: 0, rows_written: changes, last_row_id: 0, changed_db: changes > 0, changes });
   const statement = (sql: string, params: SqlValue[] = []): D1PreparedStatement => ({
     bind(...values: SqlValue[]) { return statement(sql, values); },
     async first<T = unknown>(column?: string) { const row = sqlite.prepare(sql).get(...params) as any; return (column ? row?.[column] : row) as T ?? null; },
-    async all<T = unknown>() { return { results: sqlite.prepare(sql).all(...params) as T[], success: true, meta: meta() }; },
-    async run<T = Record<string, unknown>>() { const result = sqlite.prepare(sql).run(...params); return { results: [], success: true, meta: meta(Number(result.changes)) }; },
+    async all<T = Record<string, unknown>>() { return { results: sqlite.prepare(sql).all(...params) as T[], success: true, meta: meta() }; },
+    async run<T = Record<string, unknown>>() { const result = sqlite.prepare(sql).run(...params); return { results: [] as T[], success: true, meta: meta(Number(result.changes)) }; },
     raw: async () => { throw new Error('Not implemented'); },
   });
   const prepare = (sql: string) => statement(sql);
