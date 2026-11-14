@@ -586,7 +586,8 @@ The current production baseline is Cloudflare Pages + Pages Functions, D1 and KV
 - No migration was added; next free number remains `0009`. No simulation flag,
   disbursement control, or provisional ADR behaviour changed.
 - Verified `workers/api`: typecheck exit 0, `npm test` 136/136; `frontend`:
-  `npm run build` exit 0. No commit created.
+  `npm run build` exit 0. No commit command was issued; the repository
+  auto-committed the feature as `b5da621` during this session.
 
 ### 2026-10-29 — Stack and documentation consolidation
 

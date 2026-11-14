@@ -119,15 +119,22 @@ describe('staff on-behalf origination', () => {
 
   it('enforces staff role, agency and borrower identity checks', async () => {
     await createUser('loan_officer', 'officer@example.com');
+    const admin = await createUser('agency_admin', 'admin@example.com');
     const other = await createUser('borrower', 'other@example.com', 'agency_default');
     const unknown = await call('POST', '/staff/applications', 'loan_officer', validApplication('missing-user'));
     assert.equal(unknown.status, 404);
     const anotherRole = await call('POST', '/staff/applications', 'borrower', validApplication(other));
     assert.equal(anotherRole.status, 403);
+    for (const role of ['cashier', 'underwriter', 'auditor', 'lender']) {
+      await createUser(role, `${role}@example.com`);
+      assert.equal((await call('POST', '/staff/applications', role, validApplication(other))).status, 403);
+    }
+    const adminToken = await signAccessToken({ userId: admin, agencyId: 'agency_default', role: 'agency_admin' }, secret, 3600);
+    assert.equal((await call('POST', '/staff/applications', undefined, validApplication(other), adminToken)).status, 201);
     await sqlite.prepare("INSERT INTO agencies (id, slug, name, created_at) VALUES ('agency_other','other','Other',?)").run(Date.now());
     const foreign = await createUser('borrower', 'foreign@example.com', 'agency_other');
     assert.equal((await call('POST', '/staff/applications', 'loan_officer', validApplication(foreign))).status, 404);
-    const underwriter = await createUser('underwriter', 'underwriter@example.com');
+    const underwriter = 'user_underwriter_underwriter';
     assert.equal((await call('POST', '/staff/applications', 'loan_officer', validApplication(underwriter))).status, 404);
     const inactive = await createUser('borrower', 'inactive@example.com');
     sqlite.prepare('UPDATE users SET is_active=0 WHERE id=?').run(inactive);
@@ -137,8 +144,9 @@ describe('staff on-behalf origination', () => {
   it('requires explicit valid consent before writing an application', async () => {
     await createUser('loan_officer', 'officer@example.com');
     const borrower = await createUser('borrower', 'borrower@example.com');
-    for (const consent of [null, { attested: false, method: 'phone' }]) {
-      const result = await call('POST', '/staff/applications', 'loan_officer', validApplication(borrower, consent));
+    for (const consent of [null, undefined, { attested: false, method: 'phone' }]) {
+      const payload = consent === undefined ? { ...validApplication(borrower), consent: undefined } : validApplication(borrower, consent);
+      const result = await call('POST', '/staff/applications', 'loan_officer', payload);
       assert.equal(result.status, 400);
       assert.equal(result.error.code, 'CONSENT_REQUIRED');
     }
