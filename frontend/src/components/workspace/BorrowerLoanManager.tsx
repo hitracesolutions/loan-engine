@@ -6,6 +6,7 @@ import {
   bpsToPercentString,
 } from '../../lib/api-gidfine';
 import { Banknote, FileText, CheckCircle2, AlertCircle, RefreshCw, Clock } from 'lucide-react';
+import { useTranslation } from '../../lib/useTranslation';
 
 export interface BorrowerApplicationItem {
   applicationId: string;
@@ -25,6 +26,7 @@ export interface BorrowerApplicationItem {
 }
 
 export const BorrowerLoanManager: React.FC = () => {
+  const { tx, language } = useTranslation();
   const [activeTab, setActiveTab] = useState<'apply' | 'tracking'>('apply');
 
   // Application Form State
@@ -166,7 +168,7 @@ export const BorrowerLoanManager: React.FC = () => {
               : 'border-transparent text-white/50 hover:text-white/80'
           }`}
         >
-          <Banknote className="w-4 h-4" /> New Loan Request
+          <Banknote className="w-4 h-4" /> {tx('New Loan Request')}
         </button>
         <button
           onClick={() => setActiveTab('tracking')}
@@ -176,7 +178,7 @@ export const BorrowerLoanManager: React.FC = () => {
               : 'border-transparent text-white/50 hover:text-white/80'
           }`}
         >
-          <FileText className="w-4 h-4" /> My Applications Tracking
+          <FileText className="w-4 h-4" /> {tx('My Applications Tracking')}
         </button>
       </div>
 
@@ -185,10 +187,10 @@ export const BorrowerLoanManager: React.FC = () => {
         <div className="space-y-6">
           <div>
             <h3 className="text-xl font-bold text-white tracking-tight">
-              Submit Loan Application
+              {tx('Submit Loan Application')}
             </h3>
             <p className="text-xs text-white/50 mt-1">
-              Your request will be submitted to the agency for review and eligible lender matching.
+              {tx('Your request will be submitted to the agency for review and eligible lender matching.')}
             </p>
           </div>
 
@@ -196,7 +198,7 @@ export const BorrowerLoanManager: React.FC = () => {
             <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl text-amber-300 text-xs flex items-start gap-2.5">
               <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
-                <p className="font-semibold">Notice</p>
+                <p className="font-semibold">{tx('Notice')}</p>
                 <p className="mt-0.5 text-amber-200/90">{submitError}</p>
               </div>
             </div>
@@ -205,18 +207,18 @@ export const BorrowerLoanManager: React.FC = () => {
           {submittedAppId && (
             <div className="bg-emerald-500/10 border border-emerald-500/30 p-5 rounded-xl text-emerald-300 space-y-2">
               <div className="flex items-center gap-2 font-bold text-sm text-emerald-400">
-                <CheckCircle2 className="w-5 h-5" /> Application Submitted Successfully
+                <CheckCircle2 className="w-5 h-5" /> {tx('Application Submitted Successfully')}
               </div>
               <p className="text-xs text-emerald-200/80">
-                Application Ref: <span className="font-mono font-semibold">APP-{submittedAppId.slice(-6).toUpperCase()}</span>.
-                Your request is in status <span className="font-semibold">SUBMITTED</span> and is pending agency review.
+                {tx('Application Ref:')} <span className="font-mono font-semibold">APP-{submittedAppId.slice(-6).toUpperCase()}</span>.
+                {` ${tx('Your request is in status')} `}<span className="font-semibold">{tx('Submitted').toUpperCase()}</span> {tx('and is pending agency review.')}
               </p>
               <div className="pt-2">
                 <button
                   onClick={() => setActiveTab('tracking')}
                   className="bg-emerald-600 hover:bg-emerald-500 text-black font-semibold text-xs px-4 py-2 rounded-lg transition-colors"
                 >
-                  View in My Applications &rarr;
+                  {tx('View in My Applications →')}
                 </button>
               </div>
             </div>
@@ -226,10 +228,10 @@ export const BorrowerLoanManager: React.FC = () => {
             <div>
               <div className="flex justify-between items-center mb-2">
                 <label className="text-xs font-semibold uppercase tracking-wider text-white/60">
-                  Requested Principal (GHS)
+                  {tx('Requested Principal (GHS)')}
                 </label>
                 <span className="text-lg font-bold text-emerald-400 font-mono">
-                  GHS {amountGhs.toLocaleString()}
+                  GH₵ {amountGhs.toLocaleString()}
                 </span>
               </div>
               <input
@@ -247,17 +249,17 @@ export const BorrowerLoanManager: React.FC = () => {
                 placeholder="e.g. 5000"
               />
               <span className="text-[11px] text-white/40 mt-1 block">
-                Stored in backend strictly as minor units ({amountGhs * 100} pesewas).
+                {tx('Stored in backend strictly as minor units')} ({amountGhs * 100} pesewas).
               </span>
             </div>
 
             <div>
               <div className="flex justify-between items-center mb-2">
                 <label className="text-xs font-semibold uppercase tracking-wider text-white/60">
-                  Tenure (Months)
+                  {tx('Tenure (Months)')}
                 </label>
                 <span className="text-sm font-bold text-white font-mono">
-                  {tenureMonths} Months
+                  {tenureMonths} {tx('months')}
                 </span>
               </div>
               <select
@@ -268,18 +270,18 @@ export const BorrowerLoanManager: React.FC = () => {
                 }}
                 className="w-full bg-[#1a1a1a] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500 transition-colors"
               >
-                <option value={3}>3 Months</option>
-                <option value={6}>6 Months</option>
-                <option value={12}>12 Months (1 Year)</option>
-                <option value={18}>18 Months</option>
-                <option value={24}>24 Months (2 Years)</option>
-                <option value={36}>36 Months (3 Years)</option>
+                <option value={3}>3 {tx('months')}</option>
+                <option value={6}>6 {tx('months')}</option>
+                <option value={12}>12 {tx('months')} (1 {tx('year')})</option>
+                <option value={18}>18 {tx('months')}</option>
+                <option value={24}>24 {tx('months')} (2 {tx('years')})</option>
+                <option value={36}>36 {tx('months')} (3 {tx('years')})</option>
               </select>
             </div>
 
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-white/60 mb-2">
-                Intended Loan Purpose
+                {tx('Intended Loan Purpose')}
               </label>
               <textarea
                 required
@@ -289,7 +291,7 @@ export const BorrowerLoanManager: React.FC = () => {
                   setPurpose(e.target.value);
                   submissionKeyRef.current = null;
                 }}
-                placeholder="e.g. Working capital for retail inventory expansion..."
+                placeholder={tx('e.g. Working capital for retail inventory expansion...')}
                 className="w-full bg-[#1a1a1a] border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500 transition-colors resize-none"
               />
             </div>
@@ -301,10 +303,10 @@ export const BorrowerLoanManager: React.FC = () => {
             >
               {submitting ? (
                 <>
-                  <RefreshCw className="w-4 h-4 animate-spin" /> Submitting Application to Cloudflare API...
+                  <RefreshCw className="w-4 h-4 animate-spin" /> {tx('Submitting application...')}
                 </>
               ) : (
-                'Submit Loan Request'
+                tx('Submit Loan Request')
               )}
             </button>
           </form>
@@ -317,10 +319,10 @@ export const BorrowerLoanManager: React.FC = () => {
           <div className="flex justify-between items-center">
             <div>
               <h3 className="text-xl font-bold text-white tracking-tight">
-                My Loan Applications
+                {tx('My Loan Applications')}
               </h3>
               <p className="text-xs text-white/50 mt-1">
-                Real-time lifecycle tracking across agency review, lender matching, and consent.
+                {tx('Real-time lifecycle tracking across agency review, lender matching, and consent.')}
               </p>
             </div>
             <button
@@ -328,7 +330,7 @@ export const BorrowerLoanManager: React.FC = () => {
               disabled={loadingTracking}
               className="text-white/60 hover:text-white text-xs bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-1.5 transition-colors"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${loadingTracking ? 'animate-spin' : ''}`} /> Refresh
+              <RefreshCw className={`w-3.5 h-3.5 ${loadingTracking ? 'animate-spin' : ''}`} /> {tx('Refresh')}
             </button>
           </div>
 
@@ -343,7 +345,7 @@ export const BorrowerLoanManager: React.FC = () => {
             <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl text-amber-300 text-xs flex items-start gap-2">
               <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
-                <p className="font-semibold">Notice</p>
+                <p className="font-semibold">{tx('Notice')}</p>
                 <p className="mt-0.5 text-amber-200/90">{trackingError}</p>
               </div>
             </div>
@@ -352,14 +354,14 @@ export const BorrowerLoanManager: React.FC = () => {
           {loadingTracking ? (
             <div className="p-12 text-center text-white/40">
               <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-500" />
-              <p className="text-xs">Loading application records...</p>
+              <p className="text-xs">{tx('Loading application records...')}</p>
             </div>
           ) : applications.length === 0 ? (
             <div className="p-12 text-center border border-dashed border-white/10 rounded-xl text-white/40">
               <Clock className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm font-semibold text-white/70">No loan requests submitted yet</p>
+              <p className="text-sm font-semibold text-white/70">{tx('No loan requests submitted yet')}</p>
               <p className="text-xs text-white/40 mt-1">
-                Switch to the "New Loan Request" tab to submit your first application.
+                {tx('Switch to the "New Loan Request" tab to submit your first application.')}
               </p>
             </div>
           ) : (
@@ -393,7 +395,7 @@ export const BorrowerLoanManager: React.FC = () => {
                         ? 'bg-emerald-500 text-black font-bold'
                         : 'bg-white/10 text-white/70'
                     }`}>
-                      {app.status}
+                      {tx(app.status.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase()))}
                     </span>
                   </div>
 
@@ -402,7 +404,7 @@ export const BorrowerLoanManager: React.FC = () => {
                     <div className="bg-purple-950/20 border border-purple-500/30 rounded-lg p-3.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                       <div>
                         <p className="text-xs font-semibold text-purple-300 flex items-center gap-1.5">
-                          ✓ Agency Approved Offer Ready for Consent
+                          ✓ {tx('Agency Approved Offer Ready for Consent')}
                         </p>
                         <p className="text-[11px] text-purple-200/70 mt-0.5">
                           Approved Amount: {pesewasToGhsString(app.activeProposal.proposedAmountPesewas)} | Rate: {bpsToPercentString(app.activeProposal.borrowerRateBps)} p.a.
@@ -415,14 +417,14 @@ export const BorrowerLoanManager: React.FC = () => {
                         }}
                         className="bg-purple-500 hover:bg-purple-400 text-black font-bold text-xs px-4 py-2 rounded-lg transition-colors"
                       >
-                        Review & Affirm Consent
+                        {tx('Review & Affirm Consent')}
                       </button>
                     </div>
                   )}
 
                   <div className="text-[10px] text-white/30 border-t border-white/5 pt-2 flex justify-between">
-                    <span>Submitted: {new Date(app.createdAt).toLocaleDateString()}</span>
-                    <span>Updated: {new Date(app.updatedAt).toLocaleTimeString()}</span>
+                    <span>{tx('Submitted:')} {new Date(app.createdAt).toLocaleDateString(language === 'fr' ? 'fr-GH' : language === 'tw' ? 'ak-GH' : 'en-GH')}</span>
+                    <span>{tx('Updated:')} {new Date(app.updatedAt).toLocaleTimeString(language === 'fr' ? 'fr-GH' : language === 'tw' ? 'ak-GH' : 'en-GH')}</span>
                   </div>
                 </div>
               ))}
@@ -437,7 +439,7 @@ export const BorrowerLoanManager: React.FC = () => {
           <div className="bg-[#181818] border border-white/20 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
             <div className="flex justify-between items-center border-b border-white/10 pb-3">
               <h3 className="font-bold text-lg text-white">
-                Affirmative Loan Agreement & Consent
+                {tx('Affirmative Loan Agreement & Consent')}
               </h3>
               <button
                 onClick={() => setConsentApp(null)}
@@ -450,25 +452,25 @@ export const BorrowerLoanManager: React.FC = () => {
             <div className="space-y-3 text-xs text-white/80">
               <div className="bg-white/5 p-3 rounded-lg border border-white/10 space-y-1.5 font-mono">
                 <div className="flex justify-between">
-                  <span className="text-white/50">Application:</span>
+                  <span className="text-white/50">{tx('Application')}:</span>
                   <span className="text-white font-bold">APP-{consentApp.applicationId.slice(-6).toUpperCase()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-white/50">Principal Amount:</span>
+                  <span className="text-white/50">{tx('Principal Amount:')}</span>
                   <span className="text-emerald-400 font-bold">{pesewasToGhsString(consentApp.activeProposal.proposedAmountPesewas)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-white/50">Agreed Rate:</span>
+                  <span className="text-white/50">{tx('Agreed Rate:')}</span>
                   <span className="text-white font-bold">{bpsToPercentString(consentApp.activeProposal.borrowerRateBps)} p.a.</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-white/50">Tenure:</span>
-                  <span className="text-white font-bold">{consentApp.tenureMonths} Months</span>
+                  <span className="text-white/50">{tx('Tenure')}:</span>
+                  <span className="text-white font-bold">{consentApp.tenureMonths} {tx('months')}</span>
                 </div>
               </div>
 
               <p className="text-[11px] text-white/60 leading-relaxed">
-                By ticking the affirmation box below, you provide explicit statutory agreement under the Ghana Data Protection Act, 2012 (Act 843) to the above loan terms. An immutable, tamper-evident cryptographic SHA-256 snapshot will be recorded.
+                {tx('By ticking the affirmation box below, you provide explicit statutory agreement under the Ghana Data Protection Act, 2012 (Act 843) to the above loan terms. An immutable, tamper-evident cryptographic SHA-256 snapshot will be recorded.')}
               </p>
 
               <label className="flex items-start gap-2.5 p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20 cursor-pointer">
@@ -479,7 +481,7 @@ export const BorrowerLoanManager: React.FC = () => {
                   className="mt-0.5 rounded accent-emerald-500"
                 />
                 <span className="text-xs text-white font-medium select-none">
-                  I affirmatively accept the proposed loan terms, interest rate, and duration.
+                  {tx('I affirmatively accept the proposed loan terms, interest rate, and duration.')}
                 </span>
               </label>
             </div>
@@ -490,7 +492,7 @@ export const BorrowerLoanManager: React.FC = () => {
                 onClick={() => setConsentApp(null)}
                 className="px-4 py-2 text-white/60 hover:text-white text-xs font-semibold"
               >
-                Cancel
+                {tx('Cancel')}
               </button>
               <button
                 type="button"
@@ -498,7 +500,7 @@ export const BorrowerLoanManager: React.FC = () => {
                 onClick={handleRecordConsent}
                 className="bg-emerald-500 hover:bg-emerald-400 text-black font-bold px-5 py-2 rounded-lg text-xs transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {recordingConsent ? 'Recording Snapshot...' : 'Confirm & Sign Agreement'}
+                {recordingConsent ? tx('Recording Snapshot...') : tx('Confirm & Sign Agreement')}
               </button>
             </div>
           </div>

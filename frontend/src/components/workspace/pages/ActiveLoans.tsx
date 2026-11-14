@@ -48,7 +48,7 @@ function formatDate(ms: number | null | undefined, language: 'en' | 'fr' | 'tw')
 }
 
 export default function ActiveLoans() {
-  const { t, language } = useTranslation();
+  const { t, tx, language } = useTranslation();
   const [loans, setLoans] = useState<LoanRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -156,7 +156,7 @@ export default function ActiveLoans() {
               <div>
                 <div className="flex items-center gap-2">
                   <span className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border ${badge}`}>
-                    {statusLabel(loan.status)}
+                    {tx(statusLabel(loan.status))}
                   </span>
                   {loan.lender_name && <span className="text-xs text-white/50">{loan.lender_name}</span>}
                 </div>
@@ -223,7 +223,7 @@ export default function ActiveLoans() {
                                   : 'text-white/50 bg-white/5 border-white/10'
                               }`}
                             >
-                              {statusLabel(inst.status || 'PENDING')}
+                              {tx(statusLabel(inst.status || 'PENDING'))}
                             </span>
                           </div>
                         </div>

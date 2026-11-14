@@ -1,15 +1,15 @@
 import { Zap, Shield, BarChart3, Lock, FileText, ArrowRight, Globe, UserPlus, HandCoins, ScrollText } from 'lucide-react';
+import { useTranslation } from '../lib/useTranslation';
 
 export default function Docs() {
+  const { tx } = useTranslation();
   return (
     <div className="max-w-5xl mx-auto space-y-16 py-8">
       {/* Hero */}
       <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold text-white tracking-tight">Gidfine Help Centre</h1>
+        <h1 className="text-4xl font-bold text-white tracking-tight">{tx('Gidfine Help Centre')}</h1>
         <p className="text-lg text-white/60 max-w-2xl mx-auto">
-          Gidfine is a licensed loan arranger. We match you with partner lenders,
-          show you the full borrower rate before you accept, and service your
-          repayments — all in Ghana cedis.
+          {tx('Gidfine is a licensed loan arranger. We match you with partner lenders, show you the full borrower rate before you accept, and service your repayments — all in Ghana cedis.')}
         </p>
       </div>
 
@@ -23,15 +23,15 @@ export default function Docs() {
         ].map((item, i) => (
           <div key={i} className="border border-white/10 bg-white/[0.02] rounded-lg p-4 text-center">
             <item.icon className="w-6 h-6 text-emerald-400 mb-2 mx-auto" />
-            <p className="text-xs font-medium text-white/70">{item.label}</p>
-            <p className="text-xs text-white/40">{item.desc}</p>
+            <p className="text-xs font-medium text-white/70">{tx(item.label)}</p>
+            <p className="text-xs text-white/40">{tx(item.desc)}</p>
           </div>
         ))}
       </div>
 
       {/* Workflow */}
       <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-white tracking-tight">How borrowing works</h2>
+        <h2 className="text-2xl font-semibold text-white tracking-tight">{tx('How borrowing works')}</h2>
         <div className="border border-white/10 bg-[#0d0d0d] rounded-lg p-6">
           <ol className="space-y-6 ml-0">
             {[
@@ -45,8 +45,8 @@ export default function Docs() {
                   <span className="text-xs font-mono text-emerald-300">{s.step}</span>
                 </div>
                 <div>
-                  <p className="font-medium text-white">{s.title}</p>
-                  <p className="text-sm text-white/50 mt-0.5">{s.description}</p>
+                <p className="font-medium text-white">{tx(s.title)}</p>
+                  <p className="text-sm text-white/50 mt-0.5">{tx(s.description)}</p>
                 </div>
               </li>
             ))}
@@ -56,7 +56,7 @@ export default function Docs() {
 
       {/* Security & Compliance */}
       <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-white">Security & your data</h2>
+        <h2 className="text-2xl font-semibold text-white">{tx('Security & your data')}</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
             { icon: Lock, title: 'Encrypted in transit', description: 'All traffic between you and Gidfine is protected with TLS.' },
@@ -65,8 +65,8 @@ export default function Docs() {
           ].map((item, i) => (
             <div key={i} className="border border-white/10 rounded-lg p-4 bg-[#0d0d0d]">
               <item.icon className="w-6 h-6 text-blue-400 mb-2" />
-              <p className="font-medium text-white text-sm">{item.title}</p>
-              <p className="text-xs text-white/50 mt-1">{item.description}</p>
+              <p className="font-medium text-white text-sm">{tx(item.title)}</p>
+              <p className="text-xs text-white/50 mt-1">{tx(item.description)}</p>
             </div>
           ))}
         </div>
@@ -74,7 +74,7 @@ export default function Docs() {
 
       {/* FAQ */}
       <section className="space-y-6">
-        <h2 className="text-2xl font-semibold text-white">FAQ</h2>
+        <h2 className="text-2xl font-semibold text-white">{tx('FAQ')}</h2>
         {[
           { q: 'How are interest rates determined?', a: 'Each lender sets its own rate. Gidfine adds a transparent agency margin and shows you the full borrower rate and repayment schedule before you accept.' },
           { q: 'Can I prepay my loan?', a: 'Yes. Early settlement is permitted. Visit Active Loans to see your outstanding balance.' },
@@ -82,8 +82,8 @@ export default function Docs() {
           { q: 'Which currency does Gidfine use?', a: 'All amounts are shown and repaid in Ghana cedis (GH₵).' },
         ].map((item, i) => (
           <div key={i} className="border-b border-white/10 pb-4 last:border-0">
-            <p className="text-white font-medium text-sm">{item.q}</p>
-            <p className="text-white/50 text-sm mt-1">{item.a}</p>
+            <p className="text-white font-medium text-sm">{tx(item.q)}</p>
+            <p className="text-white/50 text-sm mt-1">{tx(item.a)}</p>
           </div>
         ))}
       </section>
@@ -92,7 +92,7 @@ export default function Docs() {
       <div className="text-center pb-12">
         <a href="/" className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-white/10 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-sm font-medium transition-colors">
           <Globe className="w-4 h-4" />
-          Back to Gidfine
+          {tx('Back to Gidfine')}
           <ArrowRight className="w-4 h-4" />
         </a>
       </div>

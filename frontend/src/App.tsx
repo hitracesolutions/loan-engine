@@ -5,10 +5,15 @@ import ProfileCompletionModal from './components/auth/ProfileCompletionModal';
 import Docs from './pages/Docs';
 import { ImpersonationBanner } from './components/ImpersonationBanner';
 import { useLoanStore } from './store/useLoanStore';
+import LanguagePicker from './components/LanguagePicker';
 
 function App() {
-  const { currentState } = useLoanStore();
+  const { currentState, language } = useLoanStore();
   const [showProfileCompletion, setShowProfileCompletion] = useState(false);
+
+  useEffect(() => {
+    document.documentElement.lang = language === 'tw' ? 'ak' : language;
+  }, [language]);
 
   useEffect(() => {
     const handleAuthInvalidated = () => {
@@ -26,9 +31,12 @@ function App() {
     return (
       <div className="min-h-screen bg-[#0A0A0A] text-white font-sans">
         <header className="border-b border-white/10 bg-[#0A0A0A]/80 backdrop-blur-xl flex items-center px-6 lg:px-10 h-16">
+          <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.location.href = '/'}>
             <img src="/favicon.svg" alt="Gidfine" className="h-7 w-7 rounded-lg" />
             <span className="font-display font-bold text-xl">Gidfine<span className="text-cyan-200/60">.gh</span></span>
+          </div>
+          <LanguagePicker />
           </div>
         </header>
         <main className="py-24 px-6">

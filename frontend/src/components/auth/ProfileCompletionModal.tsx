@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { gidfineAPI, ghsToPesewas } from '../../lib/api-gidfine';
 import { useLoanStore } from '../../store/useLoanStore';
 import { ShieldCheck, Phone, Briefcase, MapPin, ArrowRight } from 'lucide-react';
+import { useTranslation } from '../../lib/useTranslation';
 
 interface ProfileCompletionModalProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface ProfileCompletionModalProps {
 }
 
 export default function ProfileCompletionModal({ isOpen, phoneInitial = '', onCompleted }: ProfileCompletionModalProps) {
+  const { tx } = useTranslation();
   const { user, setUser } = useLoanStore();
   const [phone, setPhone] = useState(phoneInitial || user?.phone || '');
   const [salary, setSalary] = useState(user?.salary ? String(user.salary) : '');
@@ -57,14 +59,14 @@ export default function ProfileCompletionModal({ isOpen, phoneInitial = '', onCo
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="font-display font-medium text-lg text-white">Complete Google OAuth Profile</h3>
-            <p className="text-xs text-white/40">Verify identity parameters to enable underwriting</p>
+            <h3 className="font-display font-medium text-lg text-white">{tx('Complete Google OAuth Profile')}</h3>
+            <p className="text-xs text-white/40">{tx('Verify identity parameters to enable underwriting')}</p>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 block mb-1">Phone Number</label>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 block mb-1">{tx('Phone Number')}</label>
             <div className="relative">
               <Phone className="w-4 h-4 text-white/30 absolute left-3 top-3.5" />
               <input
@@ -79,7 +81,7 @@ export default function ProfileCompletionModal({ isOpen, phoneInitial = '', onCo
           </div>
 
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 block mb-1">Monthly Net Income</label>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 block mb-1">{tx('Monthly Net Income')}</label>
             <div className="relative">
               <Briefcase className="w-4 h-4 text-white/30 absolute left-3 top-3.5" />
               <input
@@ -94,7 +96,7 @@ export default function ProfileCompletionModal({ isOpen, phoneInitial = '', onCo
           </div>
 
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 block mb-1">City of Residence</label>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 block mb-1">{tx('City of Residence')}</label>
             <div className="relative">
               <MapPin className="w-4 h-4 text-white/30 absolute left-3 top-3.5" />
               <input
@@ -113,7 +115,7 @@ export default function ProfileCompletionModal({ isOpen, phoneInitial = '', onCo
             disabled={loading}
             className="w-full h-12 mt-4 bg-white text-black font-semibold rounded-xl hover:bg-white/90 shadow-lg transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50"
           >
-            {loading ? 'Saving…' : 'Save Profile & Enter Workspace'}
+            {loading ? tx('Saving…') : tx('Save Profile & Enter Workspace')}
             <ArrowRight className="w-4 h-4" />
           </button>
         </form>

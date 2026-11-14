@@ -19,6 +19,7 @@ import {
   AlertCircle,
   FileCheck,
 } from 'lucide-react';
+import { useTranslation } from '../lib/useTranslation';
 
 interface LenderPortalProps {
   lenderName?: string;
@@ -27,6 +28,7 @@ interface LenderPortalProps {
 export const LenderPortal: React.FC<LenderPortalProps> = ({
   lenderName = 'Institutional Lender',
 }) => {
+  const { tx } = useTranslation();
   // State
   const [proposals, setProposals] = useState<LenderProposalItem[]>([]);
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'ACCEPTED' | 'DECLINED'>('ALL');
@@ -165,7 +167,7 @@ export const LenderPortal: React.FC<LenderPortalProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold tracking-tight">Lender Decision Portal</h1>
+                <h1 className="text-2xl font-bold tracking-tight">{tx('Lender Decision Portal')}</h1>
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
                   Assigned Rate Cards
                 </span>
@@ -192,7 +194,7 @@ export const LenderPortal: React.FC<LenderPortalProps> = ({
         <div className="mt-4 p-3 bg-slate-800/80 rounded-xl border border-slate-700/80 flex items-start gap-2.5 text-xs text-slate-300">
           <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
           <div>
-            <span className="font-semibold text-slate-100">Gidfine Privacy & Visibility Control (Section 7): </span>
+            <span className="font-semibold text-slate-100">{tx('Gidfine Privacy & Visibility Control (Section 7): ')}</span>
             Borrower identifying information (name, phone, email, national ID) and agency operational margins are strictly redacted.
             Lender decisions are audited on-chain; acceptance triggers agency review and does not directly activate loans or disburse funds.
           </div>
@@ -205,7 +207,7 @@ export const LenderPortal: React.FC<LenderPortalProps> = ({
           <div className="flex items-start gap-2">
             <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
             <div>
-              <div className="font-semibold">Operation Error</div>
+              <div className="font-semibold">{tx('Operation Error')}</div>
               <p className="text-xs text-rose-700 mt-0.5">{error}</p>
             </div>
           </div>
@@ -220,7 +222,7 @@ export const LenderPortal: React.FC<LenderPortalProps> = ({
           <div className="flex items-start gap-2">
             <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
             <div>
-              <div className="font-semibold">Decision Recorded</div>
+              <div className="font-semibold">{tx('Decision Recorded')}</div>
               <p className="text-xs text-emerald-700 mt-0.5">{successNotice}</p>
             </div>
           </div>
@@ -233,39 +235,39 @@ export const LenderPortal: React.FC<LenderPortalProps> = ({
       {/* Summary KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
-          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">Pending Action</div>
+          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">{tx('Pending Action')}</div>
           <div className="mt-1 flex items-baseline justify-between">
             <span className="text-2xl font-bold text-amber-600">{pendingCount}</span>
             <Clock className="w-5 h-5 text-amber-500/50" />
           </div>
-          <p className="text-[11px] text-slate-400 mt-1">Awaiting lender response</p>
+          <p className="text-[11px] text-slate-400 mt-1">{tx('Awaiting lender response')}</p>
         </div>
 
         <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
-          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">Accepted Quotes</div>
+          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">{tx('Accepted Quotes')}</div>
           <div className="mt-1 flex items-baseline justify-between">
             <span className="text-2xl font-bold text-emerald-600">{acceptedCount}</span>
             <CheckCircle2 className="w-5 h-5 text-emerald-500/50" />
           </div>
-          <p className="text-[11px] text-slate-400 mt-1">Advanced to agency review</p>
+          <p className="text-[11px] text-slate-400 mt-1">{tx('Advanced to agency review')}</p>
         </div>
 
         <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
-          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">Declined Proposals</div>
+          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">{tx('Declined Proposals')}</div>
           <div className="mt-1 flex items-baseline justify-between">
             <span className="text-2xl font-bold text-slate-600">{declinedCount}</span>
             <XCircle className="w-5 h-5 text-slate-400" />
           </div>
-          <p className="text-[11px] text-slate-400 mt-1">Returned with reasons</p>
+          <p className="text-[11px] text-slate-400 mt-1">{tx('Returned with reasons')}</p>
         </div>
 
         <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
-          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Portfolio Volume</div>
+          <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">{tx('Total Portfolio Volume')}</div>
           <div className="mt-1 flex items-baseline justify-between">
             <span className="text-xl font-bold text-slate-900">{pesewasToGhsString(totalVolumePesewas)}</span>
             <Landmark className="w-5 h-5 text-slate-400" />
           </div>
-          <p className="text-[11px] text-slate-400 mt-1">All assigned proposals</p>
+          <p className="text-[11px] text-slate-400 mt-1">{tx('All assigned proposals')}</p>
         </div>
       </div>
 
@@ -275,7 +277,7 @@ export const LenderPortal: React.FC<LenderPortalProps> = ({
         <div className="p-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4 text-slate-500" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-600">Filter Queue:</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-600">{tx('Filter Queue:')}</span>
             <div className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5">
               {(['ALL', 'PENDING', 'ACCEPTED', 'DECLINED'] as const).map((tab) => (
                 <button
@@ -287,14 +289,14 @@ export const LenderPortal: React.FC<LenderPortalProps> = ({
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  {tab === 'ALL' ? 'All Proposals' : tab.charAt(0) + tab.slice(1).toLowerCase()}
+                  {tx(tab === 'ALL' ? 'All Proposals' : tab.charAt(0) + tab.slice(1).toLowerCase())}
                 </button>
               ))}
             </div>
           </div>
 
           <div className="text-xs text-slate-500">
-            Showing <span className="font-semibold text-slate-800">{proposals.length}</span> assigned proposals
+            {tx('Showing')} <span className="font-semibold text-slate-800">{proposals.length}</span> {tx('assigned proposals')}
           </div>
         </div>
 
@@ -302,14 +304,14 @@ export const LenderPortal: React.FC<LenderPortalProps> = ({
         {isLoading ? (
           <div className="py-16 text-center">
             <RefreshCw className="w-8 h-8 text-indigo-600 animate-spin mx-auto mb-3" />
-            <p className="text-sm font-medium text-slate-600">Loading lender proposal queue...</p>
+            <p className="text-sm font-medium text-slate-600">{tx('Loading lender proposal queue...')}</p>
           </div>
         ) : proposals.length === 0 ? (
           <div className="py-16 text-center" role="status">
             <Clock className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <h3 className="text-base font-semibold text-slate-700">No proposals found</h3>
+            <h3 className="text-base font-semibold text-slate-700">{tx('No proposals found')}</h3>
             <p className="text-xs text-slate-500 max-w-md mx-auto mt-1">
-              {`There are currently no loan proposals assigned to your institution in the '${statusFilter}' status.`}
+              {tx('There are currently no loan proposals assigned to your institution in the')} {tx(statusFilter === 'ALL' ? 'All Proposals' : statusFilter.charAt(0) + statusFilter.slice(1).toLowerCase())} {tx('status.')}
             </p>
           </div>
         ) : (
@@ -317,14 +319,14 @@ export const LenderPortal: React.FC<LenderPortalProps> = ({
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-100/70 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                  <th className="py-3 px-4">Case Reference</th>
-                  <th className="py-3 px-4">Proposed Amount</th>
-                  <th className="py-3 px-4">Lender Base Rate</th>
-                  <th className="py-3 px-4">Tenure</th>
-                  <th className="py-3 px-4">Purpose</th>
-                  <th className="py-3 px-4">Proposal Status</th>
-                  <th className="py-3 px-4">Assigned On</th>
-                  <th className="py-3 px-4 text-right">Actions</th>
+                  <th className="py-3 px-4">{tx('Case Reference')}</th>
+                  <th className="py-3 px-4">{tx('Proposed Amount')}</th>
+                  <th className="py-3 px-4">{tx('Lender Base Rate')}</th>
+                  <th className="py-3 px-4">{tx('Tenure')}</th>
+                  <th className="py-3 px-4">{tx('Purpose')}</th>
+                  <th className="py-3 px-4">{tx('Proposal Status')}</th>
+                  <th className="py-3 px-4">{tx('Assigned On')}</th>
+                  <th className="py-3 px-4 text-right">{tx('Actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
@@ -385,7 +387,7 @@ export const LenderPortal: React.FC<LenderPortalProps> = ({
                         )}
                         {!isPending && !isAccepted && !isDeclined && (
                           <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">
-                            {item.proposalStatus}
+                            {tx(item.proposalStatus.charAt(0) + item.proposalStatus.slice(1).toLowerCase())}
                           </span>
                         )}
                       </td>
@@ -440,7 +442,7 @@ export const LenderPortal: React.FC<LenderPortalProps> = ({
             <div className="p-5 border-b border-slate-100 bg-slate-50/80 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <FileCheck className="w-5 h-5 text-indigo-600" />
-                <h3 className="text-base font-bold text-slate-900">Proposal Specification</h3>
+                <h3 className="text-base font-bold text-slate-900">{tx('Proposal Specification')}</h3>
               </div>
               <button
                 onClick={() => setSelectedProposal(null)}
@@ -453,37 +455,37 @@ export const LenderPortal: React.FC<LenderPortalProps> = ({
             <div className="p-6 space-y-4 text-sm">
               <div className="bg-indigo-50/60 border border-indigo-100 rounded-xl p-4 space-y-2">
                 <div className="flex justify-between items-center text-xs text-indigo-900 font-semibold uppercase tracking-wider">
-                  <span>Pseudonymous Case Reference</span>
+                  <span>{tx('Pseudonymous Case Reference')}</span>
                   <span className="font-mono bg-white px-2 py-0.5 rounded border border-indigo-200">
                     {selectedProposal.caseId}
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-3 pt-2 text-xs">
                   <div>
-                    <span className="text-slate-500">Proposal Version:</span>
-                    <div className="font-semibold text-slate-900">Version {selectedProposal.version}</div>
+                    <span className="text-slate-500">{tx('Proposal Version:')}</span>
+                    <div className="font-semibold text-slate-900">{tx('Version')} {selectedProposal.version}</div>
                   </div>
                   <div>
-                    <span className="text-slate-500">Proposed Principal:</span>
+                    <span className="text-slate-500">{tx('Proposed Principal:')}</span>
                     <div className="font-semibold text-slate-900">
                       {pesewasToGhsString(selectedProposal.proposedAmountPesewas)}
                     </div>
                   </div>
                   <div>
-                    <span className="text-slate-500">Lender Base Rate:</span>
+                    <span className="text-slate-500">{tx('Lender Base Rate:')}</span>
                     <div className="font-semibold text-indigo-700">
                       {bpsToPercentString(selectedProposal.lenderBaseRateBps)} p.a.
                     </div>
                   </div>
                   <div>
-                    <span className="text-slate-500">Tenure:</span>
+                    <span className="text-slate-500">{tx('Tenure')}:</span>
                     <div className="font-semibold text-slate-900">{selectedProposal.tenureMonths} Months</div>
                   </div>
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Loan Purpose</label>
+                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{tx('Loan Purpose')}</label>
                 <p className="mt-1 text-slate-800 bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs">
                   {selectedProposal.purpose}
                 </p>
@@ -587,23 +589,23 @@ export const LenderPortal: React.FC<LenderPortalProps> = ({
             <div className="p-6 space-y-4 text-sm">
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-1.5 text-xs">
                 <div className="flex justify-between font-mono">
-                  <span className="text-slate-500">Case ID:</span>
+                  <span className="text-slate-500">{tx('Case ID:')}</span>
                   <span className="font-semibold text-slate-800">{decisionModal.proposal.caseId}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Amount:</span>
+                  <span className="text-slate-500">{tx('Amount')}:</span>
                   <span className="font-semibold text-slate-800">
                     {pesewasToGhsString(decisionModal.proposal.proposedAmountPesewas)}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Base Rate:</span>
+                  <span className="text-slate-500">{tx('Base Rate:')}</span>
                   <span className="font-semibold text-indigo-700">
                     {bpsToPercentString(decisionModal.proposal.lenderBaseRateBps)} p.a.
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Tenure:</span>
+                  <span className="text-slate-500">{tx('Tenure')}:</span>
                   <span className="font-semibold text-slate-800">
                     {decisionModal.proposal.tenureMonths} Months
                   </span>
@@ -612,7 +614,7 @@ export const LenderPortal: React.FC<LenderPortalProps> = ({
 
               {decisionModal.decision === 'ACCEPT' ? (
                 <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded-xl text-xs text-emerald-900 space-y-1">
-                  <p className="font-semibold">Lender Acceptance Notice:</p>
+                  <p className="font-semibold">{tx('Lender Acceptance Notice:')}</p>
                   <p className="text-emerald-800">
                     By confirming, {lenderName} agrees to reserve capacity for this allocation.
                     This advances the case to the agency for formal review. It does not disburse funds or commit the

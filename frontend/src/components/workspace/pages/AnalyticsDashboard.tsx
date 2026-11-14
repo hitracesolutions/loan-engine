@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLoanStore } from '../../../store/useLoanStore';
 import { FileText, CreditCard, Wallet, ArrowUpRight } from 'lucide-react';
 import { gidfineAPI, pesewasToGhsString } from '../../../lib/api-gidfine';
-import { translate, type TranslationKey } from '../../../lib/translations';
+import { translate, translateText, type TranslationKey } from '../../../lib/translations';
 
 function statusLabel(status: string): string {
   return status.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
@@ -18,6 +18,7 @@ function formatDate(ms: number | null | undefined, language: 'en' | 'fr' | 'tw')
 export default function AnalyticsDashboard() {
   const { user, setView, language } = useLoanStore();
   const t = (key: TranslationKey) => translate(language, key);
+  const tx = (text: string) => translateText(language, text);
   const [applications, setApplications] = useState<any[]>([]);
   const [loans, setLoans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -121,7 +122,7 @@ export default function AnalyticsDashboard() {
                     <td className="dashboard-heading border-b py-3 font-medium">{pesewasToGhsString(a.requestedAmountPesewas ?? 0)}</td>
                     <td className="py-3">
                       <span className="inline-flex items-center px-2.5 py-1 rounded-full border border-white/10 bg-white/5 text-xs">
-                        {statusLabel(a.status || 'DRAFT')}
+                        {tx(statusLabel(a.status || 'DRAFT'))}
                       </span>
                     </td>
                   </tr>

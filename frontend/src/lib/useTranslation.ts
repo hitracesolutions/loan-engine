@@ -1,5 +1,5 @@
 import { useLoanStore } from '../store/useLoanStore';
-import { translate, type TranslationKey } from './translations';
+import { translate, translateText, type TranslationKey } from './translations';
 
 /** Reads the persisted app language so every screen can react to the header selector. */
 export function useTranslation() {
@@ -7,5 +7,6 @@ export function useTranslation() {
   return {
     language,
     t: (key: TranslationKey) => translate(language, key),
+    tx: (text: string) => translateText(language, text),
   };
 }

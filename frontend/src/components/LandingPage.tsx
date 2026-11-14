@@ -1,6 +1,8 @@
 import { useState, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { ArrowRight, ShieldCheck, Zap, Lock, ChevronRight, TrendingUp, Globe2, Clock, CheckCircle2 } from 'lucide-react';
 import AuthModal from './auth/AuthModal';
+import LanguagePicker from './LanguagePicker';
+import { useTranslation } from '../lib/useTranslation';
 
 type ButtonVariant = 'default' | 'outline' | 'ghost';
 type ButtonSize = 'default' | 'sm' | 'lg';
@@ -34,6 +36,7 @@ const Button = ({ children, className = "", variant = "default", size = "default
 };
 
 const LandingPage = () => {
+  const { tx } = useTranslation();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
 
   const handleOpenAuth = () => {
@@ -67,12 +70,13 @@ const LandingPage = () => {
             </span>
           </a>
           <div className="hidden md:flex items-center gap-8">
-            <a href="#platform" className="text-sm text-white/60 hover:text-white transition-colors">Platform</a>
-            <a href="#benefits" className="text-sm text-white/60 hover:text-white transition-colors">How it works</a>
-            <a href="#about" className="text-sm text-white/60 hover:text-white transition-colors">About</a>
+            <a href="#platform" className="text-sm text-white/60 hover:text-white transition-colors">{tx('Platform')}</a>
+            <a href="#benefits" className="text-sm text-white/60 hover:text-white transition-colors">{tx('How it works')}</a>
+            <a href="#about" className="text-sm text-white/60 hover:text-white transition-colors">{tx('About')}</a>
           </div>
           <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={handleOpenAuth}>Sign in</Button>
+            <LanguagePicker />
+            <Button variant="ghost" onClick={handleOpenAuth}>{tx('Sign in')}</Button>
             <Button onClick={handleOpenAuth} className="hidden sm:inline-flex">
               Apply now <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />
             </Button>
@@ -86,29 +90,27 @@ const LandingPage = () => {
           <div className="container mx-auto max-w-5xl text-center">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 mb-8 animate-fade-in opacity-0" style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}>
               <span className="w-2 h-2 rounded-full bg-emerald-500" aria-hidden="true" />
-              <span className="text-xs font-medium tracking-widest text-white/70 uppercase">Loans arranged in Ghana</span>
+              <span className="text-xs font-medium tracking-widest text-white/70 uppercase">{tx('Loans arranged in Ghana')}</span>
             </div>
 
             <h1 className="font-display text-4xl sm:text-5xl md:text-7xl font-medium tracking-tight mb-8 leading-[1.1] animate-slide-up opacity-0" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
-              One application, <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-blue-400">several lender offers</span>
+              {tx('One application,')} <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-blue-400">{tx('several lender offers')}</span>
             </h1>
 
             <p className="text-lg md:text-xl text-white/50 max-w-2xl mx-auto mb-12 font-light tracking-wide leading-relaxed animate-slide-up opacity-0" style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}>
-              Apply once and Gidfine takes it to partner lenders. Every offer shows its
-              monthly and annual rate side by side, so you can compare the real cost
-              before you agree to anything.
+              {tx('Apply once and Gidfine takes it to partner lenders. Every offer shows its monthly and annual rate side by side, so you can compare the real cost before you agree to anything.')}
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-slide-up opacity-0" style={{ animationDelay: '0.4s', animationFillMode: 'forwards' }}>
               <Button size="lg" onClick={handleOpenAuth} className="w-full sm:w-auto min-w-[200px]">
-                Start an application
+                {tx('Start an application')}
               </Button>
               <a
                 href="#benefits"
                 className="inline-flex h-14 w-full sm:w-auto min-w-[200px] items-center justify-center rounded-lg border border-white/10 px-8 text-base text-white transition-colors hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A0A]"
               >
-                See how it works <ChevronRight className="w-4 h-4 ml-2" aria-hidden="true" />
+                {tx('See how it works')} <ChevronRight className="w-4 h-4 ml-2" aria-hidden="true" />
               </a>
             </div>
 
@@ -116,15 +118,15 @@ const LandingPage = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 md:gap-8 mt-16 pt-8 border-t border-white/10 animate-slide-up opacity-0" style={{ animationDelay: '0.5s', animationFillMode: 'forwards' }}>
               <div>
                 <div className="text-2xl md:text-3xl font-semibold mb-2">GH&#8373;</div>
-                <div className="text-sm text-white/50">Quoted and settled in Ghana cedis</div>
+                <div className="text-sm text-white/50">{tx('Quoted and settled in Ghana cedis')}</div>
               </div>
               <div>
-                <div className="text-2xl md:text-3xl font-semibold mb-2">Multiple offers</div>
-                <div className="text-sm text-white/50">Partner lenders compete for your application</div>
+                <div className="text-2xl md:text-3xl font-semibold mb-2">{tx('Multiple offers')}</div>
+                <div className="text-sm text-white/50">{tx('Partner lenders compete for your application')}</div>
               </div>
               <div>
-                <div className="text-2xl md:text-3xl font-semibold mb-2">Human review</div>
-                <div className="text-sm text-white/50">Checked by our credit team before approval</div>
+                <div className="text-2xl md:text-3xl font-semibold mb-2">{tx('Human review')}</div>
+                <div className="text-sm text-white/50">{tx('Checked by our credit team before approval')}</div>
               </div>
             </div>
           </div>
@@ -134,51 +136,51 @@ const LandingPage = () => {
         <section id="platform" className="relative py-24 px-6 border-t border-white/10">
           <div className="container mx-auto max-w-6xl">
             <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold mb-4">Why Choose Gidfine?</h2>
-              <p className="text-white/60 text-lg max-w-2xl mx-auto">Everything you need for seamless lending, all in one place.</p>
+              <h2 className="text-4xl md:text-5xl font-bold mb-4">{tx('Why Choose Gidfine?')}</h2>
+              <p className="text-white/60 text-lg max-w-2xl mx-auto">{tx('Everything you need for seamless lending, all in one place.')}</p>
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Fast Approval */}
               <div className="p-8 rounded-2xl border border-white/10 bg-white/5 hover:border-white/20 transition-all hover:bg-white/10">
                 <Zap className="w-10 h-10 mb-4 text-emerald-400" />
-                <h3 className="text-xl font-semibold mb-2">Fast credit review</h3>
-                <p className="text-white/60">Your application is assessed by our credit team against each partner lender's criteria, so the decision you get is one a lender can stand behind.</p>
+                <h3 className="text-xl font-semibold mb-2">{tx('Fast credit review')}</h3>
+                <p className="text-white/60">{tx("Your application is assessed by our credit team against each partner lender's criteria, so the decision you get is one a lender can stand behind.")}</p>
               </div>
 
               {/* Flexible Terms */}
               <div className="p-8 rounded-2xl border border-white/10 bg-white/5 hover:border-white/20 transition-all hover:bg-white/10">
                 <TrendingUp className="w-10 h-10 mb-4 text-blue-400" />
-                <h3 className="text-xl font-semibold mb-2">Terms that fit</h3>
-                <p className="text-white/60">Tenure and repayment frequency come from the lender's product, so the schedule matches how you actually get paid.</p>
+                <h3 className="text-xl font-semibold mb-2">{tx('Terms that fit')}</h3>
+                <p className="text-white/60">{tx("Tenure and repayment frequency come from the lender's product, so the schedule matches how you actually get paid.")}</p>
               </div>
 
               {/* Transparent Pricing */}
               <div className="p-8 rounded-2xl border border-white/10 bg-white/5 hover:border-white/20 transition-all hover:bg-white/10">
                 <Lock className="w-10 h-10 mb-4 text-purple-400" />
-                <h3 className="text-xl font-semibold mb-2">See the real cost</h3>
-                <p className="text-white/60">Every offer shows the monthly and annual rate side by side, so the cost is comparable before you agree to it.</p>
+                <h3 className="text-xl font-semibold mb-2">{tx('See the real cost')}</h3>
+                <p className="text-white/60">{tx('Every offer shows the monthly and annual rate side by side, so the cost is comparable before you agree to it.')}</p>
               </div>
 
               {/* Multiple Lenders */}
               <div className="p-8 rounded-2xl border border-white/10 bg-white/5 hover:border-white/20 transition-all hover:bg-white/10">
                 <Globe2 className="w-10 h-10 mb-4 text-yellow-400" />
-                <h3 className="text-xl font-semibold mb-2">Compare lender offers</h3>
-                <p className="text-white/60">Send one application to our partner lenders and choose between the terms that come back.</p>
+                <h3 className="text-xl font-semibold mb-2">{tx('Compare lender offers')}</h3>
+                <p className="text-white/60">{tx('Send one application to our partner lenders and choose between the terms that come back.')}</p>
               </div>
 
               {/* Secure & Safe */}
               <div className="p-8 rounded-2xl border border-white/10 bg-white/5 hover:border-white/20 transition-all hover:bg-white/10">
                 <ShieldCheck className="w-10 h-10 mb-4 text-red-400" />
-                <h3 className="text-xl font-semibold mb-2">Your identity stays yours</h3>
-                <p className="text-white/60">ID details are encrypted at rest, access is role-based, and lenders see a masked summary rather than your documents.</p>
+                <h3 className="text-xl font-semibold mb-2">{tx('Your identity stays yours')}</h3>
+                <p className="text-white/60">{tx('ID details are encrypted at rest, access is role-based, and lenders see a masked summary rather than your documents.')}</p>
               </div>
 
               {/* Mobile-First */}
               <div className="p-8 rounded-2xl border border-white/10 bg-white/5 hover:border-white/20 transition-all hover:bg-white/10">
                 <Clock className="w-10 h-10 mb-4 text-cyan-400" />
-                <h3 className="text-xl font-semibold mb-2">Works on your phone</h3>
-                <p className="text-white/60">Apply, follow your application status and see your repayment schedule in the browser — no app install.</p>
+                <h3 className="text-xl font-semibold mb-2">{tx('Works on your phone')}</h3>
+                <p className="text-white/60">{tx('Apply, follow your application status and see your repayment schedule in the browser — no app install.')}</p>
               </div>
             </div>
           </div>
@@ -187,7 +189,7 @@ const LandingPage = () => {
         {/* How It Works */}
         <section id="benefits" aria-labelledby="how-it-works-heading" className="relative py-24 px-6 border-t border-white/10">
           <div className="container mx-auto max-w-4xl">
-            <h2 id="how-it-works-heading" className="text-3xl md:text-5xl font-bold text-center mb-16">How it works</h2>
+            <h2 id="how-it-works-heading" className="text-3xl md:text-5xl font-bold text-center mb-16">{tx('How it works')}</h2>
 
             <div className="space-y-8">
               <div className="flex gap-6 items-start">
@@ -197,8 +199,8 @@ const LandingPage = () => {
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold mb-2">Create your account</h3>
-                  <p className="text-white/60">Sign up with your email and phone number. No documents are needed to get started.</p>
+                  <h3 className="text-xl font-semibold mb-2">{tx('Create your account')}</h3>
+                  <p className="text-white/60">{tx('Sign up with your email and phone number. No documents are needed to get started.')}</p>
                 </div>
               </div>
 
@@ -209,8 +211,8 @@ const LandingPage = () => {
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold mb-2">Add your details</h3>
-                  <p className="text-white/60">Tell us your employer, income and ID details. Identity data is encrypted before it is stored.</p>
+                  <h3 className="text-xl font-semibold mb-2">{tx('Add your details')}</h3>
+                  <p className="text-white/60">{tx('Tell us your employer, income and ID details. Identity data is encrypted before it is stored.')}</p>
                 </div>
               </div>
 
@@ -221,8 +223,8 @@ const LandingPage = () => {
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold mb-2">Apply once</h3>
-                  <p className="text-white/60">Choose the amount and a tenure that suits you. That single application goes to our partner lenders.</p>
+                  <h3 className="text-xl font-semibold mb-2">{tx('Apply once')}</h3>
+                  <p className="text-white/60">{tx('Choose the amount and a tenure that suits you. That single application goes to our partner lenders.')}</p>
                 </div>
               </div>
 
@@ -233,8 +235,8 @@ const LandingPage = () => {
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold mb-2">Accept an offer and repay</h3>
-                  <p className="text-white/60">Pick the offer you want and accept its terms. Repayments are recorded by our cashier team against your schedule.</p>
+                  <h3 className="text-xl font-semibold mb-2">{tx('Accept an offer and repay')}</h3>
+                  <p className="text-white/60">{tx('Pick the offer you want and accept its terms. Repayments are recorded by our cashier team against your schedule.')}</p>
                 </div>
               </div>
             </div>
@@ -244,35 +246,35 @@ const LandingPage = () => {
         {/* Ghana Focus */}
         <section id="about" className="relative py-24 px-6 border-t border-white/10 bg-white/5">
           <div className="container mx-auto max-w-4xl text-center">
-            <h2 className="text-4xl md:text-5xl font-bold mb-8">Built for Ghana</h2>
+            <h2 className="text-4xl md:text-5xl font-bold mb-8">{tx('Built for Ghana')}</h2>
             <div className="grid md:grid-cols-2 gap-8 mb-12">
               <div className="text-left">
                 <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
                   <CheckCircle2 className="w-5 h-5 text-emerald-400" aria-hidden="true" />
                   Ghana cedis throughout
                 </h3>
-                <p className="text-white/60">Amounts are quoted, agreed and repaid in GHS, so there is no exchange rate to absorb mid-loan.</p>
+                <p className="text-white/60">{tx('Amounts are quoted, agreed and repaid in GHS, so there is no exchange rate to absorb mid-loan.')}</p>
               </div>
               <div className="text-left">
                 <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
                   <CheckCircle2 className="w-5 h-5 text-emerald-400" aria-hidden="true" />
                   Registered data handling
                 </h3>
-                <p className="text-white/60">Gidfine is registered with the Data Protection Commission and handles your data under the Data Protection Act, 2012 (Act 843).</p>
+                <p className="text-white/60">{tx('Gidfine is registered with the Data Protection Commission and handles your data under the Data Protection Act, 2012 (Act 843).')}</p>
               </div>
               <div className="text-left">
                 <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
                   <CheckCircle2 className="w-5 h-5 text-emerald-400" aria-hidden="true" />
                   A licensed intermediary
                 </h3>
-                <p className="text-white/60">Gidfine arranges credit rather than lending its own money, so your contract is with the lender and the final terms are theirs.</p>
+                <p className="text-white/60">{tx('Gidfine arranges credit rather than lending its own money, so your contract is with the lender and the final terms are theirs.')}</p>
               </div>
               <div className="text-left">
                 <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
                   <CheckCircle2 className="w-5 h-5 text-emerald-400" aria-hidden="true" />
                   Repayments checked daily
                 </h3>
-                <p className="text-white/60">Payments are recorded by our cashier team and reconciled against the ledger every business day.</p>
+                <p className="text-white/60">{tx('Payments are recorded by our cashier team and reconciled against the ledger every business day.')}</p>
               </div>
             </div>
           </div>
@@ -281,8 +283,8 @@ const LandingPage = () => {
         {/* CTA Section */}
         <section className="relative py-24 px-6 border-t border-white/10">
           <div className="container mx-auto max-w-3xl text-center">
-            <h2 className="text-3xl md:text-5xl font-bold mb-6">Ready to apply?</h2>
-            <p className="text-lg md:text-xl text-white/60 mb-12">Start one application and compare the offers that come back from our partner lenders.</p>
+            <h2 className="text-3xl md:text-5xl font-bold mb-6">{tx('Ready to apply?')}</h2>
+            <p className="text-lg md:text-xl text-white/60 mb-12">{tx('Start one application and compare the offers that come back from our partner lenders.')}</p>
             <Button size="lg" onClick={handleOpenAuth} className="inline-flex">
               Start an application <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />
             </Button>
@@ -300,19 +302,19 @@ const LandingPage = () => {
               </p>
             </div>
             <nav aria-label="Product">
-              <h2 className="font-semibold mb-4">Product</h2>
+              <h2 className="font-semibold mb-4">{tx('Product')}</h2>
               <ul className="space-y-2 text-sm text-white/60">
-                <li><a href="#platform" className="hover:text-white transition">Platform</a></li>
-                <li><a href="#benefits" className="hover:text-white transition">How it works</a></li>
-                <li><a href="/docs" className="hover:text-white transition">Documentation</a></li>
+                <li><a href="#platform" className="hover:text-white transition">{tx('Platform')}</a></li>
+                <li><a href="#benefits" className="hover:text-white transition">{tx('How it works')}</a></li>
+                <li><a href="/docs" className="hover:text-white transition">{tx('Documentation')}</a></li>
               </ul>
             </nav>
             <nav aria-label="Account">
-              <h2 className="font-semibold mb-4">Account</h2>
+              <h2 className="font-semibold mb-4">{tx('Account')}</h2>
               <ul className="space-y-2 text-sm text-white/60">
                 <li>
                   <button type="button" onClick={handleOpenAuth} className="hover:text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70">
-                    Sign in or apply
+                    {tx('Sign in or apply')}
                   </button>
                 </li>
               </ul>
@@ -320,7 +322,7 @@ const LandingPage = () => {
           </div>
           <div className="border-t border-white/10 pt-8 space-y-2 text-center text-sm text-white/40">
             <p>&copy; {new Date().getFullYear()} Gidfine. All rights reserved.</p>
-            <p>Gidfine is a credit intermediary: loans are provided by partner lenders and final terms are set by the lender.</p>
+            <p>{tx('Gidfine is a credit intermediary: loans are provided by partner lenders and final terms are set by the lender.')}</p>
           </div>
         </div>
       </footer>

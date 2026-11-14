@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { gidfineAPI } from '../../lib/api-gidfine';
 import { useLoanStore } from '../../store/useLoanStore';
+import { useTranslation } from '../../lib/useTranslation';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -30,6 +31,7 @@ function FieldLabel({ htmlFor, children }: { htmlFor: string; children: React.Re
 }
 
 export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
+  const { tx } = useTranslation();
   const { setUser } = useLoanStore();
   const [mode, setMode] = useState<'LOGIN' | 'REGISTER'>('LOGIN');
   const [loading, setLoading] = useState(false);
@@ -153,7 +155,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan-200/70">Gidfine</p>
             <h2 id="auth-modal-title" className="font-display text-xl font-medium tracking-tight">
-              {mode === 'LOGIN' ? 'Welcome back' : 'Create your account'}
+              {mode === 'LOGIN' ? tx('Welcome back') : tx('Create your account')}
             </h2>
           </div>
         </div>
@@ -166,7 +168,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             onClick={() => switchMode('LOGIN')}
             className={`flex-1 rounded-lg py-2.5 text-xs font-semibold transition-all ${mode === 'LOGIN' ? 'bg-white text-black shadow' : 'text-white/50 hover:text-white'}`}
           >
-            Sign in
+            {tx('Sign in')}
           </button>
           <button
             type="button"
@@ -175,7 +177,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             onClick={() => switchMode('REGISTER')}
             className={`flex-1 rounded-lg py-2.5 text-xs font-semibold transition-all ${mode === 'REGISTER' ? 'bg-white text-black shadow' : 'text-white/50 hover:text-white'}`}
           >
-            Create account
+            {tx('Create account')}
           </button>
         </div>
 
@@ -188,7 +190,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         {mode === 'LOGIN' ? (
           <form onSubmit={handleLoginSubmit} className="space-y-4" noValidate>
             <div>
-              <FieldLabel htmlFor="login-email">Email address</FieldLabel>
+              <FieldLabel htmlFor="login-email">{tx('Email address')}</FieldLabel>
               <div className="relative">
                 <Mail className="absolute left-3 top-3.5 h-4 w-4 text-white/30" />
                 <input
@@ -206,7 +208,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             </div>
 
             <div>
-              <FieldLabel htmlFor="login-password">Password</FieldLabel>
+              <FieldLabel htmlFor="login-password">{tx('Password')}</FieldLabel>
               <div className="relative">
                 <Lock className="absolute left-3 top-3.5 h-4 w-4 text-white/30" />
                 <input
@@ -241,7 +243,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
               />
               <span>
                 Remember me
-                <span className="ml-1 text-white/30">(this device)</span>
+                <span className="ml-1 text-white/30">{tx('(this device)')}</span>
               </span>
             </label>
 
@@ -251,14 +253,14 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
               aria-busy={loading}
               className="mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-white text-sm font-semibold text-black shadow-lg shadow-white/10 transition-all hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {loading ? <><LoaderCircle className="h-4 w-4 animate-spin" /> Signing you in…</> : <>Sign in to dashboard <ArrowRight className="h-4 w-4" /></>}
+                  {loading ? <><LoaderCircle className="h-4 w-4 animate-spin" /> {tx('Signing you in…')}</> : <>{tx('Sign in to dashboard')} <ArrowRight className="h-4 w-4" /></>}
             </button>
-            <p className="text-center text-[11px] text-white/35">Secure access to your lending workspace.</p>
+            <p className="text-center text-[11px] text-white/35">{tx('Secure access to your lending workspace.')}</p>
           </form>
         ) : (
           <form onSubmit={handleRegisterSubmit} className="space-y-4" noValidate>
             <div>
-              <FieldLabel htmlFor="register-name">Full name</FieldLabel>
+              <FieldLabel htmlFor="register-name">{tx('Full name')}</FieldLabel>
               <div className="relative">
                 <User className="absolute left-3 top-3.5 h-4 w-4 text-white/30" />
                 <input
@@ -277,7 +279,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <FieldLabel htmlFor="register-email">Email</FieldLabel>
+                <FieldLabel htmlFor="register-email">{tx('Email')}</FieldLabel>
                 <div className="relative">
                   <Mail className="absolute left-3 top-3.5 h-4 w-4 text-white/30" />
                   <input
@@ -294,7 +296,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 </div>
               </div>
               <div>
-                <FieldLabel htmlFor="register-phone">Phone</FieldLabel>
+                <FieldLabel htmlFor="register-phone">{tx('Phone')}</FieldLabel>
                 <div className="relative">
                   <Phone className="absolute left-3 top-3.5 h-4 w-4 text-white/30" />
                   <input
@@ -312,7 +314,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             </div>
 
             <div>
-              <FieldLabel htmlFor="register-password">Password</FieldLabel>
+              <FieldLabel htmlFor="register-password">{tx('Password')}</FieldLabel>
               <div className="relative">
                 <Lock className="absolute left-3 top-3.5 h-4 w-4 text-white/30" />
                 <input
@@ -343,7 +345,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
               aria-busy={loading}
               className="mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-white text-sm font-semibold text-black shadow-lg shadow-white/10 transition-all hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {loading ? <><LoaderCircle className="h-4 w-4 animate-spin" /> Creating account…</> : <>Create account <ArrowRight className="h-4 w-4" /></>}
+              {loading ? <><LoaderCircle className="h-4 w-4 animate-spin" /> {tx('Creating account…')}</> : <>{tx('Create account')} <ArrowRight className="h-4 w-4" /></>}
             </button>
           </form>
         )}

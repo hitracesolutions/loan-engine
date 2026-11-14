@@ -6,8 +6,10 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { api, type ImpersonationState } from '../lib/api-gidfine';
+import { useTranslation } from '../lib/useTranslation';
 
 export function ImpersonationBanner() {
+  const { tx } = useTranslation();
   const [state, setState] = useState<ImpersonationState | null>(() => api.getImpersonationState());
   const [exiting, setExiting] = useState(false);
 
@@ -41,11 +43,11 @@ export function ImpersonationBanner() {
     >
       <div className="flex flex-wrap items-center gap-2">
         <span aria-hidden="true">👁️</span>
-        <span className="font-semibold">Viewing as {state.targetUser.email}</span>
+        <span className="font-semibold">{tx('Viewing as')} {state.targetUser.email}</span>
         <span className="rounded bg-amber-200 px-2 py-0.5 text-xs font-medium uppercase tracking-wide">
           {state.targetUser.role.replace(/_/g, ' ')}
         </span>
-        <span className="text-amber-800">Read-only session · {minutesLeft} min left</span>
+        <span className="text-amber-800">{tx('Read-only session')} · {minutesLeft} {tx('min left')}</span>
       </div>
       <button
         type="button"
@@ -53,7 +55,7 @@ export function ImpersonationBanner() {
         disabled={exiting}
         className="rounded border border-amber-400 bg-white px-3 py-1 font-medium text-amber-900 hover:bg-amber-50 disabled:opacity-60"
       >
-        {exiting ? 'Exiting…' : 'Exit impersonation'}
+        {exiting ? tx('Exiting…') : tx('Exit impersonation')}
       </button>
     </div>
   );

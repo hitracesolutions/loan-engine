@@ -6,6 +6,7 @@ import {
   type ApplicationReview,
   type ApplicationStatus,
 } from '../lib/api-gidfine';
+import { useTranslation } from '../lib/useTranslation';
 
 export interface AgencyReviewQueueItem {
   applicationId: string;
@@ -34,6 +35,10 @@ const REVIEW_TARGETS: Partial<Record<ApplicationStatus, ApplicationStatus[]>> = 
   LENDER_ACCEPTED: ['AGENCY_APPROVED', 'AGENCY_REJECTED'],
 };
 
+function localizedStatus(status: string, tx: (text: string) => string): string {
+  return tx(status.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase()));
+}
+
 interface AgencyReviewQueueProps {
   agencyName?: string;
 }
@@ -53,6 +58,7 @@ interface ReadinessResult {
 export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
   agencyName = 'Accra Main Agency',
 }) => {
+  const { tx } = useTranslation();
   const [applications, setApplications] = useState<AgencyReviewQueueItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -255,7 +261,7 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
       <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <span>📋</span> Agency Loan Review Queue
+            <span>📋</span> {tx('Agency Loan Review Queue')}
           </h2>
           <p className="text-sm text-gray-500 mt-1">
             Tenant Scope: <span className="font-semibold text-gray-700">{agencyName}</span> (Cloudflare API)
@@ -268,18 +274,18 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
             onChange={(e) => setStatusFilter(e.target.value)}
             className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="">All Statuses</option>
-            <option value="SUBMITTED">SUBMITTED</option>
-            <option value="UNDER_REVIEW">UNDER_REVIEW</option>
-            <option value="MORE_INFO_REQUIRED">MORE_INFO_REQUIRED</option>
-            <option value="MATCHING">MATCHING</option>
-            <option value="LENDER_PENDING">LENDER_PENDING</option>
-            <option value="LENDER_ACCEPTED">LENDER_ACCEPTED</option>
-            <option value="AGENCY_APPROVED">AGENCY_APPROVED</option>
-            <option value="BORROWER_ACCEPTED">BORROWER_ACCEPTED</option>
-            <option value="PENDING_DISBURSEMENT">PENDING_DISBURSEMENT</option>
-            <option value="ACTIVE">ACTIVE</option>
-            <option value="AGENCY_REJECTED">AGENCY_REJECTED</option>
+            <option value="">{tx('All Statuses')}</option>
+            <option value="SUBMITTED">{localizedStatus('SUBMITTED', tx)}</option>
+            <option value="UNDER_REVIEW">{localizedStatus('UNDER_REVIEW', tx)}</option>
+            <option value="MORE_INFO_REQUIRED">{localizedStatus('MORE_INFO_REQUIRED', tx)}</option>
+            <option value="MATCHING">{localizedStatus('MATCHING', tx)}</option>
+            <option value="LENDER_PENDING">{localizedStatus('LENDER_PENDING', tx)}</option>
+            <option value="LENDER_ACCEPTED">{localizedStatus('LENDER_ACCEPTED', tx)}</option>
+            <option value="AGENCY_APPROVED">{localizedStatus('AGENCY_APPROVED', tx)}</option>
+            <option value="BORROWER_ACCEPTED">{localizedStatus('BORROWER_ACCEPTED', tx)}</option>
+            <option value="PENDING_DISBURSEMENT">{localizedStatus('PENDING_DISBURSEMENT', tx)}</option>
+            <option value="ACTIVE">{localizedStatus('ACTIVE', tx)}</option>
+            <option value="AGENCY_REJECTED">{localizedStatus('AGENCY_REJECTED', tx)}</option>
           </select>
 
           <button
@@ -304,7 +310,7 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
         <div className="bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 rounded-lg text-sm flex items-start gap-2">
           <span className="text-lg">ℹ️</span>
           <div className="flex-1">
-            <p className="font-semibold">Notice</p>
+            <p className="font-semibold">{tx('Notice')}</p>
             <p className="text-amber-800 text-xs mt-0.5">{error}</p>
           </div>
           <button onClick={() => setError(null)} className="font-bold">✕</button>
@@ -316,12 +322,12 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
         {loading ? (
           <div className="p-12 text-center text-gray-400">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent mb-3" />
-            <p className="text-sm font-medium">Loading applications from Cloudflare API...</p>
+            <p className="text-sm font-medium">{tx('Loading applications from Cloudflare API...')}</p>
           </div>
         ) : applications.length === 0 ? (
           <div className="p-12 text-center text-gray-500">
             <span className="text-4xl block mb-2">📭</span>
-            <p className="font-semibold text-gray-700">No applications in review queue</p>
+            <p className="font-semibold text-gray-700">{tx('No applications in review queue')}</p>
             <p className="text-xs text-gray-400 mt-1">
               {statusFilter ? `No applications found with status '${statusFilter}'.` : 'Applications submitted by borrowers will appear here.'}
             </p>
@@ -331,13 +337,13 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
             <table className="w-full text-left text-sm">
               <thead className="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 <tr>
-                  <th className="px-6 py-3.5">Ref / ID</th>
-                  <th className="px-6 py-3.5">Applicant</th>
-                  <th className="px-6 py-3.5">Requested Amount</th>
-                  <th className="px-6 py-3.5">Tenure</th>
-                  <th className="px-6 py-3.5">Purpose</th>
-                  <th className="px-6 py-3.5">Status</th>
-                  <th className="px-6 py-3.5 text-right">Actions</th>
+                  <th className="px-6 py-3.5">{tx('Ref / ID')}</th>
+                  <th className="px-6 py-3.5">{tx('Applicant')}</th>
+                  <th className="px-6 py-3.5">{tx('Requested Amount')}</th>
+                  <th className="px-6 py-3.5">{tx('Tenure')}</th>
+                  <th className="px-6 py-3.5">{tx('Purpose')}</th>
+                  <th className="px-6 py-3.5">{tx('Status')}</th>
+                  <th className="px-6 py-3.5 text-right">{tx('Actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -370,7 +376,7 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
                           ? 'bg-amber-100 text-amber-800'
                           : 'bg-gray-100 text-gray-800'
                       }`}>
-                        {app.status}
+                        {localizedStatus(app.status, tx)}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right space-x-2">
@@ -452,22 +458,22 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
             </div>
 
             {reviewLoading && !reviewDetails ? (
-              <div className="py-8 text-center text-sm text-gray-500">Loading review history...</div>
+              <div className="py-8 text-center text-sm text-gray-500">{tx('Review History')}…</div>
             ) : (
               <>
                 <div className="grid sm:grid-cols-3 gap-3 text-sm">
                   <div className="rounded-lg bg-gray-50 border p-3">
-                    <p className="text-xs text-gray-500">Status</p>
-                    <p className="font-semibold text-gray-900 mt-1">{reviewModalApp.status}</p>
+                    <p className="text-xs text-gray-500">{tx('Status')}</p>
+                    <p className="font-semibold text-gray-900 mt-1">{localizedStatus(reviewModalApp.status, tx)}</p>
                   </div>
                   <div className="rounded-lg bg-gray-50 border p-3">
-                    <p className="text-xs text-gray-500">Requested</p>
+                    <p className="text-xs text-gray-500">{tx('Requested')}</p>
                     <p className="font-semibold text-gray-900 mt-1">
                       {pesewasToGhsString(reviewModalApp.requestedAmountPesewas)}
                     </p>
                   </div>
                   <div className="rounded-lg bg-gray-50 border p-3">
-                    <p className="text-xs text-gray-500">Assigned reviewer</p>
+                    <p className="text-xs text-gray-500">{tx('Assigned reviewer')}</p>
                     <p className="font-semibold text-gray-900 mt-1 break-all">
                       {reviewModalApp.assignedOfficerId || 'Unassigned'}
                     </p>
@@ -475,9 +481,9 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
                 </div>
 
                 <section className="space-y-3" aria-labelledby="assignment-heading">
-                  <h4 id="assignment-heading" className="font-semibold text-gray-900">Assignment</h4>
+                  <h4 id="assignment-heading" className="font-semibold text-gray-900">{tx('Assignment')}</h4>
                   <div className="flex flex-col sm:flex-row gap-2">
-                    <label htmlFor="assignee-id" className="sr-only">Reviewer user ID</label>
+                    <label htmlFor="assignee-id" className="sr-only">{tx('Reviewer user ID')}</label>
                     <input
                       id="assignee-id"
                       type="text"
@@ -501,11 +507,11 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
                 </section>
 
                 <section className="space-y-3" aria-labelledby="decision-heading">
-                  <h4 id="decision-heading" className="font-semibold text-gray-900">Review decision</h4>
+                  <h4 id="decision-heading" className="font-semibold text-gray-900">{tx('Review decision')}</h4>
                   {REVIEW_TARGETS[reviewModalApp.status]?.length ? (
                     <>
                       <div className="flex flex-col sm:flex-row gap-2">
-                        <label htmlFor="review-target" className="sr-only">Next application status</label>
+                        <label htmlFor="review-target" className="sr-only">{tx('Next application status')}</label>
                         <select
                           id="review-target"
                           value={reviewTargetStatus}
@@ -538,14 +544,14 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
                       />
                     </>
                   ) : (
-                    <p className="text-sm text-gray-500">No agency review transition is available from this status.</p>
+                    <p className="text-sm text-gray-500">{tx('No agency review transition is available from this status.')}</p>
                   )}
                 </section>
 
                 <section className="space-y-3" aria-labelledby="notes-heading">
-                  <h4 id="notes-heading" className="font-semibold text-gray-900">Internal notes</h4>
+                  <h4 id="notes-heading" className="font-semibold text-gray-900">{tx('Internal notes')}</h4>
                   <div className="flex flex-col sm:flex-row gap-2">
-                    <label htmlFor="review-note" className="sr-only">Internal review note</label>
+                    <label htmlFor="review-note" className="sr-only">{tx('Internal review note')}</label>
                     <textarea
                       id="review-note"
                       value={reviewNote}
@@ -575,12 +581,12 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
                       ))}
                     </div>
                   ) : (
-                    <p className="text-xs text-gray-500">No internal notes yet.</p>
+                    <p className="text-xs text-gray-500">{tx('No internal notes yet.')}</p>
                   )}
                 </section>
 
                 <section className="space-y-2" aria-labelledby="history-heading">
-                  <h4 id="history-heading" className="font-semibold text-gray-900">Status history</h4>
+                  <h4 id="history-heading" className="font-semibold text-gray-900">{tx('Status history')}</h4>
                   {reviewDetails?.statusHistory.length ? (
                     <ol className="space-y-2 text-xs text-gray-600 max-h-36 overflow-y-auto">
                       {reviewDetails.statusHistory.map((entry) => (
@@ -596,7 +602,7 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
                       ))}
                     </ol>
                   ) : (
-                    <p className="text-xs text-gray-500">No status history available.</p>
+                    <p className="text-xs text-gray-500">{tx('No status history available.')}</p>
                   )}
                 </section>
               </>
@@ -611,7 +617,7 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
           <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
             <div className="flex justify-between items-center border-b pb-3">
               <h3 className="font-bold text-lg text-gray-900">
-                Match & Propose Terms
+                {tx('Match & Propose Terms')}
               </h3>
               <button
                 onClick={() => setProposeModalApp(null)}
@@ -624,7 +630,7 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
             <form onSubmit={handleProposeSubmit} className="space-y-4 text-sm">
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1">
-                  Application
+                  {tx('Application')}
                 </label>
                 <div className="bg-gray-50 p-2.5 rounded border border-gray-200 text-gray-700 font-mono text-xs">
                   APP-{proposeModalApp.applicationId.slice(-6).toUpperCase()} — {proposeModalApp.borrowerName} ({pesewasToGhsString(proposeModalApp.requestedAmountPesewas)})
@@ -633,7 +639,7 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
 
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1">
-                  Designated Lender User ID (Within Agency)
+                  {tx('Designated Lender User ID (Within Agency)')}
                 </label>
                 <input
                   type="text"
@@ -648,7 +654,7 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-gray-600 mb-1">
-                    Proposed Amount (GHS)
+                    {tx('Proposed Amount (GHS)')}
                   </label>
                   <input
                     type="number"
@@ -662,7 +668,7 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-600 mb-1">
-                    Lender Base Rate (bps)
+                    {tx('Lender Base Rate (bps)')}
                   </label>
                   <input
                     type="number"
@@ -681,7 +687,7 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
 
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1">
-                  Agency Margin (bps, Optional)
+                    {tx('Agency Margin (bps, Optional)')}
                 </label>
                 <input
                   type="number"
@@ -702,14 +708,14 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
                   onClick={() => setProposeModalApp(null)}
                   className="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm font-medium"
                 >
-                  Cancel
+                  {tx('Cancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={submittingPropose}
                   className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg text-sm transition-colors disabled:opacity-50"
                 >
-                  {submittingPropose ? 'Submitting...' : 'Send Proposal'}
+                  {submittingPropose ? tx('Submitting application...') : tx('Send Proposal')}
                 </button>
               </div>
             </form>
@@ -723,7 +729,7 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
             <div className="flex justify-between items-center border-b pb-3">
               <h3 className="font-bold text-lg text-gray-900">
-                Disbursement Readiness Check
+                {tx('Disbursement Readiness Check')}
               </h3>
               <button
                 onClick={() => setReadinessResult(null)}
@@ -735,7 +741,7 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
 
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border">
-                <span className="font-medium text-gray-700">Status:</span>
+                <span className="font-medium text-gray-700">{tx('Status')}:</span>
                 <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                   readinessResult.readyForDisbursement ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
                 }`}>
@@ -745,30 +751,30 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
 
               <div className="space-y-2 text-xs text-gray-600">
                 <div className="flex justify-between">
-                  <span>Agency Approval:</span>
+                  <span>{tx('Agency Approval')}:</span>
                   <span className="font-medium">{readinessResult.disbursementPrerequisites?.hasAgencyApproval ? '✓ Yes' : '✕ No'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Borrower Consent:</span>
+                  <span>{tx('Borrower Consent')}:</span>
                   <span className="font-medium">{readinessResult.disbursementPrerequisites?.hasBorrowerConsent ? '✓ Yes' : '✕ No'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>SHA-256 Fingerprint:</span>
+                  <span>{tx('SHA-256 Fingerprint')}:</span>
                   <span className="font-medium">{readinessResult.disbursementPrerequisites?.isConsentFingerprintValid ? '✓ Verified' : '✕ Invalid'}</span>
                 </div>
                 <div className="flex justify-between pt-2 border-t text-gray-400">
-                  <span>Payment Initiated:</span>
+                  <span>{tx('Payment Initiated')}:</span>
                   <span>{readinessResult.paymentInitiated ? 'Yes' : 'False (Locked)'}</span>
                 </div>
                 <div className="flex justify-between text-gray-400">
-                  <span>Repayment Schedule Active:</span>
+                  <span>{tx('Repayment Schedule Active')}:</span>
                   <span>{readinessResult.repaymentScheduleActive ? 'Active' : 'False (Locked)'}</span>
                 </div>
               </div>
 
               {readinessResult.reasons?.length > 0 && (
                 <div className="bg-amber-50 p-3 rounded text-xs text-amber-800 space-y-1">
-                  <p className="font-semibold">Blockers:</p>
+                  <p className="font-semibold">{tx('Blockers')}:</p>
                   {readinessResult.reasons.map((r: string, idx: number) => (
                     <p key={idx}>• {r}</p>
                   ))}
@@ -781,7 +787,7 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
                 onClick={() => setReadinessResult(null)}
                 className="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-900"
               >
-                Close
+                {tx('Close')}
               </button>
             </div>
           </div>
