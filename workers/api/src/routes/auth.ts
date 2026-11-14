@@ -3,6 +3,7 @@ import {
   USER_ROLES,
   hashPassword,
   requireActor,
+  requireRole,
   signAccessToken,
   verifyPassword,
 } from '../lib/auth.ts';
@@ -134,6 +135,76 @@ export async function register({ request, env, requestId }: RouteContext): Promi
     requestId,
     201,
   );
+}
+
+/**
+ * POST /staff/borrowers — agency staff register a borrower on their behalf.
+ *
+ * Only `loan_officer` and `agency_admin` may do this. The borrower is created
+ * inside the staff member's own agency with a temporary password the staff set
+ * (the borrower can log in immediately and change it). The action is attributed
+ * to the staff actor in the audit log — this is NOT impersonation (ADR-0015):
+ * the record is created by staff acting as themselves, and no borrower token is
+ * issued here.
+ */
+export async function registerBorrowerByStaff({ request, env, requestId }: RouteContext): Promise<Response> {
+  const actor = await requireRole({ request, env }, 'loan_officer', 'agency_admin');
+
+  const body = await readJsonObject(request);
+  const email = requireEmail(body);
+  const password = requirePassword(body);
+  const fullName = requirePersonName(body);
+  const phone = optionalString(body, 'phone', 32);
+
+  const existing = await env.DB.prepare(
+    'SELECT id FROM users WHERE agency_id = ? AND lower(email) = ?',
+  )
+    .bind(actor.agencyId, email)
+    .first<{ id: string }>();
+
+  if (existing) {
+    throw conflict('EMAIL_TAKEN', 'An account with that email already exists');
+  }
+
+  const now = Date.now();
+  const user: UserRow = {
+    id: ulid(now),
+    agency_id: actor.agencyId,
+    role: 'borrower',
+    email,
+    phone,
+    full_name: fullName,
+    password_hash: await hashPassword(password),
+    is_active: 1,
+    created_at: now,
+  };
+
+  await env.DB.batch([
+    env.DB.prepare(
+      `INSERT INTO users (id, agency_id, role, email, phone, full_name, password_hash, is_active, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)`,
+    ).bind(
+      user.id,
+      user.agency_id,
+      user.role,
+      user.email,
+      user.phone,
+      user.full_name,
+      user.password_hash,
+      now,
+      now,
+    ),
+    auditStatement(env.DB, {
+      agencyId: actor.agencyId,
+      actorId: actor.userId,
+      action: 'BORROWER_REGISTERED_BY_STAFF',
+      resourceType: 'user',
+      resourceId: user.id,
+      details: { role: user.role, registeredByRole: actor.role, onBehalf: true },
+    }),
+  ]);
+
+  return jsonResponse({ user: publicUser(user) }, requestId, 201);
 }
 
 /** POST /auth/login — email + password, constant-ish failure response. */

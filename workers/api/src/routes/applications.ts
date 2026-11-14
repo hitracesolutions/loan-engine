@@ -1,5 +1,5 @@
 import { auditStatement } from '../lib/audit.ts';
-import { requireActor } from '../lib/auth.ts';
+import { requireActor, requireRole } from '../lib/auth.ts';
 import { HttpError, badRequest, forbidden, jsonResponse, notFound, readJsonObject } from '../lib/http.ts';
 import { assertKeyScope, findIdempotentResponse, idempotencyStatement } from '../lib/idempotency.ts';
 import { ulid } from '../lib/ids.ts';
@@ -227,6 +227,158 @@ export async function createApplication({ request, env, requestId }: RouteContex
   }
 
   return jsonResponse(payload, requestId, 201);
+}
+
+const ON_BEHALF_ROLES = ['loan_officer', 'agency_admin'] as const;
+const ON_BEHALF_CONSENT_METHODS = ['in_branch', 'phone', 'email', 'written'] as const;
+
+/**
+ * POST /staff/applications — agency staff submit a loan application on behalf of
+ * an existing borrower in their agency.
+ *
+ * Only `loan_officer` and `agency_admin` may do this. The borrower must already
+ * exist (register them first via POST /staff/borrowers). Processing a borrower's
+ * PII on their behalf requires their consent (ADR-0013); the staff member must
+ * attest that consent was obtained, and the attestation is written to the
+ * immutable audit log with the staff actor, method and timestamp. The
+ * application is attributed to the staff actor — not the borrower, and not via
+ * impersonation (ADR-0015).
+ */
+export async function createApplicationOnBehalf({ request, env, requestId }: RouteContext): Promise<Response> {
+  const actor = await requireRole({ request, env }, ...ON_BEHALF_ROLES);
+
+  const body = await readJsonObject(request);
+  const borrowerId = requireString(body, 'borrowerId', 64);
+
+  const requestedAmountPesewas = assertPositivePesewas(
+    body.requestedAmountPesewas ?? body.requested_amount_pesewas,
+    'requestedAmountPesewas',
+  );
+  const tenureMonths = assertPositiveInteger(body.tenureMonths ?? body.tenure_months, 'tenureMonths');
+  const purpose = optionalString(body, 'purpose', 500);
+
+  // Staff-attested consent (ADR-0013): required, recorded, attributed.
+  const consent = body.consent;
+  if (!consent || typeof consent !== 'object') {
+    throw badRequest('CONSENT_REQUIRED', 'Borrower consent attestation is required to apply on their behalf');
+  }
+  const consentObj = consent as Record<string, unknown>;
+  if (consentObj.attested !== true) {
+    throw badRequest('CONSENT_REQUIRED', 'consent.attested must be true to apply on a borrower\'s behalf');
+  }
+  const consentMethod = requireString(consentObj, 'method', 32);
+  if (!(ON_BEHALF_CONSENT_METHODS as readonly string[]).includes(consentMethod)) {
+    throw badRequest(
+      'CONSENT_METHOD_INVALID',
+      `consent.method must be one of: ${ON_BEHALF_CONSENT_METHODS.join(', ')}`,
+    );
+  }
+  const consentStatement = optionalString(consentObj, 'statement', 1000);
+
+  // The borrower must be a real borrower inside the staff member's agency.
+  const borrower = await env.DB.prepare(
+    'SELECT id, role, is_active FROM users WHERE id = ? AND agency_id = ?',
+  )
+    .bind(borrowerId, actor.agencyId)
+    .first<{ id: string; role: string; is_active: number }>();
+
+  if (!borrower || borrower.role !== 'borrower') {
+    throw notFound('Borrower not found in this agency');
+  }
+  if (borrower.is_active !== 1) {
+    throw badRequest('BORROWER_INACTIVE', 'Borrower account is disabled');
+  }
+
+  const now = Date.now();
+  const application: ApplicationRow = {
+    id: ulid(now),
+    agency_id: actor.agencyId,
+    borrower_id: borrowerId,
+    status: 'SUBMITTED',
+    requested_amount_pesewas: requestedAmountPesewas,
+    tenure_months: tenureMonths,
+    purpose,
+    assigned_lender_id: null,
+    assigned_officer_id: null,
+    submitted_at: now,
+    rejection_reason: null,
+    created_at: now,
+    updated_at: now,
+  };
+
+  const statements: D1PreparedStatement[] = [
+    env.DB.prepare(
+      `INSERT INTO loan_applications
+         (id, agency_id, borrower_id, status, requested_amount_pesewas, tenure_months, purpose,
+          assigned_lender_id, assigned_officer_id, submitted_at, rejection_reason, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, NULL, ?, ?)`,
+    ).bind(
+      application.id,
+      application.agency_id,
+      application.borrower_id,
+      application.status,
+      application.requested_amount_pesewas,
+      application.tenure_months,
+      application.purpose,
+      application.submitted_at,
+      application.created_at,
+      application.updated_at,
+    ),
+    auditStatement(env.DB, {
+      agencyId: actor.agencyId,
+      actorId: actor.userId,
+      action: 'APPLICATION_CREATED_ON_BEHALF',
+      resourceType: 'loan_application',
+      resourceId: application.id,
+      details: { borrowerId, requestedAmountPesewas, tenureMonths, createdByRole: actor.role, onBehalf: true },
+    }),
+    // Immutable consent attestation record (interim mechanism pending ADR-0013).
+    auditStatement(env.DB, {
+      agencyId: actor.agencyId,
+      actorId: actor.userId,
+      action: 'ON_BEHALF_CONSENT_ATTESTED',
+      resourceType: 'loan_application',
+      resourceId: application.id,
+      details: {
+        borrowerId,
+        method: consentMethod,
+        statement: consentStatement,
+        attestedByRole: actor.role,
+        attestedAt: now,
+      },
+    }),
+    env.DB.prepare(
+      `INSERT INTO application_status_history
+         (id, agency_id, application_id, actor_id, from_status, to_status, reason, created_at)
+       VALUES (?, ?, ?, ?, NULL, ?, ?, ?)`,
+    ).bind(
+      ulid(now),
+      actor.agencyId,
+      application.id,
+      actor.userId,
+      application.status,
+      'Created on behalf of borrower by agency staff',
+      now,
+    ),
+  ];
+
+  try {
+    await env.DB.batch(statements);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(
+      JSON.stringify({
+        level: 'error',
+        event: 'ON_BEHALF_APPLICATION_CREATION_FAILED',
+        actorId: actor.userId,
+        agencyId: actor.agencyId,
+        error: message,
+      }),
+    );
+    throw new HttpError(500, 'APPLICATION_CREATION_FAILED', 'Failed to create loan application due to a database error');
+  }
+
+  return jsonResponse(discloseApplication(application, actor.role), requestId, 201);
 }
 
 /** GET /applications — borrower sees their own; agency staff see the tenant queue. */

@@ -14,6 +14,7 @@ import {
   addApplicationNote,
   assignApplication,
   createApplication,
+  createApplicationOnBehalf,
   getApplicationReview,
   listApplicationNotes,
   listApplications,
@@ -21,7 +22,7 @@ import {
   submitBorrowerResponse,
   transitionApplication,
 } from './routes/applications.ts';
-import { login, me, register } from './routes/auth.ts';
+import { login, me, register, registerBorrowerByStaff } from './routes/auth.ts';
 import {
   createDocumentRecord,
   listDocuments,
@@ -80,6 +81,9 @@ const router = new Router()
   .post('/admin/impersonate', impersonateUser)
   .post('/admin/impersonate/stop', stopImpersonationHandler)
   .get('/admin/users', listImpersonatableUsers)
+  // Staff-driven origination: register a borrower and apply on their behalf.
+  .post('/staff/borrowers', registerBorrowerByStaff)
+  .post('/staff/applications', createApplicationOnBehalf)
   .post('/applications', createApplication)
   .get('/applications', listApplications)
   .get('/applications/:id/review', getApplicationReview)
