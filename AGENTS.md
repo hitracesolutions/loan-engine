@@ -911,3 +911,9 @@ flows/logic, stop raw API text showing in the UI, fix spurious logouts, purge
 - No automated email is claimed because ADR-0011's provider decision remains Provisional. Production account creation stays blocked until ADR-0013 and R6 close. No migration was added; next free remains `0009`.
 - Added ADR-0020 as Provisional and S-26 as pre-launch complete. No Provisional ADR-0016/0017/0018 behavior, simulation flag, or maker/checker rule changed.
 - Verified: worker typecheck exit 0; `npm test` 137/137; frontend build exit 0. The environment auto-created commit `25bcee5` for earlier task changes and `b5da621` during this task despite no commit command; current API/doc changes remain uncommitted.
+### 2026-11-14 — App-wide French and Twi selection
+
+- Extended the persisted language preference and translation catalogue across borrower applications and consent, agency review, lender decisions and registration, loans, profile, auth, public landing, and help screens.
+- Added a shared public-route language picker and set the document language to French or Akan for accessibility; localized displayed dates for the selected locale.
+- Verified the frontend production build (`tsc -b && vite build`) and final TypeScript check. Backend behavior and API contracts were unchanged.
+- The IDE/environment created commit `b7d62b5` automatically during this task; no commit command was run. Final follow-up edits remain in the working tree.

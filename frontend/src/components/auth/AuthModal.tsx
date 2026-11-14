@@ -142,7 +142,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         <button
           type="button"
           onClick={onClose}
-          aria-label="Close sign in dialog"
+          aria-label={tx('Close sign in dialog')}
           className="absolute right-4 top-4 rounded-lg p-2 text-white/40 transition-colors hover:bg-white/5 hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-300/50"
         >
           <X className="h-5 w-5" />
@@ -160,7 +160,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           </div>
         </div>
 
-        <div className="mb-6 flex rounded-xl border border-white/10 bg-[#0A0A0A] p-1" role="tablist" aria-label="Authentication mode">
+        <div className="mb-6 flex rounded-xl border border-white/10 bg-[#0A0A0A] p-1" role="tablist" aria-label={tx('Authentication mode')}>
           <button
             type="button"
             role="tab"
@@ -225,7 +225,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 <button
                   type="button"
                   onClick={() => setShowLoginPassword((visible) => !visible)}
-                  aria-label={showLoginPassword ? 'Hide password' : 'Show password'}
+                  aria-label={tx(showLoginPassword ? 'Hide password' : 'Show password')}
                   className="absolute right-3 top-3 rounded-md p-0.5 text-white/35 transition-colors hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-300/50"
                 >
                   {showLoginPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -331,7 +331,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 <button
                   type="button"
                   onClick={() => setShowRegistrationPassword((visible) => !visible)}
-                  aria-label={showRegistrationPassword ? 'Hide password' : 'Show password'}
+                  aria-label={tx(showRegistrationPassword ? 'Hide password' : 'Show password')}
                   className="absolute right-3 top-3 rounded-md p-0.5 text-white/35 transition-colors hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-300/50"
                 >
                   {showRegistrationPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

@@ -45,7 +45,7 @@ export function ImpersonationBanner() {
         <span aria-hidden="true">👁️</span>
         <span className="font-semibold">{tx('Viewing as')} {state.targetUser.email}</span>
         <span className="rounded bg-amber-200 px-2 py-0.5 text-xs font-medium uppercase tracking-wide">
-          {state.targetUser.role.replace(/_/g, ' ')}
+          {tx(state.targetUser.role.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase()))}
         </span>
         <span className="text-amber-800">{tx('Read-only session')} · {minutesLeft} {tx('min left')}</span>
       </div>

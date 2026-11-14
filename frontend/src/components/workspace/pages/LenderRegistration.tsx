@@ -7,7 +7,7 @@ import { useTranslation } from '../../../lib/useTranslation';
 type ProvisionedLogin = { lenderName: string; email: string; temporaryPassword: string };
 
 export default function LenderRegistration() {
-  const { t } = useTranslation();
+  const { t, tx } = useTranslation();
   const role = useLoanStore((state) => state.user?.role);
   const [login, setLogin] = useState<ProvisionedLogin | null>(null);
   const [error, setError] = useState('');
@@ -35,7 +35,7 @@ export default function LenderRegistration() {
 
   async function copyCredentials() {
     if (!login) return;
-    await navigator.clipboard.writeText(`Gidfine lender login\nEmail: ${login.email}\nTemporary password: ${login.temporaryPassword}`);
+    await navigator.clipboard.writeText(`${tx('Gidfine lender login')}\n${tx('Email')}: ${login.email}\n${t('temporaryPassword')}: ${login.temporaryPassword}`);
     setCopied(true);
   }
 

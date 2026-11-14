@@ -1,9 +1,15 @@
 # Gidfine Changelog
 
+## 2026-11-14 — French and Twi app language coverage
+
+- The persisted English/French/Twi preference now drives the active borrower, staff, agency review, lender, profile, auth, landing, and help screens.
+- Added public-route language selection and updates the document language (`fr` / Akan `ak`); dates follow the selected locale where shown.
+- API-provided error details may still be returned in the server's language. Localization changed no API, permission, financial, or consent behavior.
+
 ## 2026-11-14 — French and Twi dashboard language options
 
 - Enabled French and Twi in the account language selector. The choice is stored in the existing persisted workspace preferences and updates the document language attribute (`fr` / Akan `ak`).
-- Translated dashboard navigation, account popover controls, and the overview page; date formatting follows the selected locale. Other feature pages will need their own translated strings as they are brought into the language catalogue.
+- Translated dashboard navigation, account popover controls, and the overview page; date formatting follows the selected locale. The app-wide follow-up is recorded in the entry above.
 ## 2026-11-14 — Staff lender registration and login handoff
 
 - Agency admins can register a lender and create its linked lender-admin login. Lender and user records, mapping and staff-attributed audit events are committed atomically.

@@ -13,7 +13,7 @@ import Docs from '../../../pages/Docs';
 import StaffIntake from '../pages/StaffIntake';
 import { LenderPortal } from '../../LenderPortal';
 import LenderRegistration from '../pages/LenderRegistration';
-import { translate, type TranslationKey } from '../../../lib/translations';
+import { translate, translateText, type TranslationKey } from '../../../lib/translations';
 
 const languages: { code: LanguagePreference; label: string; nativeName: string }[] = [
   { code: 'en', label: 'English', nativeName: 'English' },
@@ -28,8 +28,9 @@ export default function DashboardLayout() {
   const profileRef = useRef<HTMLDivElement>(null);
   const staffRole = user?.role === 'loan_officer' || user?.role === 'agency_admin';
   const lenderRole = user?.role === 'lender';
-  const roleLabel = user?.role?.replaceAll('_', ' ') || 'Account';
+  const roleLabel = user?.role ? translateText(language, user.role.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())) : translateText(language, 'Account');
   const t = (key: TranslationKey) => translate(language, key);
+  const tx = (text: string) => translateText(language, text);
 
   const navigation: { name: string; id: DashboardView; icon: typeof LayoutDashboard }[] = lenderRole ? [
     { name: t('proposals'), id: 'LENDER_PORTAL', icon: Landmark },
@@ -96,12 +97,12 @@ export default function DashboardLayout() {
     <div className="dashboard-shell min-h-screen font-sans selection:bg-emerald-500/20">
       <header className="dashboard-header sticky top-0 z-40 border-b backdrop-blur-xl">
         <div className="mx-auto flex h-[72px] max-w-[1440px] items-center gap-5 px-4 sm:px-6 xl:px-10">
-          <button type="button" onClick={() => setView(lenderRole ? 'LENDER_PORTAL' : 'DASHBOARD')} aria-label="Go to dashboard" className="flex shrink-0 items-center gap-3 rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
+          <button type="button" onClick={() => setView(lenderRole ? 'LENDER_PORTAL' : 'DASHBOARD')} aria-label={tx('Go to dashboard')} className="flex shrink-0 items-center gap-3 rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
             <span className="grid h-10 w-10 place-items-center overflow-hidden rounded-[14px] bg-emerald-500/10 ring-1 ring-emerald-500/15"><img src="/favicon.svg" alt="" className="h-7 w-7" /></span>
             <span className="hidden sm:block"><span className="block text-[17px] font-semibold tracking-tight">Gidfine<span className="text-emerald-600">.</span></span><span className="dashboard-subtle block text-[10px] font-medium uppercase tracking-[0.16em]">{t('workspace')}</span></span>
           </button>
 
-          <nav aria-label="Main navigation" className="dashboard-nav ml-1 hidden min-w-0 items-center gap-1 overflow-x-auto lg:flex">
+          <nav aria-label={tx('Main navigation')} className="dashboard-nav ml-1 hidden min-w-0 items-center gap-1 overflow-x-auto lg:flex">
             {navigation.map((item) => {
               const active = currentView === item.id;
               return <button key={item.id} type="button" onClick={() => setView(item.id)} aria-current={active ? 'page' : undefined} className={`dashboard-nav-item inline-flex shrink-0 items-center gap-2 rounded-xl px-3.5 py-2.5 text-[13px] font-medium transition-colors ${active ? 'is-active' : ''}`}><item.icon className="h-4 w-4" />{item.name}</button>;
@@ -136,7 +137,7 @@ export default function DashboardLayout() {
             </div>
           </div>
         </div>
-        <nav aria-label="Mobile navigation" className="dashboard-mobile-nav flex gap-1 overflow-x-auto border-t px-3 py-2 lg:hidden">
+        <nav aria-label={tx('Mobile navigation')} className="dashboard-mobile-nav flex gap-1 overflow-x-auto border-t px-3 py-2 lg:hidden">
           {navigation.map((item) => { const active = currentView === item.id; return <button key={item.id} type="button" onClick={() => setView(item.id)} aria-current={active ? 'page' : undefined} className={`dashboard-nav-item inline-flex min-h-10 shrink-0 items-center gap-2 rounded-lg px-3 text-xs font-medium ${active ? 'is-active' : ''}`}><item.icon className="h-4 w-4" />{item.name}</button>; })}
         </nav>
       </header>

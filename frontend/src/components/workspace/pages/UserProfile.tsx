@@ -144,7 +144,7 @@ export default function UserProfile() {
             </div>
 
             <div className="space-y-1.5 md:col-span-2">
-              <label htmlFor="pf-income" className="text-xs font-semibold uppercase tracking-widest text-white/50">Monthly Income (GH₵)</label>
+              <label htmlFor="pf-income" className="text-xs font-semibold uppercase tracking-widest text-white/50">{t('monthlyIncome')} (GH₵)</label>
               <div className="relative">
                 <Briefcase className="w-4 h-4 text-white/30 absolute left-3 top-3.5" />
                 <input

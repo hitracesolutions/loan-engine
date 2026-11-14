@@ -59,7 +59,7 @@ const LandingPage = () => {
       </div>
 
       {/* Navbar */}
-      <nav aria-label="Main" className="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.05] bg-[#0A0A0A]/80 backdrop-blur-xl">
+      <nav aria-label={tx('Main')} className="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.05] bg-[#0A0A0A]/80 backdrop-blur-xl">
         <div className="container mx-auto px-6 h-20 flex items-center justify-between">
           <a href="#main-content" className="flex items-center gap-3 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70">
             <div className="h-10 w-10 overflow-hidden rounded-xl border border-white/10 bg-white/5">
@@ -301,7 +301,7 @@ const LandingPage = () => {
                 Loan applications arranged with partner lenders in Ghana.
               </p>
             </div>
-            <nav aria-label="Product">
+            <nav aria-label={tx('Product navigation')}>
               <h2 className="font-semibold mb-4">{tx('Product')}</h2>
               <ul className="space-y-2 text-sm text-white/60">
                 <li><a href="#platform" className="hover:text-white transition">{tx('Platform')}</a></li>
@@ -309,7 +309,7 @@ const LandingPage = () => {
                 <li><a href="/docs" className="hover:text-white transition">{tx('Documentation')}</a></li>
               </ul>
             </nav>
-            <nav aria-label="Account">
+            <nav aria-label={tx('Account navigation')}>
               <h2 className="font-semibold mb-4">{tx('Account')}</h2>
               <ul className="space-y-2 text-sm text-white/60">
                 <li>
