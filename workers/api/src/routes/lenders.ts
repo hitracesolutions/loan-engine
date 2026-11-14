@@ -414,6 +414,7 @@ export async function respondToProposal(ctx: RouteContext): Promise<Response> {
 
   const now = Date.now();
   let newStatus: string = prop.status;
+  if (prop.status !== 'PENDING') throw conflict('PROPOSAL_NOT_PENDING', 'Only pending proposals can be changed');
 
   if (body.action === 'ACCEPT') {
     newStatus = 'ACCEPTED';
@@ -431,9 +432,9 @@ export async function respondToProposal(ctx: RouteContext): Promise<Response> {
     `UPDATE lender_proposals
      SET status = ?, offered_amount_pesewas = ?, nominal_annual_rate_bps = ?, tenure_months = ?,
          notes = ?, updated_at = ?
-     WHERE id = ?`,
+     WHERE id = ? AND agency_id = ? AND status = 'PENDING'`,
   )
-    .bind(newStatus, offeredAmount, offeredRate, offeredTenure, body.notes ?? null, now, proposalId)
+    .bind(newStatus, offeredAmount, offeredRate, offeredTenure, body.notes ?? null, now, proposalId, actor.agencyId)
     .run();
 
   // Insert proposal version

@@ -55,20 +55,20 @@ export default function AnalyticsDashboard() {
 
   return (
     <div className="space-y-8 pb-10">
-      <div className="bg-gradient-to-r from-white/10 via-white/5 to-transparent border border-white/10 rounded-2xl p-8 relative overflow-hidden">
+      <div className="dashboard-welcome relative overflow-hidden rounded-2xl border p-6 sm:p-8">
         <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="max-w-2xl space-y-3 relative z-10">
-          <h1 className="text-3xl lg:text-4xl font-display font-medium tracking-tight text-white">
+          <h1 className="dashboard-heading text-3xl font-display font-semibold tracking-tight lg:text-4xl">
             Welcome back{user?.name ? `, ${user.name}` : ''}
           </h1>
-          <p className="text-white/60 text-sm leading-relaxed">
+          <p className="dashboard-copy text-sm leading-relaxed">
             Track your loan applications, active loans and repayment status.
           </p>
           <div className="pt-2">
             <button
               type="button"
               onClick={() => setView('APPLICATION')}
-              className="px-5 py-2.5 bg-white text-black font-medium text-sm rounded-xl hover:bg-white/90 shadow-lg shadow-white/10 transition-all flex items-center gap-2"
+              className="dashboard-primary-button flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all"
             >
               Apply for a loan <ArrowUpRight className="w-4 h-4" />
             </button>
@@ -80,9 +80,9 @@ export default function AnalyticsDashboard() {
         {metrics.map((m) => {
           const Icon = m.icon;
           return (
-            <div key={m.label} className="bg-[#111] border border-white/10 rounded-2xl p-6">
+            <div key={m.label} className="dashboard-card rounded-2xl border p-5 sm:p-6">
               <div className="flex justify-between items-start mb-4">
-                <p className="text-xs font-semibold uppercase tracking-widest text-white/50">{m.label}</p>
+                <p className="dashboard-label text-xs font-semibold uppercase tracking-widest">{m.label}</p>
                 <div className={`w-10 h-10 rounded-xl border flex items-center justify-center ${m.tint}`}>
                   <Icon className="w-5 h-5" />
                 </div>
@@ -93,16 +93,16 @@ export default function AnalyticsDashboard() {
         })}
       </div>
 
-      <div className="bg-[#111] border border-white/10 rounded-2xl p-6">
-        <h3 className="text-lg font-display font-medium text-white mb-4 tracking-tight">Recent applications</h3>
+      <div className="dashboard-card rounded-2xl border p-5 sm:p-6">
+        <h3 className="dashboard-heading mb-4 text-lg font-display font-semibold tracking-tight">Recent applications</h3>
         {loading ? (
-          <p className="text-white/40 text-sm">Loading…</p>
+          <p className="dashboard-copy text-sm">Loading…</p>
         ) : recent.length === 0 ? (
-          <p className="text-white/40 text-sm">No applications yet. Apply for a loan to get started.</p>
+          <p className="dashboard-copy text-sm">No applications yet. Apply for a loan to get started.</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-white/70">
-              <thead className="text-xs font-semibold text-white/40 uppercase tracking-wider border-b border-white/10">
+            <table className="dashboard-table w-full text-left text-sm">
+              <thead className="dashboard-label border-b text-xs font-semibold uppercase tracking-wider">
                 <tr>
                   <th className="pb-3">Reference</th>
                   <th className="pb-3">Date</th>
@@ -110,12 +110,12 @@ export default function AnalyticsDashboard() {
                   <th className="pb-3">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody>
                 {recent.map((a) => (
                   <tr key={a.id}>
-                    <td className="py-3 text-white font-mono text-xs">{String(a.id).slice(0, 10)}</td>
-                    <td className="py-3 text-white/60">{formatDate(a.createdAt)}</td>
-                    <td className="py-3 text-white font-medium">{pesewasToGhsString(a.requestedAmountPesewas ?? 0)}</td>
+                    <td className="dashboard-heading border-b py-3 font-mono text-xs">{String(a.id).slice(0, 10)}</td>
+                    <td className="dashboard-copy border-b py-3">{formatDate(a.createdAt)}</td>
+                    <td className="dashboard-heading border-b py-3 font-medium">{pesewasToGhsString(a.requestedAmountPesewas ?? 0)}</td>
                     <td className="py-3">
                       <span className="inline-flex items-center px-2.5 py-1 rounded-full border border-white/10 bg-white/5 text-xs">
                         {statusLabel(a.status || 'DRAFT')}

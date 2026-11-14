@@ -282,7 +282,7 @@ export const loanService = {
         lenderBaseRateBps: p.nominalAnnualRateBps || p.nominal_annual_rate_bps || 0,
         tenureMonths: p.tenureMonths || p.tenure_months || 0,
         requestedAmountPesewas: p.borrowerSummary?.requestedAmountPesewas || 0,
-        purpose: p.borrowerSummary?.purpose || p.borrowerSummary?.application?.purpose || p.purpose || 'Business Expansion',
+        purpose: p.borrowerSummary?.purpose || p.borrowerSummary?.application?.purpose || p.purpose || 'Not provided',
         proposalStatus: (p.status || 'PENDING') as "PENDING" | "ACCEPTED" | "DECLINED" | "SUPERSEDED",
         applicationStatus: p.status || 'PENDING',
         decisionReason: p.notes || undefined,

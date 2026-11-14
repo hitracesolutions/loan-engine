@@ -255,6 +255,7 @@ Status: `DONE` · `NEXT` · `AUTHORISED` · `SEQUENCED` (needs an earlier step) 
 | S-23 | Security review: cross-role leakage, enumeration, export leakage | findings with severity; nothing critical open | SEQUENCED (S-13, S-20) |
 | S-24 | UAT pack and acceptance evidence | each §14-guide acceptance criterion has recorded pass/fail with evidence | SEQUENCED (S-15, S-23) |
 | S-25 | Staff on-behalf origination | authorised staff can register borrower and submit a loan request with consent attestation; role/agency tests, immutable audit attribution, safe frontend and all gates retained | **DONE** (2026-11-14; production writes blocked until ADR-0013/R6 close) |
+| S-26 | Lender registration and login handoff | agency admin can register a lender and mapped lender-admin login, hand off a one-time temporary password securely, and lender users access only their own masked proposals; real email remains gated on ADR-0011 and production PII on ADR-0013/R6 | **DONE for pre-launch** (2026-11-14; UI handoff only, no automated email, production creation blocked) |
 
 ### Detail on the steps that carry real risk
 
@@ -327,6 +328,7 @@ Smaller owner answers still open (R-1 to R-10) are in the [blocker triage](./ADR
 | S-23 | PENDING | — | no pentest; disclosure tests only |
 | S-24 | PENDING | — | no UAT evidence pack |
 | S-25 | DONE | 2026-11-14 | `staffOrigination.test.ts` 7/7; worker typecheck, 137 API tests, frontend production build green; production writes blocked until ADR-0013/R6 close; interim audit consent depends on ADR-0013 |
+| S-26 | DONE for pre-launch | 2026-11-14 | lender account + `lender_users` mapping and audit committed atomically; generated password is hashed at rest and omitted from audit/outbox, authenticated login verified, cross-lender proposal reads/writes denied; `npm test` 137/137, typecheck exit 0, frontend build exit 0; delivery depends on ADR-0011, production PII remains gated by ADR-0013/R6 |
 
 **Remediation (from [`DECISION_REVIEW.md`](./DECISION_REVIEW.md), 2026-11-03/04):** Phase 1 shipped — atomic financial writes (`db.batch`), payment-reference `UNIQUE` (migration `0008`), no fabricated lender on disbursement; plus reversal segregation and the daily disbursement reconciliation report. ADR-0016/0017/0018 directions decided (Provisional).
 

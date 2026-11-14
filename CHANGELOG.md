@@ -1,5 +1,11 @@
 # Gidfine Changelog
 
+## 2026-11-14 — Staff lender registration and login handoff
+
+- Agency admins can register a lender and create its linked lender-admin login. Lender and user records, mapping and staff-attributed audit events are committed atomically.
+- A random temporary password is shown once to the admin, stored only as a password hash, and omitted from audit/outbox records. Automated email is not enabled; the UI states that the details require secure manual handoff.
+- Added lender-only proposal access and guarded proposal decisions by the lender mapping. Borrower data remains masked in lender responses.
+- Production lender creation remains blocked until ADR-0013/R6 close; automated credential delivery awaits ADR-0011. No migration or change to simulation/maker-checker controls.
 ## 2026-11-13 — Frontend refined to the Gidfine suite; dead code purged; green bars restored
 
 - **Workspace rebuilt on the Worker API.** `AnalyticsDashboard`, `ActiveLoans`,

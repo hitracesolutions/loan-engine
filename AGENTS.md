@@ -903,3 +903,11 @@ flows/logic, stop raw API text showing in the UI, fix spurious logouts, purge
   and tests) is unchanged and out of scope — the project gates are
   build + typecheck + tests, all green.
 - **Not committed** — the owner commits their own work.
+
+### 2026-11-14 — Staff lender onboarding
+
+- Added agency-admin-only lender registration, a mapped lender login and atomic audit rows. The temporary password is generated randomly, hashed at rest, excluded from audit details and shown once for manual secure handoff.
+- Added the lender registration page and lender-only proposal workspace navigation. Lender reads and decisions are constrained to the lender linked to the authenticated account; lender summaries remain masked.
+- No automated email is claimed because ADR-0011's provider decision remains Provisional. Production account creation stays blocked until ADR-0013 and R6 close. No migration was added; next free remains `0009`.
+- Added ADR-0020 as Provisional and S-26 as pre-launch complete. No Provisional ADR-0016/0017/0018 behavior, simulation flag, or maker/checker rule changed.
+- Verified: worker typecheck exit 0; `npm test` 137/137; frontend build exit 0. The environment auto-created commit `25bcee5` for earlier task changes and `b5da621` during this task despite no commit command; current API/doc changes remain uncommitted.

@@ -56,6 +56,7 @@ honour.
 | ADR | Subject | Status |
 | --- | --- | --- |
 | [0019](#adr-0019) | Staff on-behalf borrower origination; interim consent audit event | Provisional |
+| [0020](#adr-0020) | Staff lender onboarding; one-time password handoff | Provisional |
 
 ### Proposed — direction decided 2026-11-03, acceptance pending
 
@@ -1483,3 +1484,55 @@ while keeping staff identity, agency scope and the borrower's account distinct.
 - [`ADR-0013`](#adr-0013) — data protection and live borrower PII gate.
 - [`ADR-0015`](#adr-0015) — read-only impersonation.
 - [`IMPLEMENTATION_PLAN.md`](../IMPLEMENTATION_PLAN.md) — S-25 and §14 release gate.
+---
+
+<a id="adr-0020"></a>
+## ADR-0020: Staff lender onboarding and login handoff
+
+- **Gate:** Operational workflow; this record does not close ADR-0011 or ADR-0013
+- **Status:** Provisional — interim workflow direction recorded 2026-11-14
+- **Owner:** Matthias and the Gidfine executive team
+- **Version:** 0.1
+- **Depends on:** ADR-0001, ADR-0011, ADR-0013, ADR-0015
+- **Constrains:** `POST /lenders`, agency-admin lender registration UI, lender proposal access
+
+### Context
+
+Agency administrators need to register partner lenders and provision a login for their named contact. The current notification adapter is simulated and ADR-0011 remains Provisional, so the platform cannot truthfully claim that a credential email was sent. Lender proposal access must be limited to the lender mapped to the authenticated user, and the existing O-06 borrower disclosure boundary remains in force.
+
+### Decision
+
+In pre-launch environments, only `agency_admin` may register a lender. The server creates the lender, a `lender` user and a `lender_admin` mapping in one atomic batch, and attributes audit events to the administrator. It generates a cryptographically random temporary password, stores only the existing password hash, excludes the secret from audit/outbox records and returns it once to the authenticated administrator for secure manual handoff. No email delivery is claimed or performed. Lender users may access only proposals for their mapped lender; unmapped lender accounts fail closed. The lender portal continues to receive masked borrower summaries.
+
+Creation is blocked when `APP_ENV=production` until ADR-0013 and the R6 production-PII gates close. A future automated credential-delivery channel requires an accepted ADR-0011 and a suitable provider; it must not send plaintext credentials over an unapproved channel.
+
+### Rationale
+
+This enables controlled pre-launch lender onboarding without pretending the simulated notification adapter has delivered credentials. One-time display, hashed storage, actor-attributed audit and lender mapping keep the credential and proposal boundary explicit.
+
+### Consequences
+
+- `agency_id` is checked in lender creation, user uniqueness checks, mapping, lender proposal reads and lender proposal writes.
+- No migration is added; migration numbering remains forward-only and the next free number is `0009`.
+- No ADR-0016/0017/0018 behavior, simulation flag, or maker/checker control is changed.
+- This decision does not accept ADR-0011 or ADR-0013 and does not authorise live borrower PII or real-money operations.
+
+### Evidence in the codebase
+
+- `workers/api/src/routes/lenders.ts` — admin-only creation, atomic lender/user mapping, audit events, production guard and mapped proposal scope.
+- `workers/api/tests/sprints3to7.test.ts` — password login, hashed storage, audit secrecy, production/role/duplicate checks, and cross-lender denial.
+- `frontend/src/components/workspace/pages/LenderRegistration.tsx` — admin registration form and one-time credential handoff notice.
+- `frontend/src/components/LenderPortal.tsx` — lender-only proposal workspace.
+
+### Outstanding before acceptance
+
+- [ ] Accept ADR-0011's email/SMS provider and credential-delivery policy before implementing automated delivery.
+- [ ] Complete ADR-0013's privacy and counsel artefacts and close R6 gates before allowing production lender-user PII writes.
+- [ ] Confirm password rotation/change requirement for provisioned lender accounts; the current auth contract supports immediate login but has no forced-change flag.
+
+### References
+
+- [`ADR-0011`](#adr-0011) — notification channels and provider gate.
+- [`ADR-0013`](#adr-0013) — data protection and live PII gate.
+- [`ADR-0015`](#adr-0015) — read-only impersonation.
+- [`IMPLEMENTATION_PLAN.md`](../IMPLEMENTATION_PLAN.md) — S-26 and §14 release gate.
