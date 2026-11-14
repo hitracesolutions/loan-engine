@@ -254,6 +254,7 @@ Status: `DONE` · `NEXT` · `AUTHORISED` · `SEQUENCED` (needs an earlier step) 
 | S-22 | Observability, runbook, backup/restore drill | restore drill from a D1 export recorded; structured logs carry request ids, never PII | AUTHORISED |
 | S-23 | Security review: cross-role leakage, enumeration, export leakage | findings with severity; nothing critical open | SEQUENCED (S-13, S-20) |
 | S-24 | UAT pack and acceptance evidence | each §14-guide acceptance criterion has recorded pass/fail with evidence | SEQUENCED (S-15, S-23) |
+| S-25 | Staff on-behalf origination | authorised staff can register borrower and submit a loan request with consent attestation; role/agency tests, immutable audit attribution, safe frontend and all gates retained | **DONE** (2026-11-14; pre-launch only, consent mechanism depends on ADR-0013) |
 
 ### Detail on the steps that carry real risk
 
@@ -325,6 +326,7 @@ Smaller owner answers still open (R-1 to R-10) are in the [blocker triage](./ADR
 | S-22 | PENDING | — | no restore drill recorded |
 | S-23 | PENDING | — | no pentest; disclosure tests only |
 | S-24 | PENDING | — | no UAT evidence pack |
+| S-25 | DONE | 2026-11-14 | `staffOrigination.test.ts` 6/6; worker typecheck, 136 API tests, frontend production build green; `/staff/borrowers`, `/staff/applications`, role-gated intake UI; interim audit consent depends on ADR-0013 |
 
 **Remediation (from [`DECISION_REVIEW.md`](./DECISION_REVIEW.md), 2026-11-03/04):** Phase 1 shipped — atomic financial writes (`db.batch`), payment-reference `UNIQUE` (migration `0008`), no fabricated lender on disbursement; plus reversal segregation and the daily disbursement reconciliation report. ADR-0016/0017/0018 directions decided (Provisional).
 

@@ -81,6 +81,29 @@ export interface ApplicationRecord {
   updatedAt: number;
 }
 
+export interface StaffBorrowerInput {
+  email: string;
+  password: string;
+  fullName: string;
+  phone?: string;
+}
+
+export interface StaffBorrowerRecord {
+  id: string;
+  agencyId: string;
+  role: 'borrower';
+  email: string;
+  phone: string | null;
+  fullName: string;
+  createdAt: number;
+}
+
+export interface OnBehalfConsent {
+  attested: true;
+  method: 'in_branch' | 'phone' | 'email' | 'written';
+  statement?: string;
+}
+
 export interface ApplicationStatusHistoryEntry {
   id: string;
   actorId: string;
@@ -318,6 +341,20 @@ class GidfineAPI {
     if (response && Array.isArray(response.applications)) return response.applications;
     if (response && Array.isArray(response.results)) return response.results;
     return [];
+  }
+
+  async registerBorrowerByStaff(input: StaffBorrowerInput): Promise<{ user: StaffBorrowerRecord }> {
+    return this.request('POST', '/staff/borrowers', input);
+  }
+
+  async createApplicationOnBehalf(input: {
+    borrowerId: string;
+    requestedAmountPesewas: number;
+    tenureMonths: number;
+    purpose?: string;
+    consent: OnBehalfConsent;
+  }): Promise<{ application: ApplicationRecord }> {
+    return this.request('POST', '/staff/applications', input);
   }
 
   async assignApplication(applicationId: string, assigneeId: string): Promise<{

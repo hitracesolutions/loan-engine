@@ -6,6 +6,7 @@ export type AppState = 'UNAUTHENTICATED' | 'AUTHENTICATED';
 export type DashboardView =
   | 'DASHBOARD'
   | 'APPLICATION'
+  | 'STAFF_INTAKE'
   | 'AGENCY_QUEUE'
   | 'ACTIVE_LOANS'
   | 'PROFILE'
@@ -18,6 +19,7 @@ export interface UserProfile {
   phone?: string;
   salary?: number;
   city?: string;
+  role?: string;
 }
 
 interface LoanStore {

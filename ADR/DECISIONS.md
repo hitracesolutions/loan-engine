@@ -51,6 +51,12 @@ honour.
 | --- | --- | --- |
 | [0015](#adr-0015) | Administrator impersonation ("view as") — read-only, audited, revocable | Accepted |
 
+### Additional operational records
+
+| ADR | Subject | Status |
+| --- | --- | --- |
+| [0019](#adr-0019) | Staff on-behalf borrower origination; interim consent audit event | Provisional |
+
 ### Proposed — direction decided 2026-11-03, acceptance pending
 
 Records raised by the [decision & code review](../DECISION_REVIEW.md). The owner
@@ -1241,6 +1247,91 @@ create legally binding evidence (consent), change money, or approve anything.
 
 ---
 
+<a id="adr-0019"></a>
+## ADR-0019: Staff on-behalf borrower origination
+
+- **Gate:** Operational workflow; this record does not close an external gate
+- **Status:** Provisional — interim workflow direction recorded 2026-11-14
+- **Owner:** Matthias and the Gidfine executive team
+- **Version:** 0.1
+- **Depends on:** ADR-0001, ADR-0013, ADR-0015
+- **Constrains:** `POST /staff/borrowers`, `POST /staff/applications`, staff intake UI
+
+### Context
+
+Agency staff need to register a borrower and submit a loan request for that
+borrower. The workflow handles borrower identity and consent evidence and must
+preserve agency isolation and ADR-0015's read-only impersonation boundary.
+ADR-0013 remains Provisional; its privacy notice, consent wording, processing
+register and counsel artefacts are not yet complete.
+
+### Decision
+
+For the pre-launch workflow, only `loan_officer` and `agency_admin` may register
+borrowers or submit applications on their behalf. Staff set a temporary
+borrower password; the registration response issues no token. Staff must attest
+that borrower permission was obtained and select a method (`in_branch`,
+`phone`, `email` or `written`) before submission.
+
+The interim consent evidence is an append-only `ON_BEHALF_CONSENT_ATTESTED`
+audit event, committed atomically with the application and status history and
+attributed to the authenticated staff actor. Registration is likewise audited
+as `BORROWER_REGISTERED_BY_STAFF`. These actions are performed as staff, never
+through an impersonated borrower session.
+
+This direction does not accept ADR-0013 or authorise live borrower PII. The
+interim mechanism depends on ADR-0013: after that ADR's privacy and counsel
+artefacts are accepted, the consent record must be reviewed and moved to a
+formal consent artifact if required by the accepted policy. Until then, the
+workflow remains pre-launch under R6.
+
+### Rationale
+
+This enables controlled staff intake without introducing a migration before the
+privacy decision is closed. Audit events provide attributable interim evidence
+while keeping staff identity, agency scope and the borrower's account distinct.
+
+### Consequences
+
+- Every query and write stays scoped to the staff actor's `agency_id`; target
+  borrowers must be active borrower accounts in that same agency.
+- Borrower responses continue to use the existing disclosure helper and
+  exclude staff-only identity and review fields.
+- No migration is introduced; migration numbering remains forward-only and the
+  next free number is `0009`.
+- No ADR-0016/0017/0018 behaviour, simulation flag, or maker/checker control is
+  changed.
+- This is not authorisation to process real borrower PII or route real money.
+  R6 and ADR-0013 C-2 remain go-live gates.
+
+### Evidence in the codebase
+
+- `workers/api/src/routes/auth.ts` — staff borrower creation and actor audit.
+- `workers/api/src/routes/applications.ts` — scoped borrower validation,
+  consent audit and atomic application/history writes.
+- `workers/api/src/lib/impersonationGuard.ts` — blocks impersonated writes.
+- `workers/api/tests/staffOrigination.test.ts` — endpoint, consent, audit,
+  tenancy, response and impersonation coverage.
+- `frontend/src/components/workspace/pages/StaffIntake.tsx` — role-gated intake
+  interface with explicit consent attestation.
+
+### Outstanding before acceptance
+
+- [ ] Complete ADR-0013's privacy notice, approved consent wording, processing
+      register and counsel artefacts (C-2).
+- [ ] Review whether staff attestation and the audit event satisfy that policy
+      or whether a formal consent artifact is required.
+- [ ] Confirm production processing scope and close R6 release gates before
+      enabling real borrower PII.
+
+### References
+
+- [`ADR-0013`](#adr-0013) — data protection and live borrower PII gate.
+- [`ADR-0015`](#adr-0015) — read-only impersonation.
+- [`IMPLEMENTATION_PLAN.md`](../IMPLEMENTATION_PLAN.md) — S-25 and §14 release gate.
+
+---
+
 <a id="adr-0016"></a>
 ## ADR-0016: Custody of repayment funds (proposed — supersedes 0002)
 
@@ -1387,3 +1478,88 @@ Owner, 2026-11-03:
 2. Mark ADR-0009 **Superseded**; update the index and `IMPLEMENTATION_PLAN.md` §3.1.
 3. Add migration `0009` making the constraint conditional on amount; implement
    T6; ship the reconciliation report and real MFA before go-live.
+
+---
+
+<a id="adr-0019"></a>
+## ADR-0019: Staff on-behalf borrower origination
+
+- **Gate:** Operational workflow; this record does not close an external gate
+- **Status:** Provisional — interim workflow direction recorded 2026-11-14
+- **Owner:** Matthias and the Gidfine executive team
+- **Version:** 0.1
+- **Depends on:** ADR-0001, ADR-0013, ADR-0015
+- **Constrains:** `POST /staff/borrowers`, `POST /staff/applications`, staff intake UI
+
+### Context
+
+Agency staff need to register a borrower and submit a loan request for that
+borrower. The workflow handles borrower identity and consent evidence and must
+preserve agency isolation and ADR-0015's read-only impersonation boundary.
+ADR-0013 remains Provisional; its privacy notice, consent wording, processing
+register and counsel artefacts are not yet complete.
+
+### Decision
+
+For the pre-launch workflow, only `loan_officer` and `agency_admin` may register
+borrowers or submit applications on their behalf. Staff set a temporary
+borrower password; the registration response issues no token. Staff must attest
+that borrower permission was obtained and select a method (`in_branch`,
+`phone`, `email` or `written`) before submission.
+
+The interim consent evidence is an append-only `ON_BEHALF_CONSENT_ATTESTED`
+audit event, committed atomically with the application and status history and
+attributed to the authenticated staff actor. Registration is likewise audited
+as `BORROWER_REGISTERED_BY_STAFF`. These actions are performed as staff, never
+through an impersonated borrower session.
+
+This direction does not accept ADR-0013 or authorise live borrower PII. The
+interim mechanism depends on ADR-0013: after that ADR's privacy and counsel
+artefacts are accepted, the consent record must be reviewed and moved to a
+formal consent artifact if required by the accepted policy. Until then, the
+workflow remains pre-launch under R6.
+
+### Rationale
+
+This enables controlled staff intake without introducing a migration before the
+privacy decision is closed. Audit events provide attributable interim evidence
+while keeping staff identity, agency scope and the borrower's account distinct.
+
+### Consequences
+
+- Every query and write stays scoped to the staff actor's `agency_id`; target
+  borrowers must be active borrower accounts in that same agency.
+- Borrower responses continue to use the existing disclosure helper and
+  exclude staff-only identity and review fields.
+- No migration is introduced; migration numbering remains forward-only and the
+  next free number is `0009`.
+- No ADR-0016/0017/0018 behaviour, simulation flag, or maker/checker control is
+  changed.
+- This is not authorisation to process real borrower PII or route real money.
+  R6 and ADR-0013 C-2 remain go-live gates.
+
+### Evidence in the codebase
+
+- `workers/api/src/routes/auth.ts` — staff borrower creation and actor audit.
+- `workers/api/src/routes/applications.ts` — scoped borrower validation,
+  consent audit and atomic application/history writes.
+- `workers/api/src/lib/impersonationGuard.ts` — blocks impersonated writes.
+- `workers/api/tests/staffOrigination.test.ts` — endpoint, consent, audit,
+  tenancy, response and impersonation coverage.
+- `frontend/src/components/workspace/pages/StaffIntake.tsx` — role-gated intake
+  interface with explicit consent attestation.
+
+### Outstanding before acceptance
+
+- [ ] Complete ADR-0013's privacy notice, approved consent wording, processing
+      register and counsel artefacts (C-2).
+- [ ] Review whether staff attestation and the audit event satisfy that policy
+      or whether a formal consent artifact is required.
+- [ ] Confirm production processing scope and close R6 release gates before
+      enabling real borrower PII.
+
+### References
+
+- [`ADR-0013`](#adr-0013) — data protection and live borrower PII gate.
+- [`ADR-0015`](#adr-0015) — read-only impersonation.
+- [`IMPLEMENTATION_PLAN.md`](../IMPLEMENTATION_PLAN.md) — S-25 and §14 release gate.

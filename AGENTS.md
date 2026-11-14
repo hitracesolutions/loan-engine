@@ -571,6 +571,23 @@ The current production baseline is Cloudflare Pages + Pages Functions, D1 and KV
 
 ## Work log
 
+### 2026-11-14 — Staff on-behalf origination
+
+- Completed `POST /staff/borrowers` and `POST /staff/applications` with tests
+  covering roles, agency/borrower validation, consent enforcement, audit rows,
+  application visibility and rejection of impersonated mutations.
+- Added typed `gidfineAPI` methods and a staff-only intake screen for borrower
+  registration and loan requests. The UI requires an explicit permission
+  attestation and records the consent method; amounts use GH₵ and integer
+  pesewas at the API boundary.
+- Added S-25 to `IMPLEMENTATION_PLAN.md`. Consent remains an interim immutable
+  audit event dependent on ADR-0013; real borrower PII remains behind C-2 and
+  the R6 go-live gate.
+- No migration was added; next free number remains `0009`. No simulation flag,
+  disbursement control, or provisional ADR behaviour changed.
+- Verified `workers/api`: typecheck exit 0, `npm test` 136/136; `frontend`:
+  `npm run build` exit 0. No commit created.
+
 ### 2026-10-29 — Stack and documentation consolidation
 
 - Updated the development guide to describe the actual Pages Functions + shared

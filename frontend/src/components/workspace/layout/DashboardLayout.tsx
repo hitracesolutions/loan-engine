@@ -1,4 +1,4 @@
-import { LayoutDashboard, FileText, CreditCard, LogOut, ClipboardList } from 'lucide-react';
+import { LayoutDashboard, FileText, CreditCard, LogOut, ClipboardList, UserPlus } from 'lucide-react';
 import { useLoanStore } from '../../../store/useLoanStore';
 import AnalyticsDashboard from '../pages/AnalyticsDashboard';
 import LoanApplication from '../pages/LoanApplication';
@@ -6,9 +6,11 @@ import AgencyReviewQueue from '../../AgencyReviewQueue';
 import ActiveLoans from '../pages/ActiveLoans';
 import UserProfile from '../pages/UserProfile';
 import Docs from '../../../pages/Docs';
+import StaffIntake from '../pages/StaffIntake';
 
 export default function DashboardLayout() {
   const { user, currentView, setView, clearSession } = useLoanStore();
+  const staffRole = user?.role === 'loan_officer' || user?.role === 'agency_admin';
 
   const navigation = [
     { name: 'Dashboard', id: 'DASHBOARD', icon: LayoutDashboard },
@@ -16,11 +18,13 @@ export default function DashboardLayout() {
     { name: 'Agency Review Queue', id: 'AGENCY_QUEUE', icon: ClipboardList },
     { name: 'Active Loans & Ledgers', id: 'ACTIVE_LOANS', icon: CreditCard },
   ];
+  if (staffRole) navigation.splice(2, 0, { name: 'Borrower Intake', id: 'STAFF_INTAKE', icon: UserPlus });
 
   const renderContent = () => {
     switch (currentView) {
       case 'DASHBOARD': return <AnalyticsDashboard />;
       case 'APPLICATION': return <LoanApplication />;
+      case 'STAFF_INTAKE': return staffRole ? <StaffIntake /> : <AnalyticsDashboard />;
       case 'AGENCY_QUEUE': return <AgencyReviewQueue />;
       case 'ACTIVE_LOANS': return <ActiveLoans />;
       case 'PROFILE': return <UserProfile />;

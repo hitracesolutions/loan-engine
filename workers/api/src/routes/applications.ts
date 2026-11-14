@@ -248,7 +248,7 @@ export async function createApplicationOnBehalf({ request, env, requestId }: Rou
   const actor = await requireRole({ request, env }, ...ON_BEHALF_ROLES);
 
   const body = await readJsonObject(request);
-  const borrowerId = requireString(body, 'borrowerId', 64);
+  const borrowerId = requireString(body, 'borrowerId', { maxLength: 64 });
 
   const requestedAmountPesewas = assertPositivePesewas(
     body.requestedAmountPesewas ?? body.requested_amount_pesewas,
@@ -266,7 +266,7 @@ export async function createApplicationOnBehalf({ request, env, requestId }: Rou
   if (consentObj.attested !== true) {
     throw badRequest('CONSENT_REQUIRED', 'consent.attested must be true to apply on a borrower\'s behalf');
   }
-  const consentMethod = requireString(consentObj, 'method', 32);
+  const consentMethod = requireString(consentObj, 'method', { maxLength: 32 });
   if (!(ON_BEHALF_CONSENT_METHODS as readonly string[]).includes(consentMethod)) {
     throw badRequest(
       'CONSENT_METHOD_INVALID',

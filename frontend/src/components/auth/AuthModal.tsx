@@ -78,6 +78,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         name: response.user.fullName?.trim() || response.user.email,
         email: response.user.email,
         picture: '',
+        role: response.user.role,
       });
 
       const targetView = localStorage.getItem('postAuthView');
@@ -109,6 +110,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         name: response.user.fullName?.trim() || regName.trim(),
         email: response.user.email,
         picture: '',
+        role: response.user.role,
       });
       onClose();
     } catch (cause: unknown) {

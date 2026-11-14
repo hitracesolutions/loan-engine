@@ -537,3 +537,19 @@ workers/api/
 - `chore: scaffold KV cache service and rate limiting middleware`
 - `feat: implement REST API handlers for auth, borrower, loan, payment`
 - `fix: resolve TypeScript compilation errors and type safety issues`
+# 2026-11-14 — Staff on-behalf origination
+
+- Added worker coverage for staff borrower registration and on-behalf loan
+  applications, including permitted/denied roles, agency and borrower checks,
+  consent codes, audit attribution, application visibility and read-only
+  impersonation enforcement.
+- Added typed `gidfineAPI` methods and a role-gated agency intake screen for
+  borrower details, temporary credentials, loan request terms and an explicit
+  consent attestation. Amounts display in GH₵ and submit as integer pesewas.
+- Recorded the owner direction that interim consent evidence is an immutable
+  audit event, pending ADR-0013's privacy notice, consent wording, processing
+  register and counsel artefacts. This does not permit live borrower PII.
+- No migrations or financial controls changed. The next free migration remains
+  `0009`; `check_maker_checker_distinct` and simulation gates remain intact.
+- Verified worker typecheck, 136 API tests and the frontend production build.
+
