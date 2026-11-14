@@ -168,4 +168,19 @@ describe('staff on-behalf origination', () => {
     assert.equal(appAttempt.status, 403);
     assert.match(appAttempt.error.message, /read-only/i);
   });
+
+  it('keeps on-behalf PII writes disabled in production until the privacy and R6 gates close', async () => {
+    const admin = await createUser('agency_admin', 'admin@example.com');
+    const borrower = await createUser('borrower', 'borrower@example.com');
+    env = { ...env, APP_ENV: 'production' };
+    const adminToken = await signAccessToken({ userId: admin, agencyId: 'agency_default', role: 'agency_admin' }, secret, 3600);
+    const registration = await call('POST', '/staff/borrowers', undefined, {
+      email: 'blocked@example.com', password: 'TemporaryPassword123!', fullName: 'Test Borrower',
+    }, adminToken);
+    assert.equal(registration.status, 403);
+    const application = await call('POST', '/staff/applications', undefined, validApplication(borrower), adminToken);
+    assert.equal(application.status, 403);
+    assert.equal(sqlite.prepare("SELECT count(*) AS count FROM users WHERE email='blocked@example.com'").get()?.count, 0);
+    assert.equal(sqlite.prepare('SELECT count(*) AS count FROM loan_applications').get()?.count, 0);
+  });
 });

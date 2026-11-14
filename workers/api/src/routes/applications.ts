@@ -246,6 +246,9 @@ const ON_BEHALF_CONSENT_METHODS = ['in_branch', 'phone', 'email', 'written'] as 
  */
 export async function createApplicationOnBehalf({ request, env, requestId }: RouteContext): Promise<Response> {
   const actor = await requireRole({ request, env }, ...ON_BEHALF_ROLES);
+  if (env.APP_ENV.trim().toLowerCase() === 'production') {
+    throw forbidden('Staff origination is disabled in production until ADR-0013 and the R6 go-live gates are closed');
+  }
 
   const body = await readJsonObject(request);
   const borrowerId = requireString(body, 'borrowerId', { maxLength: 64 });

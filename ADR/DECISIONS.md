@@ -1433,8 +1433,9 @@ through an impersonated borrower session.
 This direction does not accept ADR-0013 or authorise live borrower PII. The
 interim mechanism depends on ADR-0013: after that ADR's privacy and counsel
 artefacts are accepted, the consent record must be reviewed and moved to a
-formal consent artifact if required by the accepted policy. Until then, the
-workflow remains pre-launch under R6.
+formal consent artifact if required by the accepted policy. Both endpoints
+reject writes when `APP_ENV=production`; the workflow remains available only
+outside production until the ADR-0013 and R6 gates are closed.
 
 ### Rationale
 
@@ -1460,6 +1461,8 @@ while keeping staff identity, agency scope and the borrower's account distinct.
 - `workers/api/src/routes/auth.ts` — staff borrower creation and actor audit.
 - `workers/api/src/routes/applications.ts` — scoped borrower validation,
   consent audit and atomic application/history writes.
+- Both routes fail closed for production `APP_ENV` until the privacy and go-live
+  gates close.
 - `workers/api/src/lib/impersonationGuard.ts` — blocks impersonated writes.
 - `workers/api/tests/staffOrigination.test.ts` — endpoint, consent, audit,
   tenancy, response and impersonation coverage.
@@ -1473,7 +1476,7 @@ while keeping staff identity, agency scope and the borrower's account distinct.
 - [ ] Review whether staff attestation and the audit event satisfy that policy
       or whether a formal consent artifact is required.
 - [ ] Confirm production processing scope and close R6 release gates before
-      enabling real borrower PII.
+      removing the production guard for real borrower PII.
 
 ### References
 

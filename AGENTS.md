@@ -582,10 +582,11 @@ The current production baseline is Cloudflare Pages + Pages Functions, D1 and KV
   pesewas at the API boundary.
 - Added S-25 to `IMPLEMENTATION_PLAN.md`. Consent remains an interim immutable
   audit event dependent on ADR-0013; real borrower PII remains behind C-2 and
-  the R6 go-live gate.
+  the R6 go-live gate. Both staff write endpoints fail closed when
+  `APP_ENV=production` until those gates close.
 - No migration was added; next free number remains `0009`. No simulation flag,
   disbursement control, or provisional ADR behaviour changed.
-- Verified `workers/api`: typecheck exit 0, `npm test` 136/136; `frontend`:
+- Verified `workers/api`: typecheck exit 0, `npm test` 137/137; `frontend`:
   `npm run build` exit 0. No commit command was issued; the repository
   auto-committed the feature as `b5da621` during this session.
 

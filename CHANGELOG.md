@@ -549,7 +549,9 @@ workers/api/
 - Recorded the owner direction that interim consent evidence is an immutable
   audit event, pending ADR-0013's privacy notice, consent wording, processing
   register and counsel artefacts. This does not permit live borrower PII.
+- Added a server-side `APP_ENV=production` guard on both writes so the interim
+  workflow cannot persist PII in production before ADR-0013 and R6 are closed.
 - No migrations or financial controls changed. The next free migration remains
   `0009`; `check_maker_checker_distinct` and simulation gates remain intact.
-- Verified worker typecheck, 136 API tests and the frontend production build.
+- Verified worker typecheck, 137 API tests and the frontend production build.
 

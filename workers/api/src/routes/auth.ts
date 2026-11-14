@@ -9,7 +9,7 @@ import {
 } from '../lib/auth.ts';
 import type { AppEnv } from '../env.ts';
 import type { UserRole } from '../domain/stateMachine.ts';
-import { conflict, jsonResponse, readJsonObject, unauthorized } from '../lib/http.ts';
+import { conflict, forbidden, jsonResponse, readJsonObject, unauthorized } from '../lib/http.ts';
 import { ulid } from '../lib/ids.ts';
 import { optionalString, requireEmail, requirePassword, requirePersonName } from '../lib/validation.ts';
 import type { RouteContext } from '../router.ts';
@@ -149,6 +149,9 @@ export async function register({ request, env, requestId }: RouteContext): Promi
  */
 export async function registerBorrowerByStaff({ request, env, requestId }: RouteContext): Promise<Response> {
   const actor = await requireRole({ request, env }, 'loan_officer', 'agency_admin');
+  if (env.APP_ENV.trim().toLowerCase() === 'production') {
+    throw forbidden('Staff origination is disabled in production until ADR-0013 and the R6 go-live gates are closed');
+  }
 
   const body = await readJsonObject(request);
   const email = requireEmail(body);
