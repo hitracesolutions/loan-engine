@@ -7,6 +7,15 @@ import {
   type ApplicationStatus,
 } from '../lib/api-gidfine';
 import { useTranslation } from '../lib/useTranslation';
+import {
+  ClipboardList,
+  Inbox,
+  Info,
+  RefreshCw,
+  X,
+  CheckCircle2,
+  AlertCircle,
+} from 'lucide-react';
 
 export interface AgencyReviewQueueItem {
   applicationId: string;
@@ -35,9 +44,22 @@ const REVIEW_TARGETS: Partial<Record<ApplicationStatus, ApplicationStatus[]>> = 
   LENDER_ACCEPTED: ['AGENCY_APPROVED', 'AGENCY_REJECTED'],
 };
 
+const STATUS_STYLES: Record<string, string> = {
+  AGENCY_APPROVED: 'bg-gray-50 text-gray-600 border-gray-200',
+  BORROWER_ACCEPTED: 'bg-[#f0f9f7] text-[#0d3d38] border-[#b8dbd8]',
+  LENDER_ACCEPTED: 'bg-[#f0f9f7] text-[#0d3d38] border-[#b8dbd8]',
+  LENDER_PENDING: 'bg-amber-50 text-amber-700 border-amber-200',
+  AGENCY_REJECTED: 'bg-red-50 text-red-700 border-red-200',
+  UNDER_REVIEW: 'bg-amber-50 text-amber-700 border-amber-200',
+  SUBMITTED: 'bg-gray-100 text-gray-600 border-gray-200',
+};
+
 function localizedStatus(status: string, tx: (text: string) => string): string {
   return tx(status.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase()));
 }
+
+const inputBase =
+  'w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus:border-gray-400 focus:ring-2 focus:ring-gray-900/10 disabled:opacity-50';
 
 interface AgencyReviewQueueProps {
   agencyName?: string;
@@ -64,7 +86,6 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('');
 
-  // Review workflow state (Phase 1/2)
   const [reviewModalApp, setReviewModalApp] = useState<AgencyReviewQueueItem | null>(null);
   const [reviewDetails, setReviewDetails] = useState<ApplicationReview | null>(null);
   const [reviewLoading, setReviewLoading] = useState<boolean>(false);
@@ -74,16 +95,14 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
   const [reviewReason, setReviewReason] = useState<string>('');
   const [reviewNote, setReviewNote] = useState<string>('');
 
-  // Modal State for Propose Terms (Phase 3 Gated)
   const [proposeModalApp, setProposeModalApp] = useState<AgencyReviewQueueItem | null>(null);
   const [proposeLenderId, setProposeLenderId] = useState<string>('');
   const [proposeAmountGhs, setProposeAmountGhs] = useState<number>(5000);
-  const [proposeBaseRateBps, setProposeBaseRateBps] = useState<number>(1800); // 18.00%
-  const [proposeMarginBps, setProposeMarginBps] = useState<number>(300); // 3.00%
+  const [proposeBaseRateBps, setProposeBaseRateBps] = useState<number>(1800);
+  const [proposeMarginBps, setProposeMarginBps] = useState<number>(300);
   const [submittingPropose, setSubmittingPropose] = useState<boolean>(false);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
 
-  // Modal State for Disbursement Readiness Check (Phase 4 Gated)
   const [readinessResult, setReadinessResult] = useState<ReadinessResult | null>(null);
   const [checkingReadiness, setCheckingReadiness] = useState<boolean>(false);
 
@@ -94,7 +113,6 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
       const rawList = await gidfineAPI.listApplications(
         statusFilter ? { status: statusFilter as ApplicationStatus } : {},
       );
-
       const normalized: AgencyReviewQueueItem[] = rawList.map((item) => ({
         applicationId: item.id,
         agencyId: '',
@@ -108,7 +126,6 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
         submittedAt: item.submittedAt,
         assignedOfficerId: item.assignedOfficerId,
       }));
-
       setApplications(normalized);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to load agency review queue from Cloudflare API.';
@@ -171,7 +188,6 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
       setError('Add a reason before requesting information or rejecting an application.');
       return;
     }
-
     setReviewAction('transition');
     setError(null);
     try {
@@ -207,16 +223,12 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
     }
   };
 
-  // Handle Propose Terms Submit (Gated: Phase 3 endpoint pending backend implementation)
   const handleProposeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!proposeModalApp || !proposeLenderId) return;
-
     setSubmittingPropose(true);
     setActionNotice(null);
     try {
-      // Backend router (workers/api) currently implements Phase 1-2 auth & applications.
-      // Phase 3 lender proposal endpoints (/proposals) are pending Sprint 2 implementation.
       setActionNotice(
         `[Phase 3 Gated]: Lender term proposal endpoint (POST /proposals) is scheduled for Sprint 2. Requested GHS ${proposeAmountGhs} at ${bpsToPercentString(proposeBaseRateBps)} for ${proposeModalApp.applicationId} logged locally.`
       );
@@ -228,14 +240,12 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
     }
   };
 
-  // Handle Agency Approve Offer (Gated: Phase 3 approval endpoint pending backend implementation)
   const handleApproveOffer = async (app: AgencyReviewQueueItem) => {
     setActionNotice(
       `[Phase 3 Gated]: Agency approval endpoint (POST /applications/${app.applicationId}/approve) is pending Sprint 2 backend implementation.`
     );
   };
 
-  // Handle Check Disbursement Readiness (Gated: Phase 4 readiness check pending ledger sign-off)
   const handleCheckDisbursement = async () => {
     setCheckingReadiness(true);
     setReadinessResult({
@@ -257,14 +267,15 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Header & Controls */}
-      <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* Header */}
+      <div className="dashboard-card rounded-xl border p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <span>📋</span> {tx('Agency Loan Review Queue')}
+          <h2 className="text-xl font-semibold dashboard-heading flex items-center gap-2">
+            <ClipboardList className="h-5 w-5 dashboard-label" strokeWidth={1.75} />
+            {tx('Agency Loan Review Queue')}
           </h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Tenant Scope: <span className="font-semibold text-gray-700">{agencyName}</span> (Cloudflare API)
+          <p className="text-sm dashboard-copy mt-1">
+            Tenant Scope: <span className="font-medium dashboard-heading">{agencyName}</span> (Cloudflare API)
           </p>
         </div>
 
@@ -272,7 +283,7 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-gray-900/10"
           >
             <option value="">{tx('All Statuses')}</option>
             <option value="SUBMITTED">{localizedStatus('SUBMITTED', tx)}</option>
@@ -289,53 +300,65 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
           </select>
 
           <button
+            type="button"
             onClick={fetchQueue}
             disabled={loading}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg text-sm transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800 disabled:opacity-50"
           >
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
             {loading ? 'Refreshing...' : 'Refresh'}
           </button>
         </div>
       </div>
 
-      {/* Notifications */}
+      {/* Action notice */}
       {actionNotice && (
-        <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg text-sm flex items-center justify-between">
-          <span>ℹ️ {actionNotice}</span>
-          <button onClick={() => setActionNotice(null)} className="font-bold ml-4">✕</button>
-        </div>
-      )}
-
-      {error && (
-        <div className="bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 rounded-lg text-sm flex items-start gap-2">
-          <span className="text-lg">ℹ️</span>
-          <div className="flex-1">
-            <p className="font-semibold">{tx('Notice')}</p>
-            <p className="text-amber-800 text-xs mt-0.5">{error}</p>
+        <div className="flex items-center justify-between gap-4 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm">
+          <div className="flex items-center gap-2 dashboard-copy">
+            <Info className="h-4 w-4 dashboard-label flex-shrink-0" strokeWidth={1.75} />
+            {actionNotice}
           </div>
-          <button onClick={() => setError(null)} className="font-bold">✕</button>
+          <button type="button" onClick={() => setActionNotice(null)} className="text-gray-400 hover:text-gray-600 flex-shrink-0">
+            <X className="h-4 w-4" />
+          </button>
         </div>
       )}
 
-      {/* Applications Table */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      {/* Error */}
+      {error && (
+        <div className="flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm">
+          <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5 text-amber-600" strokeWidth={1.75} />
+          <div className="flex-1">
+            <p className="font-semibold text-amber-700">{tx('Notice')}</p>
+            <p className="text-amber-600 text-xs mt-0.5">{error}</p>
+          </div>
+          <button type="button" onClick={() => setError(null)} className="text-amber-500 hover:text-amber-700 flex-shrink-0">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Table card */}
+      <div className="dashboard-card rounded-xl border overflow-hidden">
         {loading ? (
-          <div className="p-12 text-center text-gray-400">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent mb-3" />
+          <div className="p-12 text-center dashboard-copy">
+            <RefreshCw className="h-7 w-7 animate-spin mx-auto mb-3 dashboard-label" strokeWidth={1.5} />
             <p className="text-sm font-medium">{tx('Loading applications from Cloudflare API...')}</p>
           </div>
         ) : applications.length === 0 ? (
-          <div className="p-12 text-center text-gray-500">
-            <span className="text-4xl block mb-2">📭</span>
-            <p className="font-semibold text-gray-700">{tx('No applications in review queue')}</p>
-            <p className="text-xs text-gray-400 mt-1">
-              {statusFilter ? `No applications found with status '${statusFilter}'.` : 'Applications submitted by borrowers will appear here.'}
+          <div className="p-12 text-center">
+            <Inbox className="h-10 w-10 mx-auto mb-2 dashboard-label" strokeWidth={1.5} />
+            <p className="font-semibold dashboard-heading">{tx('No applications in review queue')}</p>
+            <p className="text-xs dashboard-copy mt-1">
+              {statusFilter
+                ? `No applications found with status '${statusFilter}'.`
+                : 'Applications submitted by borrowers will appear here.'}
             </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              <thead className="border-b border-gray-200 bg-gray-50 text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 <tr>
                   <th className="px-6 py-3.5">{tx('Ref / ID')}</th>
                   <th className="px-6 py-3.5">{tx('Applicant')}</th>
@@ -347,100 +370,102 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {applications.map((app) => (
-                  <tr key={app.applicationId} className="hover:bg-gray-50/75 transition-colors">
-                    <td className="px-6 py-4 font-mono text-xs text-gray-900 font-semibold">
-                      APP-{app.applicationId.slice(-6).toUpperCase()}
-                    </td>
-                    <td className="px-6 py-4 text-gray-900 font-medium">
-                      {app.borrowerName}
-                    </td>
-                    <td className="px-6 py-4 text-gray-900 font-semibold">
-                      {pesewasToGhsString(app.requestedAmountPesewas)}
-                    </td>
-                    <td className="px-6 py-4 text-gray-600">
-                      {app.tenureMonths} Months
-                    </td>
-                    <td className="px-6 py-4 text-gray-600 max-w-xs truncate" title={app.purpose}>
-                      {app.purpose}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        app.status === 'AGENCY_APPROVED'
-                          ? 'bg-purple-100 text-purple-800'
-                          : app.status === 'BORROWER_ACCEPTED'
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : app.status === 'LENDER_ACCEPTED'
-                          ? 'bg-blue-100 text-blue-800'
-                          : app.status === 'LENDER_PENDING'
-                          ? 'bg-amber-100 text-amber-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {localizedStatus(app.status, tx)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right space-x-2">
-                      <button
-                        onClick={() => openReviewModal(app)}
-                        className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium px-3 py-1.5 rounded text-xs transition-colors"
-                      >
-                        Review
-                      </button>
-
-                      {/* Propose Terms Button */}
-                      {(app.status === 'SUBMITTED' || app.status === 'UNDER_REVIEW' || app.status === 'MATCHING' || app.status === 'LENDER_PENDING') && (
-                        <button
-                          onClick={() => {
-                            setProposeModalApp(app);
-                            setProposeAmountGhs(app.requestedAmountPesewas / 100);
-                          }}
-                          className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium px-3 py-1.5 rounded text-xs transition-colors"
+                {applications.map((app) => {
+                  const badge = STATUS_STYLES[app.status] ?? 'bg-gray-100 text-gray-600 border-gray-200';
+                  return (
+                    <tr key={app.applicationId} className="hover:bg-gray-50/60 transition-colors">
+                      <td className="px-6 py-4 font-mono text-xs font-semibold dashboard-heading">
+                        APP-{app.applicationId.slice(-6).toUpperCase()}
+                      </td>
+                      <td className="px-6 py-4 font-medium dashboard-heading">
+                        {app.borrowerName}
+                      </td>
+                      <td className="px-6 py-4 font-semibold dashboard-heading tabular-nums">
+                        {pesewasToGhsString(app.requestedAmountPesewas)}
+                      </td>
+                      <td className="px-6 py-4 dashboard-copy">
+                        {app.tenureMonths} Months
+                      </td>
+                      <td className="px-6 py-4 dashboard-copy max-w-xs truncate" title={app.purpose}>
+                        {app.purpose}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${badge}`}
                         >
-                          Propose Terms
-                        </button>
-                      )}
+                          {localizedStatus(app.status, tx)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => openReviewModal(app)}
+                            className="rounded border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                          >
+                            Review
+                          </button>
 
-                      {/* Approve Offer Button */}
-                      {app.status === 'LENDER_ACCEPTED' && (
-                        <button
-                          onClick={() => handleApproveOffer(app)}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-3 py-1.5 rounded text-xs transition-colors"
-                        >
-                          Approve Offer
-                        </button>
-                      )}
+                          {['SUBMITTED', 'UNDER_REVIEW', 'MATCHING', 'LENDER_PENDING'].includes(app.status) && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setProposeModalApp(app);
+                                setProposeAmountGhs(app.requestedAmountPesewas / 100);
+                              }}
+                              className="rounded border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                            >
+                              Propose Terms
+                            </button>
+                          )}
 
-                      {/* Verify Disbursement Readiness */}
-                      {app.status === 'BORROWER_ACCEPTED' && (
-                        <button
-                          onClick={handleCheckDisbursement}
-                          disabled={checkingReadiness}
-                          className="bg-purple-50 hover:bg-purple-100 text-purple-700 font-medium px-3 py-1.5 rounded text-xs transition-colors"
-                        >
-                          Check Readiness
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                          {app.status === 'LENDER_ACCEPTED' && (
+                            <button
+                              type="button"
+                              onClick={() => handleApproveOffer(app)}
+                              className="rounded-lg bg-[#0d3d38] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[#0a2e2a]"
+                            >
+                              Approve Offer
+                            </button>
+                          )}
+
+                          {app.status === 'BORROWER_ACCEPTED' && (
+                            <button
+                              type="button"
+                              onClick={handleCheckDisbursement}
+                              disabled={checkingReadiness}
+                              className="rounded border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                            >
+                              Check Readiness
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         )}
       </div>
 
-      {/* Agency review modal */}
+      {/* Review Modal */}
       {reviewModalApp && (
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="review-modal-title"
+          onMouseDown={(e) => { if (e.target === e.currentTarget) setReviewModalApp(null); }}
         >
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl space-y-5">
-            <div className="flex justify-between items-start border-b pb-3">
+          <div
+            className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-gray-200 bg-white p-6 shadow-xl"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-start border-b border-gray-200 pb-4 mb-5">
               <div>
-                <h3 id="review-modal-title" className="font-bold text-lg text-gray-900">
+                <h3 id="review-modal-title" className="text-base font-semibold text-gray-900">
                   Review application
                 </h3>
                 <p className="text-xs text-gray-500 mt-1 font-mono">
@@ -451,37 +476,36 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
                 type="button"
                 aria-label="Close review dialog"
                 onClick={() => setReviewModalApp(null)}
-                className="text-gray-400 hover:text-gray-600 font-bold text-lg"
+                className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
               >
-                ×
+                <X className="h-4 w-4" />
               </button>
             </div>
 
             {reviewLoading && !reviewDetails ? (
-              <div className="py-8 text-center text-sm text-gray-500">{tx('Review History')}…</div>
+              <div className="py-8 text-center text-sm text-gray-500">
+                <RefreshCw className="h-5 w-5 animate-spin mx-auto mb-2 text-gray-400" />
+                {tx('Review History')}…
+              </div>
             ) : (
-              <>
+              <div className="space-y-5">
+                {/* Summary cards */}
                 <div className="grid sm:grid-cols-3 gap-3 text-sm">
-                  <div className="rounded-lg bg-gray-50 border p-3">
-                    <p className="text-xs text-gray-500">{tx('Status')}</p>
-                    <p className="font-semibold text-gray-900 mt-1">{localizedStatus(reviewModalApp.status, tx)}</p>
-                  </div>
-                  <div className="rounded-lg bg-gray-50 border p-3">
-                    <p className="text-xs text-gray-500">{tx('Requested')}</p>
-                    <p className="font-semibold text-gray-900 mt-1">
-                      {pesewasToGhsString(reviewModalApp.requestedAmountPesewas)}
-                    </p>
-                  </div>
-                  <div className="rounded-lg bg-gray-50 border p-3">
-                    <p className="text-xs text-gray-500">{tx('Assigned reviewer')}</p>
-                    <p className="font-semibold text-gray-900 mt-1 break-all">
-                      {reviewModalApp.assignedOfficerId || 'Unassigned'}
-                    </p>
-                  </div>
+                  {[
+                    { label: tx('Status'), value: localizedStatus(reviewModalApp.status, tx) },
+                    { label: tx('Requested'), value: pesewasToGhsString(reviewModalApp.requestedAmountPesewas) },
+                    { label: tx('Assigned reviewer'), value: reviewModalApp.assignedOfficerId || 'Unassigned' },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                      <p className="text-xs text-gray-500">{label}</p>
+                      <p className="font-semibold text-gray-900 mt-1 break-all">{value}</p>
+                    </div>
+                  ))}
                 </div>
 
+                {/* Assignment */}
                 <section className="space-y-3" aria-labelledby="assignment-heading">
-                  <h4 id="assignment-heading" className="font-semibold text-gray-900">{tx('Assignment')}</h4>
+                  <h4 id="assignment-heading" className="font-semibold text-gray-900 text-sm">{tx('Assignment')}</h4>
                   <div className="flex flex-col sm:flex-row gap-2">
                     <label htmlFor="assignee-id" className="sr-only">{tx('Reviewer user ID')}</label>
                     <input
@@ -490,13 +514,13 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
                       value={assigneeId}
                       onChange={(e) => setAssigneeId(e.target.value)}
                       placeholder="Loan officer or underwriter user ID"
-                      className="flex-1 border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      className={inputBase}
                     />
                     <button
                       type="button"
                       onClick={handleAssign}
                       disabled={!assigneeId.trim() || reviewAction !== null}
-                      className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg text-sm disabled:opacity-50"
+                      className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 whitespace-nowrap"
                     >
                       {reviewAction === 'assign' ? 'Assigning...' : 'Assign'}
                     </button>
@@ -506,8 +530,9 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
                   </p>
                 </section>
 
+                {/* Review decision */}
                 <section className="space-y-3" aria-labelledby="decision-heading">
-                  <h4 id="decision-heading" className="font-semibold text-gray-900">{tx('Review decision')}</h4>
+                  <h4 id="decision-heading" className="font-semibold text-gray-900 text-sm">{tx('Review decision')}</h4>
                   {REVIEW_TARGETS[reviewModalApp.status]?.length ? (
                     <>
                       <div className="flex flex-col sm:flex-row gap-2">
@@ -516,7 +541,7 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
                           id="review-target"
                           value={reviewTargetStatus}
                           onChange={(e) => setReviewTargetStatus(e.target.value as ApplicationStatus)}
-                          className="flex-1 border rounded-lg p-2.5 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                          className={inputBase}
                         >
                           {REVIEW_TARGETS[reviewModalApp.status]?.map((target) => (
                             <option key={target} value={target}>{target}</option>
@@ -526,30 +551,36 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
                           type="button"
                           onClick={handleReviewTransition}
                           disabled={reviewAction !== null}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2 rounded-lg text-sm disabled:opacity-50"
+                          className="rounded-lg bg-[#0d3d38] px-4 py-2 text-sm font-medium text-white hover:bg-[#0a2e2a] disabled:opacity-50 whitespace-nowrap"
                         >
                           {reviewAction === 'transition' ? 'Saving...' : 'Save decision'}
                         </button>
                       </div>
-                      <label htmlFor="review-reason" className="block text-xs font-semibold text-gray-600">
-                        Reason {reviewTargetStatus === 'MORE_INFO_REQUIRED' || reviewTargetStatus === 'AGENCY_REJECTED' ? '(required)' : '(optional)'}
-                      </label>
-                      <textarea
-                        id="review-reason"
-                        value={reviewReason}
-                        onChange={(e) => setReviewReason(e.target.value)}
-                        rows={3}
-                        placeholder="Explain the decision or information needed"
-                        className="w-full border rounded-lg p-2.5 text-sm resize-y focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                      />
+                      <div>
+                        <label htmlFor="review-reason" className="block text-xs font-medium text-gray-600 mb-1.5">
+                          Reason{' '}
+                          {reviewTargetStatus === 'MORE_INFO_REQUIRED' || reviewTargetStatus === 'AGENCY_REJECTED'
+                            ? '(required)'
+                            : '(optional)'}
+                        </label>
+                        <textarea
+                          id="review-reason"
+                          value={reviewReason}
+                          onChange={(e) => setReviewReason(e.target.value)}
+                          rows={3}
+                          placeholder="Explain the decision or information needed"
+                          className={`${inputBase} resize-y`}
+                        />
+                      </div>
                     </>
                   ) : (
                     <p className="text-sm text-gray-500">{tx('No agency review transition is available from this status.')}</p>
                   )}
                 </section>
 
+                {/* Internal notes */}
                 <section className="space-y-3" aria-labelledby="notes-heading">
-                  <h4 id="notes-heading" className="font-semibold text-gray-900">{tx('Internal notes')}</h4>
+                  <h4 id="notes-heading" className="font-semibold text-gray-900 text-sm">{tx('Internal notes')}</h4>
                   <div className="flex flex-col sm:flex-row gap-2">
                     <label htmlFor="review-note" className="sr-only">{tx('Internal review note')}</label>
                     <textarea
@@ -558,13 +589,13 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
                       onChange={(e) => setReviewNote(e.target.value)}
                       rows={2}
                       placeholder="Add a note for agency staff"
-                      className="flex-1 border rounded-lg p-2.5 text-sm resize-y focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      className={`${inputBase} resize-y flex-1`}
                     />
                     <button
                       type="button"
                       onClick={handleAddReviewNote}
                       disabled={!reviewNote.trim() || reviewAction !== null}
-                      className="self-start bg-gray-800 hover:bg-gray-900 text-white font-medium px-4 py-2 rounded-lg text-sm disabled:opacity-50"
+                      className="self-start rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 whitespace-nowrap"
                     >
                       {reviewAction === 'note' ? 'Adding...' : 'Add note'}
                     </button>
@@ -572,7 +603,7 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
                   {reviewDetails?.notes.length ? (
                     <div className="space-y-2 max-h-32 overflow-y-auto">
                       {reviewDetails.notes.map((note) => (
-                        <div key={note.id} className="rounded-lg bg-gray-50 border p-3 text-sm">
+                        <div key={note.id} className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm">
                           <p className="text-gray-800 whitespace-pre-wrap">{note.note}</p>
                           <p className="text-xs text-gray-500 mt-1">
                             {note.actorId} · {new Date(note.createdAt).toLocaleString()}
@@ -585,12 +616,13 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
                   )}
                 </section>
 
+                {/* Status history */}
                 <section className="space-y-2" aria-labelledby="history-heading">
-                  <h4 id="history-heading" className="font-semibold text-gray-900">{tx('Status history')}</h4>
+                  <h4 id="history-heading" className="font-semibold text-gray-900 text-sm">{tx('Status history')}</h4>
                   {reviewDetails?.statusHistory.length ? (
                     <ol className="space-y-2 text-xs text-gray-600 max-h-36 overflow-y-auto">
                       {reviewDetails.statusHistory.map((entry) => (
-                        <li key={entry.id} className="border-l-2 border-blue-200 pl-3">
+                        <li key={entry.id} className="border-l-2 border-gray-200 pl-3">
                           <span className="font-semibold text-gray-800">
                             {entry.fromStatus || 'New'} → {entry.toStatus}
                           </span>
@@ -605,7 +637,7 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
                     <p className="text-xs text-gray-500">{tx('No status history available.')}</p>
                   )}
                 </section>
-              </>
+              </div>
             )}
           </div>
         </div>
@@ -613,32 +645,36 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
 
       {/* Propose Terms Modal */}
       {proposeModalApp && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
-            <div className="flex justify-between items-center border-b pb-3">
-              <h3 className="font-bold text-lg text-gray-900">
-                {tx('Match & Propose Terms')}
-              </h3>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onMouseDown={(e) => { if (e.target === e.currentTarget) setProposeModalApp(null); }}
+        >
+          <div
+            className="relative w-full max-w-lg rounded-2xl border border-gray-200 bg-white p-6 shadow-xl"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center border-b border-gray-200 pb-4 mb-4">
+              <h3 className="text-base font-semibold text-gray-900">{tx('Match & Propose Terms')}</h3>
               <button
+                type="button"
                 onClick={() => setProposeModalApp(null)}
-                className="text-gray-400 hover:text-gray-600 font-bold"
+                className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
               >
-                ✕
+                <X className="h-4 w-4" />
               </button>
             </div>
 
             <form onSubmit={handleProposeSubmit} className="space-y-4 text-sm">
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1">
-                  {tx('Application')}
-                </label>
-                <div className="bg-gray-50 p-2.5 rounded border border-gray-200 text-gray-700 font-mono text-xs">
-                  APP-{proposeModalApp.applicationId.slice(-6).toUpperCase()} — {proposeModalApp.borrowerName} ({pesewasToGhsString(proposeModalApp.requestedAmountPesewas)})
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">{tx('Application')}</label>
+                <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-gray-700 font-mono text-xs">
+                  APP-{proposeModalApp.applicationId.slice(-6).toUpperCase()} — {proposeModalApp.borrowerName}{' '}
+                  ({pesewasToGhsString(proposeModalApp.requestedAmountPesewas)})
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1">
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">
                   {tx('Designated Lender User ID (Within Agency)')}
                 </label>
                 <input
@@ -647,13 +683,13 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
                   placeholder="e.g. usr_lender_123"
                   value={proposeLenderId}
                   onChange={(e) => setProposeLenderId(e.target.value)}
-                  className="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className={inputBase}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">
+                  <label className="block text-xs font-medium text-gray-600 mb-1.5">
                     {tx('Proposed Amount (GHS)')}
                   </label>
                   <input
@@ -663,11 +699,11 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
                     required
                     value={proposeAmountGhs}
                     onChange={(e) => setProposeAmountGhs(Number(e.target.value))}
-                    className="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className={inputBase}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">
+                  <label className="block text-xs font-medium text-gray-600 mb-1.5">
                     {tx('Lender Base Rate (bps)')}
                   </label>
                   <input
@@ -677,7 +713,7 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
                     required
                     value={proposeBaseRateBps}
                     onChange={(e) => setProposeBaseRateBps(Number(e.target.value))}
-                    className="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className={inputBase}
                   />
                   <span className="text-[10px] text-gray-400 mt-0.5 block">
                     {bpsToPercentString(proposeBaseRateBps)} p.a.
@@ -686,8 +722,8 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1">
-                    {tx('Agency Margin (bps, Optional)')}
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">
+                  {tx('Agency Margin (bps, Optional)')}
                 </label>
                 <input
                   type="number"
@@ -695,25 +731,25 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
                   step="50"
                   value={proposeMarginBps}
                   onChange={(e) => setProposeMarginBps(Number(e.target.value))}
-                  className="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className={inputBase}
                 />
                 <span className="text-[10px] text-gray-400 mt-0.5 block">
                   {bpsToPercentString(proposeMarginBps)} spread
                 </span>
               </div>
 
-              <div className="flex justify-end gap-3 pt-3 border-t">
+              <div className="flex justify-end gap-3 pt-3 border-t border-gray-200">
                 <button
                   type="button"
                   onClick={() => setProposeModalApp(null)}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm font-medium"
+                  className="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
                 >
                   {tx('Cancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={submittingPropose}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg text-sm transition-colors disabled:opacity-50"
+                  className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 transition-colors disabled:opacity-50"
                 >
                   {submittingPropose ? tx('Submitting application...') : tx('Send Proposal')}
                 </button>
@@ -725,55 +761,66 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
 
       {/* Disbursement Readiness Modal */}
       {readinessResult && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
-            <div className="flex justify-between items-center border-b pb-3">
-              <h3 className="font-bold text-lg text-gray-900">
-                {tx('Disbursement Readiness Check')}
-              </h3>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onMouseDown={(e) => { if (e.target === e.currentTarget) setReadinessResult(null); }}
+        >
+          <div
+            className="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-xl"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center border-b border-gray-200 pb-4 mb-4">
+              <h3 className="text-base font-semibold text-gray-900">{tx('Disbursement Readiness Check')}</h3>
               <button
+                type="button"
                 onClick={() => setReadinessResult(null)}
-                className="text-gray-400 hover:text-gray-600 font-bold"
+                className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
               >
-                ✕
+                <X className="h-4 w-4" />
               </button>
             </div>
 
             <div className="space-y-3 text-sm">
-              <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border">
+              <div className="flex items-center justify-between p-3 rounded-lg border border-gray-200 bg-gray-50">
                 <span className="font-medium text-gray-700">{tx('Status')}:</span>
-                <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                  readinessResult.readyForDisbursement ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                }`}>
+                <span
+                  className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
+                    readinessResult.readyForDisbursement
+                      ? 'bg-[#f0f9f7] text-[#0d3d38] border-[#b8dbd8]'
+                      : 'bg-amber-50 text-amber-700 border-amber-200'
+                  }`}
+                >
                   {readinessResult.readyForDisbursement ? 'READY FOR DISBURSEMENT' : 'NOT READY'}
                 </span>
               </div>
 
               <div className="space-y-2 text-xs text-gray-600">
-                <div className="flex justify-between">
-                  <span>{tx('Agency Approval')}:</span>
-                  <span className="font-medium">{readinessResult.disbursementPrerequisites?.hasAgencyApproval ? '✓ Yes' : '✕ No'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>{tx('Borrower Consent')}:</span>
-                  <span className="font-medium">{readinessResult.disbursementPrerequisites?.hasBorrowerConsent ? '✓ Yes' : '✕ No'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>{tx('SHA-256 Fingerprint')}:</span>
-                  <span className="font-medium">{readinessResult.disbursementPrerequisites?.isConsentFingerprintValid ? '✓ Verified' : '✕ Invalid'}</span>
-                </div>
-                <div className="flex justify-between pt-2 border-t text-gray-400">
-                  <span>{tx('Payment Initiated')}:</span>
-                  <span>{readinessResult.paymentInitiated ? 'Yes' : 'False (Locked)'}</span>
-                </div>
-                <div className="flex justify-between text-gray-400">
-                  <span>{tx('Repayment Schedule Active')}:</span>
-                  <span>{readinessResult.repaymentScheduleActive ? 'Active' : 'False (Locked)'}</span>
+                {[
+                  { label: `${tx('Agency Approval')}:`, value: readinessResult.disbursementPrerequisites?.hasAgencyApproval },
+                  { label: `${tx('Borrower Consent')}:`, value: readinessResult.disbursementPrerequisites?.hasBorrowerConsent },
+                  { label: `${tx('SHA-256 Fingerprint')}:`, value: readinessResult.disbursementPrerequisites?.isConsentFingerprintValid },
+                ].map(({ label, value }) => (
+                  <div key={label} className="flex justify-between">
+                    <span>{label}</span>
+                    <span className={`font-medium ${value ? 'text-[#0d3d38]' : 'text-red-600'}`}>
+                      {value ? '✓ Yes' : '✕ No'}
+                    </span>
+                  </div>
+                ))}
+                <div className="border-t border-gray-200 pt-2 space-y-1 text-gray-400">
+                  <div className="flex justify-between">
+                    <span>{tx('Payment Initiated')}:</span>
+                    <span>{readinessResult.paymentInitiated ? 'Yes' : 'False (Locked)'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>{tx('Repayment Schedule Active')}:</span>
+                    <span>{readinessResult.repaymentScheduleActive ? 'Active' : 'False (Locked)'}</span>
+                  </div>
                 </div>
               </div>
 
               {readinessResult.reasons?.length > 0 && (
-                <div className="bg-amber-50 p-3 rounded text-xs text-amber-800 space-y-1">
+                <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-700 space-y-1">
                   <p className="font-semibold">{tx('Blockers')}:</p>
                   {readinessResult.reasons.map((r: string, idx: number) => (
                     <p key={idx}>• {r}</p>
@@ -782,10 +829,11 @@ export const AgencyReviewQueue: React.FC<AgencyReviewQueueProps> = ({
               )}
             </div>
 
-            <div className="flex justify-end pt-2 border-t">
+            <div className="flex justify-end pt-4 border-t border-gray-200 mt-4">
               <button
+                type="button"
                 onClick={() => setReadinessResult(null)}
-                className="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-900"
+                className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 transition-colors"
               >
                 {tx('Close')}
               </button>

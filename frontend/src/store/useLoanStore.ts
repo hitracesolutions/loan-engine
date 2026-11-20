@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type AppState = 'UNAUTHENTICATED' | 'AUTHENTICATED';
+export type AppState = 'UNAUTHENTICATED' | 'LOGIN' | 'REGISTER' | 'AUTHENTICATED';
 
 export type DashboardView =
   | 'DASHBOARD'
@@ -12,6 +12,8 @@ export type DashboardView =
   | 'AGENCY_QUEUE'
   | 'ACTIVE_LOANS'
   | 'PROFILE'
+  | 'SETTINGS'
+  | 'NOTIFICATIONS'
   | 'DOCS';
 
 export type ThemePreference = 'light' | 'dark';
@@ -34,6 +36,9 @@ interface LoanStore {
   theme: ThemePreference;
   language: LanguagePreference;
   setView: (view: DashboardView) => void;
+  // renamed from setState to avoid conflict with Zustand's built-in setState
+  setAppState: (state: AppState) => void;
+  /** @deprecated use setAppState */
   setState: (state: AppState) => void;
   setUser: (user: UserProfile) => void;
   setTheme: (theme: ThemePreference) => void;
@@ -51,6 +56,7 @@ export const useLoanStore = create<LoanStore>()(
       language: 'en',
 
       setView: (view) => set({ currentView: view }),
+      setAppState: (state) => set({ currentState: state }),
       setState: (state) => set({ currentState: state }),
       setUser: (user) => set({ user, currentState: 'AUTHENTICATED' }),
       setTheme: (theme) => set({ theme }),
@@ -65,7 +71,8 @@ export const useLoanStore = create<LoanStore>()(
     {
       name: 'gidfine-session',
       partialize: (state) => ({
-        currentState: state.currentState,
+        // Don't persist LOGIN/REGISTER — always boot to UNAUTHENTICATED if not AUTHENTICATED
+        currentState: state.currentState === 'AUTHENTICATED' ? 'AUTHENTICATED' : 'UNAUTHENTICATED',
         user: state.user,
         currentView: state.currentView,
         theme: state.theme,
