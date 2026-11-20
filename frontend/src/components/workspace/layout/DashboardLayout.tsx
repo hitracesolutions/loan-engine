@@ -1,14 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-  Bell, Check, ChevronDown, CreditCard, Globe2, LayoutDashboard, Landmark,
-  LogOut, Moon, Settings2, Sun, UserRound, Users,
+  Bell, ChevronDown, ClipboardList, CreditCard, Gauge, Landmark,
+  LogOut, Menu, ScrollText, Settings2, UserPlus, UserRound, X,
 } from 'lucide-react';
-import { useLoanStore, type DashboardView, type LanguagePreference, type ThemePreference } from '../../../store/useLoanStore';
+import { useLoanStore, type DashboardView, type LanguagePreference } from '../../../store/useLoanStore';
 import AnalyticsDashboard from '../pages/AnalyticsDashboard';
 import LoanApplication from '../pages/LoanApplication';
 import AgencyReviewQueue from '../../AgencyReviewQueue';
 import ActiveLoans from '../pages/ActiveLoans';
 import UserProfile from '../pages/UserProfile';
+import AccountSettings from '../pages/AccountSettings';
+import NotificationsPage from '../pages/NotificationsPage';
 import Docs from '../../../pages/Docs';
 import StaffIntake from '../pages/StaffIntake';
 import { LenderPortal } from '../../LenderPortal';
@@ -17,30 +19,32 @@ import { translate, translateText, type TranslationKey } from '../../../lib/tran
 
 const languages: { code: LanguagePreference; label: string; nativeName: string }[] = [
   { code: 'en', label: 'English', nativeName: 'English' },
-  { code: 'fr', label: 'Fran\u00e7ais', nativeName: 'Fran\u00e7ais' },
+  { code: 'fr', label: 'Français', nativeName: 'Français' },
   { code: 'tw', label: 'Twi', nativeName: 'Twi' },
 ];
 
 export default function DashboardLayout() {
   const { user, currentView, setView, clearSession, theme, language, setTheme, setLanguage } = useLoanStore();
-  const [profileOpen, setProfileOpen] = useState(false);
-  const [languageOpen, setLanguageOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false); // kept for future use
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
   const staffRole = user?.role === 'loan_officer' || user?.role === 'agency_admin';
   const lenderRole = user?.role === 'lender';
-  const roleLabel = user?.role ? translateText(language, user.role.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())) : translateText(language, 'Account');
+  const roleLabel = user?.role
+    ? translateText(language, user.role.replaceAll('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase()))
+    : translateText(language, 'Account');
   const t = (key: TranslationKey) => translate(language, key);
   const tx = (text: string) => translateText(language, text);
 
-  const navigation: { name: string; id: DashboardView; icon: typeof LayoutDashboard }[] = lenderRole ? [
+  const navigation: { name: string; id: DashboardView; icon: typeof Gauge }[] = lenderRole ? [
     { name: t('proposals'), id: 'LENDER_PORTAL', icon: Landmark },
   ] : [
-    { name: t('overview'), id: 'DASHBOARD', icon: LayoutDashboard },
+    { name: t('overview'), id: 'DASHBOARD', icon: Gauge },
     { name: t('applications'), id: 'APPLICATION', icon: CreditCard },
-    { name: t('reviewQueue'), id: 'AGENCY_QUEUE', icon: Users },
-    { name: t('loansLedgers'), id: 'ACTIVE_LOANS', icon: Landmark },
+    { name: t('reviewQueue'), id: 'AGENCY_QUEUE', icon: ClipboardList },
+    { name: t('loansLedgers'), id: 'ACTIVE_LOANS', icon: ScrollText },
   ];
-  if (staffRole) navigation.splice(2, 0, { name: t('borrowerIntake'), id: 'STAFF_INTAKE', icon: Users });
+  if (staffRole) navigation.splice(2, 0, { name: t('borrowerIntake'), id: 'STAFF_INTAKE', icon: UserPlus });
   if (user?.role === 'agency_admin') navigation.splice(3, 0, { name: t('registerLender'), id: 'LENDER_REGISTER', icon: Landmark });
 
   useEffect(() => {
@@ -53,25 +57,14 @@ export default function DashboardLayout() {
   }, [language]);
 
   useEffect(() => {
-    const onPointer = (event: PointerEvent) => {
-      if (!profileRef.current?.contains(event.target as Node)) {
-        setProfileOpen(false);
-        setLanguageOpen(false);
-      }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { setMobileNavOpen(false); }
     };
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setProfileOpen(false);
-        setLanguageOpen(false);
-      }
-    };
-    document.addEventListener('pointerdown', onPointer);
     document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('pointerdown', onPointer);
-      document.removeEventListener('keydown', onKey);
-    };
+    return () => { document.removeEventListener('keydown', onKey); };
   }, []);
+
+  const navigate = (id: DashboardView) => { setView(id); setMobileNavOpen(false); };
 
   const renderContent = () => {
     switch (currentView) {
@@ -83,68 +76,246 @@ export default function DashboardLayout() {
       case 'AGENCY_QUEUE': return staffRole ? <AgencyReviewQueue /> : <AnalyticsDashboard />;
       case 'ACTIVE_LOANS': return <ActiveLoans />;
       case 'PROFILE': return <UserProfile />;
+      case 'SETTINGS': return <AccountSettings />;
+      case 'NOTIFICATIONS': return <NotificationsPage />;
       case 'DOCS': return <Docs />;
       default: return lenderRole ? <LenderPortal lenderName={user?.name} /> : <AnalyticsDashboard />;
     }
   };
 
-  const selectLanguage = (code: LanguagePreference) => {
-    setLanguage(code);
-    setLanguageOpen(false);
-  };
+  /* ─── Sidebar nav items ─── */
+  const SidebarNav = () => (
+    <nav aria-label={tx('Main navigation')} className="flex flex-col gap-1 px-3">
+      {navigation.map((item) => {
+        const active = currentView === item.id;
+        return (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => navigate(item.id)}
+            aria-current={active ? 'page' : undefined}
+            className={`dashboard-sidebar-item flex w-full items-center gap-3 px-3.5 py-3 text-sm font-medium text-left transition-colors ${active ? 'is-active' : ''}`}
+          >
+            <item.icon className="h-[18px] w-[18px] shrink-0" strokeWidth={1.75} />
+            <span>{item.name}</span>
+          </button>
+        );
+      })}
+    </nav>
+  );
 
   return (
-    <div className="dashboard-shell min-h-screen font-sans selection:bg-emerald-500/20">
-      <header className="dashboard-header sticky top-0 z-40 border-b backdrop-blur-xl">
-        <div className="mx-auto flex h-[72px] max-w-[1440px] items-center gap-5 px-4 sm:px-6 xl:px-10">
-          <button type="button" onClick={() => setView(lenderRole ? 'LENDER_PORTAL' : 'DASHBOARD')} aria-label={tx('Go to dashboard')} className="flex shrink-0 items-center gap-3 rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
-            <span className="grid h-10 w-10 place-items-center overflow-hidden rounded-[14px] bg-emerald-500/10 ring-1 ring-emerald-500/15"><img src="/favicon.svg" alt="" className="h-7 w-7" /></span>
-            <span className="hidden sm:block"><span className="block text-[17px] font-semibold tracking-tight">Gidfine<span className="text-emerald-600">.</span></span><span className="dashboard-subtle block text-[10px] font-medium uppercase tracking-[0.16em]">{t('workspace')}</span></span>
+    <div className="dashboard-shell flex min-h-screen font-sans selection:bg-[#f0f9f7]0/20">
+
+      {/* ═══ DESKTOP SIDEBAR ═══ */}
+      <aside className="dashboard-sidebar hidden lg:flex w-60 shrink-0 flex-col border-r">
+        {/* Logo */}
+        <div className="flex h-[72px] shrink-0 items-center px-5 border-b border-inherit">
+          <button
+            type="button"
+            onClick={() => navigate(lenderRole ? 'LENDER_PORTAL' : 'DASHBOARD')}
+            className="flex items-center gap-2.5 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0d3d38]"
+          >
+            <img src="/favicon.svg" alt="" className="h-7 w-7 shrink-0" />
+            <span>
+              <span className="block text-[16px] font-semibold tracking-tight dashboard-heading">
+                Gidfine<span className="text-[#0d3d38]">.</span>
+              </span>
+              <span className="dashboard-subtle block text-[10px] font-medium uppercase tracking-[0.16em]">{t('workspace')}</span>
+            </span>
           </button>
+        </div>
 
-          <nav aria-label={tx('Main navigation')} className="dashboard-nav ml-1 hidden min-w-0 items-center gap-1 overflow-x-auto lg:flex">
-            {navigation.map((item) => {
-              const active = currentView === item.id;
-              return <button key={item.id} type="button" onClick={() => setView(item.id)} aria-current={active ? 'page' : undefined} className={`dashboard-nav-item inline-flex shrink-0 items-center gap-2 rounded-xl px-3.5 py-2.5 text-[13px] font-medium transition-colors ${active ? 'is-active' : ''}`}><item.icon className="h-4 w-4" />{item.name}</button>;
-            })}
-          </nav>
+        {/* User block */}
+        <div className="shrink-0 px-4 py-3.5 border-b border-inherit">
+          <button
+            type="button"
+            onClick={() => navigate('PROFILE')}
+            className="flex w-full items-center gap-3 rounded-xl p-2 text-left hover:bg-gray-50 transition-colors"
+          >
+            <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-teal-700 to-teal-600 text-sm font-semibold text-white">
+              {user?.picture
+                ? <img src={user.picture} alt="" className="h-full w-full object-cover" />
+                : (user?.name?.trim()?.[0] || user?.email?.[0] || 'U').toUpperCase()
+              }
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-xs font-semibold dashboard-heading">{user?.name || user?.email || 'Account'}</span>
+              <span className="dashboard-subtle block truncate text-[10px] capitalize mt-0.5">{roleLabel}</span>
+            </span>
+          </button>
+        </div>
 
-          <div className="ml-auto flex min-w-0 items-center gap-2 sm:gap-3">
-            <button type="button" aria-label={t('notificationsLater')} title={t('notificationsLater')} disabled className="dashboard-icon-button relative grid h-10 w-10 shrink-0 cursor-not-allowed place-items-center rounded-xl border opacity-55"><Bell className="h-[17px] w-[17px]" /></button>
-
-            <div className="relative" ref={profileRef}>
-              <button type="button" onClick={() => { setProfileOpen((open) => !open); setLanguageOpen(false); }} aria-haspopup="dialog" aria-expanded={profileOpen} aria-label={t('accountMenu')} className="dashboard-account flex h-11 items-center gap-2 rounded-xl p-1 pr-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 sm:gap-2.5 sm:pr-2">
-                <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-[11px] bg-gradient-to-br from-emerald-500 to-teal-600 text-sm font-semibold text-white shadow-sm">{user?.picture ? <img src={user.picture} alt="" className="h-full w-full object-cover" /> : (user?.name?.trim()?.[0] || user?.email?.[0] || 'U').toUpperCase()}</span>
-                <span className="hidden min-w-0 text-left sm:block"><span className="block max-w-28 truncate text-xs font-semibold leading-4">{user?.name || user?.email || 'Account'}</span><span className="dashboard-subtle mt-0.5 block max-w-28 truncate text-[10px] capitalize">{roleLabel}</span></span>
-                <ChevronDown className={`dashboard-subtle hidden h-4 w-4 transition-transform sm:block ${profileOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              {profileOpen && <section role="dialog" aria-label={t('accountMenu')} className="dashboard-popover absolute right-0 top-[calc(100%+12px)] z-50 w-[min(340px,calc(100vw-24px))] origin-top-right overflow-visible rounded-2xl border p-2.5 shadow-2xl animate-scale-in">
-                <div className="flex items-center gap-3 rounded-xl p-3"><span className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-[13px] bg-gradient-to-br from-emerald-500 to-teal-600 text-base font-semibold text-white">{user?.picture ? <img src={user.picture} alt="" className="h-full w-full object-cover" /> : (user?.name?.trim()?.[0] || user?.email?.[0] || 'U').toUpperCase()}</span><span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{user?.name || 'Gidfine user'}</span><span className="dashboard-subtle mt-1 block truncate text-xs">{user?.email}</span></span></div>
-                <div className="dashboard-divider my-2 border-t" />
-                <button type="button" onClick={() => { setView('PROFILE'); setProfileOpen(false); }} className="dashboard-menu-item flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors"><UserRound className="h-4 w-4" /><span className="flex-1">{t('profileSettings')}</span></button>
-
-                <div className="dashboard-setting-row mt-1 flex items-center gap-3 rounded-xl px-3 py-2.5"><span className="grid h-8 w-8 place-items-center rounded-lg bg-emerald-500/10 text-emerald-600">{theme === 'dark' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}</span><span className="min-w-0 flex-1"><span className="block text-sm font-medium">{t('appearance')}</span><span className="dashboard-subtle block text-[11px]">{t('themeHelp')}</span></span><div role="group" aria-label={t('appearance')} className="dashboard-segment inline-flex rounded-lg border p-0.5"><button type="button" onClick={() => setTheme('light')} aria-pressed={theme === 'light'} aria-label={t('light')} className={`grid h-7 w-7 place-items-center rounded-md transition-colors ${theme === 'light' ? 'is-selected' : ''}`}><Sun className="h-3.5 w-3.5" /></button><button type="button" onClick={() => setTheme('dark')} aria-pressed={theme === 'dark'} aria-label={t('dark')} className={`grid h-7 w-7 place-items-center rounded-md transition-colors ${theme === 'dark' ? 'is-selected' : ''}`}><Moon className="h-3.5 w-3.5" /></button></div></div>
-
-                <div className="relative mt-1"><button type="button" onClick={() => setLanguageOpen((open) => !open)} aria-expanded={languageOpen} className="dashboard-menu-item flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors"><span className="grid h-8 w-8 place-items-center rounded-lg bg-sky-500/10 text-sky-600"><Globe2 className="h-4 w-4" /></span><span className="min-w-0 flex-1"><span className="block text-sm font-medium">{t('language')}</span><span className="dashboard-subtle block text-[11px]">{languages.find((item) => item.code === language)?.label || 'English'}</span></span><ChevronDown className={`dashboard-subtle h-4 w-4 transition-transform ${languageOpen ? 'rotate-180' : ''}`} /></button>
-                  {languageOpen && <div role="menu" aria-label={t('language')} className="dashboard-language-menu absolute right-0 top-full z-[60] mt-1 w-full rounded-xl border p-1.5 shadow-xl">{languages.map((item) => <button key={item.code} type="button" role="menuitemradio" aria-checked={language === item.code} onClick={() => selectLanguage(item.code)} className="dashboard-language-option flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm"><span className="flex-1">{item.nativeName}</span>{language === item.code && <Check className="h-4 w-4 text-emerald-600" />}</button>)}</div>}
-                </div>
-
-                <button type="button" onClick={() => { setView('PROFILE'); setProfileOpen(false); }} className="dashboard-menu-item mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors"><Settings2 className="h-4 w-4" /><span className="flex-1">{t('accountPreferences')}</span></button>
-                <div className="dashboard-divider my-2 border-t" />
-                <button type="button" onClick={clearSession} className="dashboard-logout flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors"><LogOut className="h-4 w-4" /><span>{t('logout')}</span></button>
-              </section>}
-            </div>
+        {/* Nav items + bottom section — no gap, stacked naturally */}
+        <div className="flex-1 overflow-y-auto py-4 flex flex-col">
+          <SidebarNav />
+          <div className="mt-4 border-t border-inherit px-3 pt-4 space-y-1">
+            <button
+              type="button"
+              
+              onClick={() => navigate('NOTIFICATIONS')}
+              className={`dashboard-sidebar-item flex w-full items-center gap-3 px-3.5 py-3 text-sm font-medium text-left transition-colors ${currentView === 'NOTIFICATIONS' ? 'is-active' : ''}`}
+            >
+              <Bell className="h-[18px] w-[18px] shrink-0" strokeWidth={1.75} />
+              <span>{'Notifications'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('PROFILE')}
+              className={`dashboard-sidebar-item flex w-full items-center gap-3 px-3.5 py-3 text-sm font-medium text-left transition-colors ${currentView === 'PROFILE' ? 'is-active' : ''}`}
+            >
+              <UserRound className="h-[18px] w-[18px] shrink-0" strokeWidth={1.75} />
+              <span>{t('profileSettings')}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('SETTINGS')}
+              className={`dashboard-sidebar-item flex w-full items-center gap-3 px-3.5 py-3 text-sm font-medium text-left transition-colors ${currentView === 'SETTINGS' ? 'is-active' : ''}`}
+            >
+              <Settings2 className="h-[18px] w-[18px] shrink-0" strokeWidth={1.75} />
+              <span>{tx('Settings')}</span>
+            </button>
+            <button
+              type="button"
+              onClick={clearSession}
+              className="dashboard-sidebar-logout flex w-full items-center gap-3 px-3.5 py-3 text-sm font-medium text-left transition-colors"
+            >
+              <LogOut className="h-[18px] w-[18px] shrink-0" strokeWidth={1.75} />
+              <span>{t('logout')}</span>
+            </button>
           </div>
         </div>
-        <nav aria-label={tx('Mobile navigation')} className="dashboard-mobile-nav flex gap-1 overflow-x-auto border-t px-3 py-2 lg:hidden">
-          {navigation.map((item) => { const active = currentView === item.id; return <button key={item.id} type="button" onClick={() => setView(item.id)} aria-current={active ? 'page' : undefined} className={`dashboard-nav-item inline-flex min-h-10 shrink-0 items-center gap-2 rounded-lg px-3 text-xs font-medium ${active ? 'is-active' : ''}`}><item.icon className="h-4 w-4" />{item.name}</button>; })}
-        </nav>
-      </header>
+      </aside>
 
-      <main className="dashboard-main mx-auto w-full max-w-[1440px] px-4 py-7 sm:px-6 lg:px-8 xl:px-10 xl:py-9">
-        <div key={currentView} className="animate-fade-in">{renderContent()}</div>
-      </main>
+      {/* ═══ MOBILE SIDEBAR DRAWER ═══ */}
+      {mobileNavOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          {/* backdrop */}
+          <div className="absolute inset-0 bg-black/40" onClick={() => setMobileNavOpen(false)} />
+          {/* drawer */}
+          <aside className="dashboard-sidebar absolute left-0 top-0 h-full w-64 flex flex-col border-r shadow-2xl">
+            {/* Logo row */}
+            <div className="flex h-[72px] shrink-0 items-center justify-between px-5 border-b border-inherit">
+              <button
+                type="button"
+                onClick={() => navigate(lenderRole ? 'LENDER_PORTAL' : 'DASHBOARD')}
+                className="flex items-center gap-2.5"
+              >
+                <img src="/favicon.svg" alt="" className="h-7 w-7 shrink-0" />
+                <span className="block text-[16px] font-semibold tracking-tight dashboard-heading">
+                  Gidfine<span className="text-[#0d3d38]">.</span>
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setMobileNavOpen(false)}
+                className="dashboard-subtle hover:text-current p-1 rounded-lg transition-colors"
+              >
+                <X className="h-5 w-5" strokeWidth={1.75} />
+              </button>
+            </div>
+            {/* User block */}
+            <div className="shrink-0 px-4 py-3.5 border-b border-inherit">
+              <button
+                type="button"
+                onClick={() => navigate('PROFILE')}
+                className="flex w-full items-center gap-3 rounded-xl p-2 text-left hover:bg-gray-50 transition-colors"
+              >
+                <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-teal-700 to-teal-600 text-sm font-semibold text-white">
+                  {user?.picture
+                    ? <img src={user.picture} alt="" className="h-full w-full object-cover" />
+                    : (user?.name?.trim()?.[0] || user?.email?.[0] || 'U').toUpperCase()
+                  }
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-xs font-semibold dashboard-heading">{user?.name || user?.email || 'Account'}</span>
+                  <span className="dashboard-subtle block truncate text-[10px] capitalize mt-0.5">{roleLabel}</span>
+                </span>
+              </button>
+            </div>
+            {/* Nav + bottom stacked */}
+            <div className="flex-1 overflow-y-auto py-4 flex flex-col">
+              <SidebarNav />
+              <div className="mt-4 border-t border-inherit px-3 pt-4 space-y-1">
+                <button
+                  type="button"
+                  
+              onClick={() => navigate('NOTIFICATIONS')}
+              className={`dashboard-sidebar-item flex w-full items-center gap-3 px-3.5 py-3 text-sm font-medium text-left transition-colors ${currentView === 'NOTIFICATIONS' ? 'is-active' : ''}`}
+            >
+              <Bell className="h-[18px] w-[18px] shrink-0" strokeWidth={1.75} />
+                  <span>{'Notifications'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('PROFILE')}
+                  className={`dashboard-sidebar-item flex w-full items-center gap-3 px-3.5 py-3 text-sm font-medium text-left transition-colors ${currentView === 'PROFILE' ? 'is-active' : ''}`}
+                >
+                  <UserRound className="h-[18px] w-[18px] shrink-0" strokeWidth={1.75} />
+                  <span>{t('profileSettings')}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('SETTINGS')}
+                  className={`dashboard-sidebar-item flex w-full items-center gap-3 px-3.5 py-3 text-sm font-medium text-left transition-colors ${currentView === 'SETTINGS' ? 'is-active' : ''}`}
+                >
+                  <Settings2 className="h-[18px] w-[18px] shrink-0" strokeWidth={1.75} />
+                  <span>{tx('Settings')}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={clearSession}
+                  className="dashboard-sidebar-logout flex w-full items-center gap-3 px-3.5 py-3 text-sm font-medium text-left transition-colors"
+                >
+                  <LogOut className="h-[18px] w-[18px] shrink-0" strokeWidth={1.75} />
+                  <span>{t('logout')}</span>
+                </button>
+              </div>
+            </div>
+          </aside>
+        </div>
+      )}
+
+      {/* ═══ MAIN COLUMN ═══ */}
+      <div className="flex flex-1 min-w-0 flex-col">
+
+        {/* Top bar */}
+        <header className="dashboard-header sticky top-0 z-40 border-b backdrop-blur-xl">
+          <div className="flex h-[72px] items-center gap-3 px-4 sm:px-6">
+
+            {/* Mobile hamburger */}
+            <button
+              type="button"
+              onClick={() => setMobileNavOpen(true)}
+              className="lg:hidden dashboard-icon-button grid h-10 w-10 shrink-0 place-items-center rounded-xl border"
+              aria-label={tx('Open navigation')}
+            >
+              <Menu className="h-5 w-5" strokeWidth={1.75} />
+            </button>
+
+            {/* Mobile logo (shown when sidebar hidden) */}
+            <button
+              type="button"
+              onClick={() => navigate(lenderRole ? 'LENDER_PORTAL' : 'DASHBOARD')}
+              className="lg:hidden flex items-center gap-2 rounded-xl"
+            >
+              <img src="/favicon.svg" alt="" className="h-6 w-6 shrink-0" />
+              <span className="text-[15px] font-semibold tracking-tight dashboard-heading">
+                Gidfine<span className="text-[#0d3d38]">.</span>
+              </span>
+            </button>
+
+            <div className="ml-auto flex items-center gap-2 sm:gap-3">
+            </div>
+          </div>
+        </header>
+
+        {/* Page content */}
+        <main className="dashboard-main flex-1 px-4 py-7 sm:px-6 lg:px-8 xl:px-10 xl:py-9">
+          <div key={currentView} className="animate-fade-in">{renderContent()}</div>
+        </main>
+      </div>
     </div>
   );
 }
+

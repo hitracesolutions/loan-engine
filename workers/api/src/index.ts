@@ -36,6 +36,7 @@ import {
   stopImpersonationHandler,
 } from './routes/impersonation.ts';
 import { health } from './routes/health.ts';
+import { subscribeNewsletter } from './routes/newsletter.ts';
 import {
   createLender,
   createLenderProduct,
@@ -71,6 +72,7 @@ import { Router } from './router.ts';
 
 const router = new Router()
   .get('/health', health)
+  .post('/newsletter/subscribe', subscribeNewsletter)
   .post('/auth/login', login)
   .post('/auth/register', register)
   .get('/auth/me', me)
